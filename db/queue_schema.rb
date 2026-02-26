@@ -10,15 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_26_160145) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_26_201841) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "exchange_accounts", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "provider_type"
-    t.string "api_key_ciphertext"
-    t.string "api_secret_ciphertext"
+    t.string "api_key"
+    t.string "api_secret"
     t.datetime "linked_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -167,7 +167,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_160145) do
     t.jsonb "raw_payload", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "position_id"
     t.index ["exchange_account_id", "exchange_reference_id"], name: "index_trades_on_account_and_reference", unique: true
+    t.index ["exchange_account_id", "position_id"], name: "index_trades_on_account_and_position_id"
     t.index ["exchange_account_id"], name: "index_trades_on_exchange_account_id"
   end
 

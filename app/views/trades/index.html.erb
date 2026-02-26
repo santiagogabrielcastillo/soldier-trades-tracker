@@ -1,26 +1,30 @@
 <div>
   <h1 class="mb-6 text-2xl font-semibold text-slate-900">Trades</h1>
 
-  <% if @trades.any? %>
+  <% if @positions.any? %>
     <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
       <table class="min-w-full divide-y divide-slate-200">
         <thead class="bg-slate-50">
           <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Date</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Closed</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Exchange</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Symbol</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Side</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Net amount</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Leverage</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Margin used</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Net P&amp;L</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Balance</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-200 bg-white">
-          <% @trades.each do |trade| %>
+          <% @positions.each do |pos| %>
             <tr>
-              <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-900"><%= trade.executed_at&.strftime("%Y-%m-%d %H:%M") %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-sm capitalize text-slate-600"><%= trade.exchange_account.provider_type %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900"><%= trade.symbol %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600"><%= trade.side %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-900"><%= number_with_precision(trade.net_amount, precision: 4) %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-900"><%= pos.close_at&.strftime("%Y-%m-%d %H:%M") %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-sm capitalize text-slate-600"><%= pos.exchange_account.provider_type %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900"><%= pos.symbol %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600"><%= pos.leverage ? "#{pos.leverage}X" : "—" %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-900"><%= pos.margin_used ? number_with_precision(pos.margin_used, precision: 4) : "—" %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= pos.net_pl >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= number_with_precision(pos.net_pl, precision: 4) %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-slate-900"><%= pos.balance.nil? ? "—" : number_with_precision(pos.balance, precision: 4) %></td>
             </tr>
           <% end %>
         </tbody>

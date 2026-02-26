@@ -10,20 +10,29 @@ class SyncExchangeAccountJob < ApplicationJob
     return unless account
     return unless account.provider_type == "bingx"
 
+    if account.api_key.blank? || account.api_secret.blank?
+      Rails.logger.error("[SyncExchangeAccountJob] account_id=#{exchange_account_id} missing API credentials (encryption may be unavailable in this process)")
+      return
+    end
+
     client = Exchanges::BingxClient.new(api_key: account.api_key, api_secret: account.api_secret)
-    since = account.linked_at || account.created_at
+    # TEMPORARY: fetch last 6 months for testing old mainnet trades. Revert to: since = account.linked_at || account.created_at
+    since = 6.months.ago
 
     trades = client.fetch_my_trades(since: since)
 
     trades.each do |attrs|
+      # Unique on [exchange_account_id, exchange_reference_id] prevents duplicates when sync is re-run.
       trade = account.trades.find_or_initialize_by(exchange_reference_id: attrs[:exchange_reference_id])
+      raw = attrs[:raw_payload] || {}
       trade.assign_attributes(
         symbol: attrs[:symbol],
         side: attrs[:side],
         fee: attrs[:fee],
         net_amount: attrs[:net_amount],
         executed_at: attrs[:executed_at],
-        raw_payload: attrs[:raw_payload] || {}
+        raw_payload: raw,
+        position_id: raw["positionID"]&.to_s.presence
       )
       trade.save!
     end
