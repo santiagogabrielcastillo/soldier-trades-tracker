@@ -8,11 +8,11 @@
     <div class="mb-4 flex flex-wrap items-baseline gap-6">
       <div>
         <span class="text-sm text-slate-500">Balance</span>
-        <p class="text-xl font-semibold text-slate-900"><%= number_with_precision(@summary_balance, precision: 2) %></p>
+        <p class="text-xl font-semibold text-slate-900"><%= format_money(@summary_balance) %></p>
       </div>
       <div>
         <span class="text-sm text-slate-500">Period P&amp;L</span>
-        <p class="text-xl font-semibold <%= @summary_period_pl >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= number_with_precision(@summary_period_pl, precision: 2) %></p>
+        <p class="text-xl font-semibold <%= @summary_period_pl >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= format_money(@summary_period_pl) %></p>
       </div>
       <div>
         <span class="text-sm text-slate-500">Positions</span>

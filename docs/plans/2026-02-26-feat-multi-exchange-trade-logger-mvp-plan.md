@@ -146,9 +146,9 @@ erDiagram
 #### Phase 4: Kamal deployment
 
 - [x] `bundle exec kamal init`; configure `config/deploy.yml`: server(s), registry, env (e.g. `RAILS_MASTER_KEY`, encryption keys, DB URL).
-- [ ] Roles: web (Rails server) and job (Solid Queue worker). Kamal runs Solid Queue worker on job role.
-- [ ] `kamal setup` then `kamal deploy`; verify migrations run, web and worker start; ensure encryption keys and secrets available in production.
-- [ ] Document: how to set env and secrets for Kamal (credentials, ENV).
+- [x] Roles: web (Rails server) and job (Solid Queue worker). Kamal runs Solid Queue worker on job role.
+- [x] `kamal setup` then `kamal deploy`; verify migrations run, web and worker start; ensure encryption keys and secrets available in production.
+- [x] Document: how to set env and secrets for Kamal (credentials, ENV).
 
 **Deliverables:** App deployable with Kamal; web + worker running; conventions documented.
 

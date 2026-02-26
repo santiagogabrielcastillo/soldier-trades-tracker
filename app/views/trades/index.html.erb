@@ -27,6 +27,7 @@
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Closed</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Exchange</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Symbol</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Side</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Leverage</th>
             <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Margin used</th>
             <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">ROI</th>
@@ -38,9 +39,10 @@
         <tbody class="divide-y divide-slate-200 bg-white">
           <% @positions.each do |pos| %>
             <tr>
-              <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-900"><%= pos.close_at&.strftime("%Y-%m-%d %H:%M") %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-900"><%= pos.close_at&.strftime("%Y-%m-%d") %></td>
               <td class="whitespace-nowrap px-6 py-4 text-sm capitalize text-slate-600"><%= pos.exchange_account.provider_type %></td>
               <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900"><%= pos.symbol %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-sm <%= pos.position_side == 'long' ? 'text-emerald-600' : pos.position_side == 'short' ? 'text-red-600' : 'text-slate-500' %>"><%= pos.position_side&.capitalize || "—" %></td>
               <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600"><%= pos.leverage ? "#{pos.leverage}X" : "—" %></td>
               <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-900"><%= pos.margin_used ? format_money(pos.margin_used) : "—" %></td>
               <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= pos.roi_percent && pos.roi_percent >= 0 ? 'text-emerald-600' : pos.roi_percent ? 'text-red-600' : 'text-slate-500' %>"><%= pos.roi_percent.nil? ? "—" : "#{number_with_precision(pos.roi_percent, precision: 2)}%" %></td>
@@ -52,9 +54,11 @@
         </tbody>
       </table>
     </div>
-    <div class="mt-4 flex justify-center">
-      <%== @pagy.series_nav if @pagy.last > 1 %>
-    </div>
+    <% if @pagy.last > 1 %>
+      <div class="mt-4 flex justify-center">
+          <%== @pagy.series_nav %>
+        </div>
+    <% end %>
   <% else %>
     <div class="rounded-lg border border-slate-200 bg-white p-12 text-center text-slate-600">
       <% if @view == "portfolio" && @portfolio %>

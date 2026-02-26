@@ -3,7 +3,7 @@
 ---
 title: Dashboard, named portfolios, and trades tabs
 type: feat
-status: active
+status: completed
 date: 2026-02-26
 source_brainstorm: docs/brainstorms/2026-02-26-dashboard-portfolios-trades-tabs-brainstorm.md
 ---

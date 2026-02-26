@@ -41,13 +41,18 @@ builder:
   # args:
   #   RUBY_VERSION: <%= ENV["RBENV_VERSION"] || ENV["rvm_ruby_string"] || "#{RUBY_ENGINE}-#{RUBY_ENGINE_VERSION}" %>
 
-# Inject ENV variables into containers (secrets come from .kamal/secrets).
+# Inject ENV into containers. List secret names here; set values in .kamal/secrets (or use Kamal secrets).
+# Required: RAILS_MASTER_KEY (decrypts credentials; credentials can hold DB and encryption keys).
+# Required for DB: SOLDIER_TRADES_TRACKER_DATABASE_PASSWORD if DB uses password auth.
+# Optional: ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY, ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY,
+#           ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT if not using credentials. See docs/deployment.md.
 #
 # env:
 #   clear:
-#     DB_HOST: 192.168.0.2
+#     RAILS_ENV: production
 #   secret:
 #     - RAILS_MASTER_KEY
+#     - SOLDIER_TRADES_TRACKER_DATABASE_PASSWORD
 
 # Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
 # "bin/kamal app logs -r job" will tail logs from the first server in the job section.

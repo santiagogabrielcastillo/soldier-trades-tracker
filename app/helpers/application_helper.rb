@@ -1,4 +1,10 @@
 module ApplicationHelper
+  # Format as $X.XX (two decimals). Returns "—" for nil.
+  def format_money(amount)
+    return "—" if amount.nil?
+    number_to_currency(amount.to_d, precision: 2, delimiter: "", strip_insignificant_zeros: false)
+  end
+
   def interval_hint(interval)
     case interval
     when "hourly" then "Roughly every hour."
