@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ExchangeAccountsController < ApplicationController
-  before_action :set_exchange_account, only: :destroy
+  before_action :set_exchange_account, only: %i[destroy sync]
 
   def index
     @exchange_accounts = current_user.exchange_accounts
@@ -24,6 +24,19 @@ class ExchangeAccountsController < ApplicationController
   def destroy
     @exchange_account.destroy
     redirect_to exchange_accounts_path, notice: "Exchange account removed."
+  end
+
+  def sync
+    if @exchange_account.provider_type != "bingx"
+      redirect_to exchange_accounts_path, alert: "Only BingX accounts can be synced."
+      return
+    end
+    unless @exchange_account.can_sync?
+      redirect_to exchange_accounts_path, alert: "Rate limit: max 2 syncs per day per account. Try again tomorrow."
+      return
+    end
+    SyncExchangeAccountJob.perform_later(@exchange_account.id)
+    redirect_to exchange_accounts_path, notice: "Sync started. Trades will appear shortly."
   end
 
   private

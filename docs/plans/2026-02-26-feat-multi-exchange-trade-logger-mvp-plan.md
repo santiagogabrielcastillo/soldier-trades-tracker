@@ -122,11 +122,11 @@ erDiagram
 
 #### Phase 2: Exchange providers and sync job
 
-- [ ] `Exchanges::BaseProvider` abstract interface: `#fetch_my_trades(since:)` → array of normalized hashes (symbol, side, fee, net_amount, executed_at, exchange_reference_id).
-- [ ] `Exchanges::BinanceClient`, `Exchanges::BingxClient` implement BaseProvider; normalize Binance vs BingX trade/order semantics; filter USDT/USDC only; compute net_amount = (price * qty) − commission.
-- [ ] `SyncExchangeAccountJob(account_id)`: load account, decrypt credentials, call provider `fetch_my_trades(since: account.linked_at)`, upsert `Trade` by `exchange_reference_id` (idempotent). Rescue API errors and log/retry as appropriate.
-- [ ] Rate limit: track sync runs per account per day (e.g. `SyncRun` log or count jobs in Solid Queue by account + date); in dispatcher or at enqueue time, skip if already 2 runs today for that account.
-- [ ] Day 0: pass `account.linked_at` as `since` so only trades on or after link date are fetched.
+- [x] `Exchanges::BaseProvider` abstract interface: `#fetch_my_trades(since:)` → array of normalized hashes (symbol, side, fee, net_amount, executed_at, exchange_reference_id).
+- [x] `Exchanges::BingxClient` implements BaseProvider (BingX only for MVP); normalizes BingX order history; filter USDT/USDC only; compute net_amount = (price × qty) − commission.
+- [x] `SyncExchangeAccountJob(account_id)`: load account, decrypt credentials, call provider `fetch_my_trades(since: account.linked_at)`, upsert `Trade` by `exchange_reference_id` (idempotent). Rescue API errors and log/retry.
+- [x] Rate limit: `SyncRun` model + `ExchangeAccount#can_sync?` (max 2 runs/day UTC); job creates SyncRun only on success.
+- [x] Day 0: pass `account.linked_at` as `since` so only trades on or after link date are fetched.
 
 **Deliverables:** Manual trigger of `SyncExchangeAccountJob` for an account populates `Trade`; no duplicate trades; rate limit enforced.
 

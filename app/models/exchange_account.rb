@@ -3,6 +3,7 @@ class ExchangeAccount < ApplicationRecord
 
   belongs_to :user
   has_many :trades, dependent: :destroy
+  has_many :sync_runs, dependent: :destroy
 
   encrypts :api_key
   encrypts :api_secret
@@ -11,6 +12,15 @@ class ExchangeAccount < ApplicationRecord
 
   validates :provider_type, inclusion: { in: PROVIDER_TYPES }
   validates :api_key, :api_secret, presence: true
+
+  # Rate limit: max 2 syncs per calendar day (UTC)
+  def sync_runs_today_count
+    sync_runs.where("ran_at >= ?", Time.current.utc.beginning_of_day).count
+  end
+
+  def can_sync?
+    sync_runs_today_count < 2
+  end
 
   private
 

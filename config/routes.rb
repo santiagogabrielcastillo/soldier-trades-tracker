@@ -13,6 +13,10 @@ Rails.application.routes.draw do
 
   root "dashboards#show"
 
-  resources :exchange_accounts, only: %i[index new create destroy]
+  resources :exchange_accounts, only: %i[index new create destroy] do
+    member do
+      post :sync
+    end
+  end
   resources :trades, only: :index
 end
