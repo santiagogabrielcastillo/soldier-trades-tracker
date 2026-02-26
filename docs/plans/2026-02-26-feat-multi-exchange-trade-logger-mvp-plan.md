@@ -134,10 +134,10 @@ erDiagram
 
 #### Phase 3: Per-user scheduler and config UI
 
-- [ ] Dispatcher job (e.g. `SyncDispatcherJob`) enqueued by Solid Queue recurring: run every 15–30 min (or at 08:00 and 20:00 for twice_daily). Logic: select users where next run is due based on `sync_interval` and last run time; for each, select accounts under 2 runs today; enqueue `SyncExchangeAccountJob` for each.
-- [ ] Last-run tracking: store last sync run time per account (e.g. `ExchangeAccount.last_synced_at` or `SyncRun` table) so dispatcher can compute “due” and respect 2/day.
-- [ ] **User config UI (clean & professional):** Settings page or section to set `user.sync_interval` (Hourly, Daily, Twice daily). Use clear labels, consistent spacing, and a polished control (e.g. radio group or select); show current interval and next sync hint if helpful. Match overall app design system.
-- [ ] Twice daily: dispatcher runs at 08:00 and 20:00 UTC (one recurring entry per time, or one job that branches on current hour).
+- [x] Dispatcher job (`SyncDispatcherJob`) enqueued by Solid Queue recurring every 15 min. Selects users with `sync_interval` set who are due (hourly/daily/twice_daily); for each, enqueues `SyncExchangeAccountJob` for BingX accounts under 2 runs today.
+- [x] Last-run tracking: `ExchangeAccount.last_synced_at` and `SyncRun`; dispatcher uses max(last_synced_at) per user to compute “due”.
+- [x] **User config UI:** Settings page with radio group for sync interval (Hourly, Daily, Twice daily); clear labels, current value, last sync hint. Matches app Tailwind design.
+- [x] Twice daily: dispatcher only enqueues for twice_daily users when UTC hour is 8 or 20; slot-based “due” so one run per slot.
 
 **Deliverables:** Recurring sync runs without manual trigger; user can change interval in a polished settings UI; rate limit and interval respected.
 

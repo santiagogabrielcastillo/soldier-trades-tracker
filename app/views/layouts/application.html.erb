@@ -27,6 +27,7 @@
             <%= link_to "Dashboard", root_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
             <%= link_to "Exchange accounts", exchange_accounts_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
             <%= link_to "Trades", trades_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
+            <%= link_to "Settings", settings_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
             <%= button_to "Sign out", logout_path, method: :delete, class: "text-sm text-slate-600 hover:text-slate-900" %>
           <% else %>
             <%= link_to "Sign in", login_path, class: "text-sm text-slate-600 hover:text-slate-900" %>

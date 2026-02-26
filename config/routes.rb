@@ -13,6 +13,8 @@ Rails.application.routes.draw do
 
   root "dashboards#show"
 
+  resource :settings, only: %i[show update], controller: "settings"
+
   resources :exchange_accounts, only: %i[index new create destroy] do
     member do
       post :sync
