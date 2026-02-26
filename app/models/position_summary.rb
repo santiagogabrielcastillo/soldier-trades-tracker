@@ -69,11 +69,12 @@ class PositionSummary
     )
   end
 
-  # Assign running balance (newest first): balance at row i = cumulative net_pl for that row and all rows below it.
-  def self.assign_balance!(summaries)
+  # Assign running balance (newest first): balance at row i = initial_balance + cumulative net_pl for that row and all rows below it.
+  def self.assign_balance!(summaries, initial_balance: 0)
+    base = initial_balance.to_d
     total = summaries.sum(&:net_pl)
     summaries.each do |s|
-      s.balance = total
+      s.balance = base + total
       total -= s.net_pl
     end
   end

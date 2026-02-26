@@ -1,0 +1,48 @@
+<%= form_with model: @portfolio, local: true, class: "space-y-4", data: { turbo: false } do |f| %>
+  <% if @portfolio.errors.any? %>
+    <div class="rounded-md bg-amber-50 p-4 text-sm text-amber-800">
+      <ul class="list-disc pl-5">
+        <% @portfolio.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :name, "Name", class: "block text-sm font-medium text-slate-700" %>
+    <%= f.text_field :name, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "e.g. March 2026" %>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :start_date, "Start date", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.date_field :start_date, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+    </div>
+    <div>
+      <%= f.label :end_date, "End date (optional)", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.date_field :end_date, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :initial_balance, "Initial balance / floor (optional)", class: "block text-sm font-medium text-slate-700" %>
+    <%= f.number_field :initial_balance, step: 0.01, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "0" %>
+    <p class="mt-1 text-xs text-slate-500">Balance in this portfolio will be shown as initial balance + P&amp;L (e.g. 20 means start with $20).</p>
+  </div>
+
+  <div>
+    <%= f.label :notes, "Notes (optional)", class: "block text-sm font-medium text-slate-700" %>
+    <%= f.text_area :notes, rows: 2, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "e.g. Q1 2026 – LINK focus" %>
+  </div>
+
+  <div class="flex items-center">
+    <%= f.check_box :default, class: "h-4 w-4 rounded border-slate-300 text-slate-800 focus:ring-slate-500" %>
+    <%= f.label :default, "Set as default portfolio", class: "ml-2 block text-sm text-slate-700" %>
+  </div>
+
+  <div class="flex gap-3 pt-2">
+    <%= f.submit class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
+    <%= link_to "Cancel", portfolios_path, class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+  </div>
+<% end %>

@@ -21,4 +21,9 @@ Rails.application.routes.draw do
     end
   end
   resources :trades, only: :index
+  resources :portfolios do
+    member do
+      post :set_default
+    end
+  end
 end

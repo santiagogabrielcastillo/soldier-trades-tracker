@@ -2,6 +2,31 @@
   <h1 class="mb-2 text-2xl font-semibold text-slate-900">Dashboard</h1>
   <p class="mb-6 text-slate-600">Centralize your trade activity across exchanges.</p>
 
+  <section class="mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <h2 class="mb-4 text-lg font-medium text-slate-900">Period summary</h2>
+    <p class="mb-2 text-sm text-slate-600"><%= @summary_label %><% if @summary_date_range %> · <%= @summary_date_range %><% end %></p>
+    <div class="mb-4 flex flex-wrap items-baseline gap-6">
+      <div>
+        <span class="text-sm text-slate-500">Balance</span>
+        <p class="text-xl font-semibold text-slate-900"><%= number_with_precision(@summary_balance, precision: 2) %></p>
+      </div>
+      <div>
+        <span class="text-sm text-slate-500">Period P&amp;L</span>
+        <p class="text-xl font-semibold <%= @summary_period_pl >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= number_with_precision(@summary_period_pl, precision: 2) %></p>
+      </div>
+      <div>
+        <span class="text-sm text-slate-500">Positions</span>
+        <p class="text-xl font-semibold text-slate-900"><%= @summary_position_count %></p>
+      </div>
+    </div>
+    <%= link_to "View trades", @summary_trades_path, class: "inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+    <% if @default_portfolio.nil? && current_user.portfolios.any? %>
+      <span class="ml-3 text-sm text-slate-500">or <%= link_to "set a default portfolio", portfolios_path, class: "text-slate-700 underline hover:text-slate-900" %></span>
+    <% elsif @default_portfolio.nil? %>
+      <span class="ml-3 text-sm text-slate-500">or <%= link_to "create a portfolio", new_portfolio_path, class: "text-slate-700 underline hover:text-slate-900" %></span>
+    <% end %>
+  </section>
+
   <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
     <h2 class="mb-4 text-lg font-medium text-slate-900">Exchange accounts</h2>
     <% if @exchange_accounts.any? %>
@@ -17,5 +42,6 @@
       <p class="text-slate-600">No exchange accounts linked yet.</p>
     <% end %>
     <%= link_to "Link exchange account", new_exchange_account_path, class: "mt-4 inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+    <%= link_to "Manage portfolios", portfolios_path, class: "mt-4 ml-3 inline-block text-sm text-slate-600 hover:text-slate-900" %>
   </section>
 </div>

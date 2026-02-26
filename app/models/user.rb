@@ -8,4 +8,9 @@ class User < ApplicationRecord
 
   has_many :exchange_accounts, dependent: :destroy
   has_many :trades, through: :exchange_accounts
+  has_many :portfolios, dependent: :destroy
+
+  def default_portfolio
+    portfolios.find_by(default: true)
+  end
 end

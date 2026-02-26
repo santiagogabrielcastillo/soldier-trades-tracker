@@ -1,0 +1,39 @@
+<div>
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-2xl font-semibold text-slate-900">Portfolios</h1>
+    <%= link_to "New portfolio", new_portfolio_path, class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+  </div>
+
+  <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
+    <% if @portfolios.any? %>
+      <ul class="divide-y divide-slate-200">
+        <% @portfolios.each do |portfolio| %>
+          <li class="flex items-center justify-between px-6 py-4">
+            <div>
+              <span class="font-medium text-slate-900"><%= portfolio.name %></span>
+              <% if portfolio.default? %>
+                <span class="ml-2 rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">Default</span>
+              <% end %>
+              <span class="ml-2 text-sm text-slate-500"><%= portfolio.date_range_label %></span>
+              <% if portfolio.initial_balance != 0 %>
+                <span class="ml-2 text-sm text-slate-500">· Floor <%= number_with_precision(portfolio.initial_balance, precision: 2) %></span>
+              <% end %>
+            </div>
+            <div class="flex items-center gap-3">
+              <% unless portfolio.default? %>
+                <%= button_to "Set as default", set_default_portfolio_path(portfolio), method: :post, class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50" %>
+              <% end %>
+              <%= link_to "Edit", edit_portfolio_path(portfolio), class: "text-sm text-slate-600 hover:text-slate-900" %>
+              <%= button_to "Remove", portfolio_path(portfolio), method: :delete, data: { turbo_confirm: "Remove this portfolio?" }, class: "text-sm text-slate-600 hover:text-red-600" %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="px-6 py-12 text-center text-slate-600">
+        <p class="mb-4">No portfolios yet. Create one to view trades for a specific period with an optional starting balance.</p>
+        <%= link_to "Create portfolio", new_portfolio_path, class: "inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+      </div>
+    <% end %>
+  </section>
+</div>

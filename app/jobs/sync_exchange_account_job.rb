@@ -16,9 +16,7 @@ class SyncExchangeAccountJob < ApplicationJob
     end
 
     client = Exchanges::BingxClient.new(api_key: account.api_key, api_secret: account.api_secret)
-    # TEMPORARY: fetch last 6 months for testing old mainnet trades. Revert to: since = account.linked_at || account.created_at
-    since = 6.months.ago
-
+    since = account.linked_at || account.created_at
     trades = client.fetch_my_trades(since: since)
 
     trades.each do |attrs|
