@@ -18,4 +18,12 @@ class Trade < ApplicationRecord
     qty = (raw["executedQty"] || raw["executed_qty"] || raw["origQty"] || 0).to_d
     (avg * qty).to_d
   end
+
+  # Exchange-reported realized P&L for this fill (e.g. BingX "profit"). Used for position Net P&L instead of net_amount sum.
+  def realized_profit_from_raw
+    raw = raw_payload || {}
+    val = raw["profit"].to_s.strip
+    return nil if val.blank?
+    val.to_d
+  end
 end

@@ -49,7 +49,13 @@ class PositionSummary
       (notional / leverage).round(8)
     end
 
-    net_pl = trades.sum(&:net_amount)
+    # Use exchange-reported realized P&L when present (e.g. BingX "profit" on close); else sum net_amount (cash flow).
+    profits = trades.map(&:realized_profit_from_raw)
+    net_pl = if profits.all?(&:nil?)
+      trades.sum(&:net_amount)
+    else
+      profits.map { |p| p || 0 }.sum
+    end
 
     new(
       trades: trades,
