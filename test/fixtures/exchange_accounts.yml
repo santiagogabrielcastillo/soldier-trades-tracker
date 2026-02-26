@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  provider_type: MyString
+  encrypted_api_key: MyString
+  encrypted_api_secret: MyString
+  linked_at: 2026-02-26 12:21:55
+
+two:
+  user: two
+  provider_type: MyString
+  encrypted_api_key: MyString
+  encrypted_api_secret: MyString
+  linked_at: 2026-02-26 12:21:55

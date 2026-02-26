@@ -1,0 +1,27 @@
+<div>
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-2xl font-semibold text-slate-900">Exchange accounts</h1>
+    <%= link_to "Link account", new_exchange_account_path, class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+  </div>
+
+  <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
+    <% if @exchange_accounts.any? %>
+      <ul class="divide-y divide-slate-200">
+        <% @exchange_accounts.each do |account| %>
+          <li class="flex items-center justify-between px-6 py-4">
+            <div>
+              <span class="font-medium capitalize text-slate-900"><%= account.provider_type %></span>
+              <span class="ml-2 text-sm text-slate-500">Linked <%= time_ago_in_words(account.linked_at || account.created_at) %> ago</span>
+            </div>
+            <%= button_to "Remove", exchange_account_path(account), method: :delete, data: { turbo_confirm: "Remove this exchange account?" }, class: "text-sm text-slate-600 hover:text-red-600" %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="px-6 py-12 text-center text-slate-600">
+        <p class="mb-4">No exchange accounts linked yet.</p>
+        <%= link_to "Link your first account", new_exchange_account_path, class: "inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+      </div>
+    <% end %>
+  </section>
+</div>
