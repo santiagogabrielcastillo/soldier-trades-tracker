@@ -4,7 +4,7 @@ class PortfoliosController < ApplicationController
   before_action :set_portfolio, only: %i[edit update destroy set_default]
 
   def index
-    @portfolios = current_user.portfolios.default_first
+    @pagy, @portfolios = pagy(:offset, current_user.portfolios.default_first, limit: 25)
   end
 
   def new

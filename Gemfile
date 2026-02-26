@@ -33,6 +33,9 @@ gem "solid_queue"
 # Kamal for deployment
 gem "kamal", "~> 2.0"
 
+# Pagination
+gem "pagy"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

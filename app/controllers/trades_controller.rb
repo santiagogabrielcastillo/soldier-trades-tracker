@@ -22,6 +22,7 @@ class TradesController < ApplicationController
     end
 
     PositionSummary.assign_balance!(@positions, initial_balance: initial_balance)
+    @pagy, @positions = pagy(:offset, @positions, limit: 25)
     @portfolios = current_user.portfolios.default_first if @view == "portfolio"
   end
 end

@@ -14,13 +14,13 @@
         <%= f.select :portfolio_id, options_from_collection_for_select(@portfolios, :id, :name, @portfolio&.id), { include_blank: "Select a portfolio" }, { class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", id: "portfolio_id", onchange: "this.form.submit()" } %>
       <% end %>
       <% if @portfolio %>
-        <span class="text-sm text-slate-500"><%= @portfolio.date_range_label %><% if @portfolio.initial_balance != 0 %> · Floor <%= number_with_precision(@portfolio.initial_balance, precision: 2) %><% end %></span>
+        <span class="text-sm text-slate-500"><%= @portfolio.date_range_label %><% if @portfolio.initial_balance != 0 %> · Floor <%= format_money(@portfolio.initial_balance) %><% end %></span>
       <% end %>
     </div>
   <% end %>
 
   <% if @positions.any? %>
-    <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="overflow-y-hidden overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
       <table class="min-w-full divide-y divide-slate-200">
         <thead class="bg-slate-50">
           <tr>
@@ -29,6 +29,8 @@
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Symbol</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Leverage</th>
             <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Margin used</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">ROI</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Commission</th>
             <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Net P&amp;L</th>
             <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Balance</th>
           </tr>
@@ -40,13 +42,18 @@
               <td class="whitespace-nowrap px-6 py-4 text-sm capitalize text-slate-600"><%= pos.exchange_account.provider_type %></td>
               <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900"><%= pos.symbol %></td>
               <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600"><%= pos.leverage ? "#{pos.leverage}X" : "—" %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-900"><%= pos.margin_used ? number_with_precision(pos.margin_used, precision: 4) : "—" %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= pos.net_pl >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= number_with_precision(pos.net_pl, precision: 4) %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-slate-900"><%= pos.balance.nil? ? "—" : number_with_precision(pos.balance, precision: 4) %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-900"><%= pos.margin_used ? format_money(pos.margin_used) : "—" %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= pos.roi_percent && pos.roi_percent >= 0 ? 'text-emerald-600' : pos.roi_percent ? 'text-red-600' : 'text-slate-500' %>"><%= pos.roi_percent.nil? ? "—" : "#{number_with_precision(pos.roi_percent, precision: 2)}%" %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-600"><%= pos.total_commission.zero? ? "—" : format_money(pos.total_commission.abs) %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= pos.net_pl >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= format_money(pos.net_pl) %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-slate-900"><%= format_money(pos.balance) %></td>
             </tr>
           <% end %>
         </tbody>
       </table>
+    </div>
+    <div class="mt-4 flex justify-center">
+      <%== @pagy.series_nav if @pagy.last > 1 %>
     </div>
   <% else %>
     <div class="rounded-lg border border-slate-200 bg-white p-12 text-center text-slate-600">

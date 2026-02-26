@@ -4,7 +4,7 @@ class ExchangeAccountsController < ApplicationController
   before_action :set_exchange_account, only: %i[destroy sync]
 
   def index
-    @exchange_accounts = current_user.exchange_accounts
+    @pagy, @exchange_accounts = pagy(:offset, current_user.exchange_accounts, limit: 25)
   end
 
   def new
@@ -13,6 +13,11 @@ class ExchangeAccountsController < ApplicationController
 
   def create
     @exchange_account = current_user.exchange_accounts.build(exchange_account_params)
+    if @exchange_account.api_key.blank? || @exchange_account.api_secret.blank?
+      @exchange_account.errors.add(:base, "API key and secret are required.")
+      render :new, status: :unprocessable_entity
+      return
+    end
     @exchange_account.linked_at = Time.current
     if @exchange_account.save
       redirect_to exchange_accounts_path, notice: "Exchange account linked successfully."

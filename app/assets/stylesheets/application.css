@@ -13,3 +13,86 @@
  *= require_tree .
  *= require_self
  */
+
+/* Pagy 43 nav (series_nav outputs nav.pagy) – from pagy.css, tuned for slate */
+.pagy {
+  --B: 1;
+  --H: 220;
+  --S: 13%;
+  --L: 50%;
+  --A: 1;
+  --spacing: 0.25rem;
+  --padding: 0.75rem;
+  --rounding: 0.375rem;
+  --border-width: 1px;
+  --font-size: 0.875rem;
+  --font-weight: 600;
+  --line-height: 1.75;
+
+  --text:               hsla(var(--H) var(--S) calc(var(--L) - (25 * var(--B))) / var(--A));
+  --text-hover:         hsla(var(--H) var(--S) calc(var(--L) - (30 * var(--B))) / var(--A));
+  --text-current:       hsla(var(--H) var(--S) calc(100 * (var(--B) + 1)) / var(--A));
+  --background:         hsla(var(--H) var(--S) calc(var(--L) + (30 * var(--B))) / var(--A));
+  --background-hover:   hsla(var(--H) var(--S) calc(var(--L) + (20 * var(--B))) / var(--A));
+  --background-current: hsl(var(--H) var(--S) 18%);
+  --background-input:   hsla(var(--H) var(--S) calc(var(--L) + (45 * var(--B))) / var(--A));
+
+  color: var(--text);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  font-weight: var(--font-weight);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing);
+}
+
+.pagy > :not([hidden]) ~ :not([hidden]) {
+  margin-inline-start: var(--spacing);
+}
+
+.pagy a:not([role="separator"]) {
+  display: block;
+  text-decoration: none;
+  background-color: var(--background);
+  padding: calc(var(--padding) / 3) var(--padding);
+  border: var(--border-width) solid #e2e8f0;
+  border-radius: var(--rounding);
+  color: inherit;
+}
+
+.pagy a[href]:hover {
+  background-color: var(--background-hover);
+  color: var(--text-hover);
+}
+
+.pagy a:not([href]) {
+  cursor: default;
+}
+
+.pagy a[role="link"]:not([aria-current]) {
+  opacity: 0.6;
+}
+
+.pagy a[aria-current] {
+  background-color: var(--background-current);
+  color: var(--text-current);
+  border-color: var(--background-current);
+}
+
+.pagy label {
+  white-space: nowrap;
+  display: inline-block;
+  border: var(--border-width) solid var(--background-current);
+  border-radius: var(--rounding);
+  background-color: var(--background);
+  padding: calc((var(--padding) / 3) - var(--border-width)) var(--padding);
+}
+
+.pagy label input {
+  all: unset;
+  border: var(--border-width) solid var(--background-current);
+  border-radius: calc(var(--rounding) / 2) !important;
+  background-color: var(--background-input);
+}
