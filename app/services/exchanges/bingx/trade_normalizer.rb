@@ -31,7 +31,8 @@ module Exchanges
             quantity: qty,
             fee_from_exchange: fee_from_exchange,
             executed_at: executed_at,
-            raw_payload: raw
+            raw_payload: raw,
+            position_id: (raw["positionID"] || raw["position_id"])&.to_s.presence
           }
         end
 
@@ -61,7 +62,8 @@ module Exchanges
             quantity: qty,
             fee_from_exchange: fee_from_exchange,
             executed_at: executed_at,
-            raw_payload: raw
+            raw_payload: raw,
+            position_id: (raw["positionID"] || raw["position_id"])&.to_s.presence
           }
         end
 
@@ -91,7 +93,8 @@ module Exchanges
             fee: 0,
             net_amount: amount,
             executed_at: executed_at,
-            raw_payload: raw
+            raw_payload: raw,
+            position_id: (raw["positionID"] || raw["position_id"])&.to_s.presence
           }
         end
 

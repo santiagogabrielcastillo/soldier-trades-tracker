@@ -3,6 +3,9 @@
 # One row for the trades index: one per closing leg (each take-profit/stop closes one row), so margin and ROI match the exchange.
 # Single-fill positions (no position_id or one trade) get one row. Built by grouping Trade by position_id.
 class PositionSummary
+  # Max trades to load when building summaries (used by Trades::IndexService and Dashboards::SummaryService).
+  TRADES_LIMIT = 2000
+
   attr_reader :trades, :exchange_account, :symbol, :leverage, :open_at, :close_at, :margin_used, :net_pl
   attr_accessor :balance
 
@@ -16,6 +19,15 @@ class PositionSummary
     @margin_used = margin_used
     @net_pl = net_pl
     @balance = nil
+  end
+
+  # Build position summaries from trades and assign running balance.
+  # Optional initial_balance is the portfolio starting balance; defaults to 0 for all-time view.
+  # Returns array of PositionSummary sorted by close_at desc, with #balance set.
+  def self.from_trades_with_balance(trades, initial_balance: nil)
+    positions = from_trades(trades)
+    assign_balance!(positions, initial_balance: initial_balance.to_d)
+    positions
   end
 
   # Build position summaries from a list of trades (e.g. current_user.trades).

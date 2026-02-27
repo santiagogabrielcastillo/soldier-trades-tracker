@@ -43,3 +43,4 @@ Implement solution 1 so `debug_fetch_full_order` always sends a valid 7-day wind
 
 - 2026-02-26: Code review – finding created.
 - 2026-02-26: Compute endTime as [since_ms + 7 days - 1, now_ms].min and pass to v1 fullOrder so debug call always stays within 7-day limit.
+- 2026-02-26: Verified: endTime already present in BingxClient#debug_fetch_full_order (lines 45–47); no further change needed.

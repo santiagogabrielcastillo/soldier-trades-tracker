@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Trades::IndexService
-  TRADES_LIMIT = 2000
   PAGY_LIMIT = 25
 
   def self.call(user:, view: nil, portfolio_id: nil)
@@ -17,9 +16,8 @@ class Trades::IndexService
   def call
     portfolio = resolve_portfolio
     trades = load_trades(portfolio)
-    positions = PositionSummary.from_trades(trades)
     initial_balance = portfolio&.initial_balance.to_d
-    PositionSummary.assign_balance!(positions, initial_balance: initial_balance)
+    positions = PositionSummary.from_trades_with_balance(trades, initial_balance: initial_balance)
 
     {
       view: @view,
@@ -44,6 +42,6 @@ class Trades::IndexService
     else
       @user.trades.includes(:exchange_account)
     end
-    relation.order(executed_at: :asc).limit(TRADES_LIMIT)
+    relation.order(executed_at: :asc).limit(PositionSummary::TRADES_LIMIT)
   end
 end

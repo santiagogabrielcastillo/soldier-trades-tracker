@@ -40,15 +40,14 @@ class ExchangeAccounts::SyncService
     end
 
     trade = @account.trades.find_or_initialize_by(exchange_reference_id: attrs[:exchange_reference_id])
-    raw = attrs[:raw_payload] || {}
     trade.assign_attributes(
       symbol: attrs[:symbol],
       side: attrs[:side],
       fee: attrs[:fee],
       net_amount: attrs[:net_amount],
       executed_at: attrs[:executed_at],
-      raw_payload: raw,
-      position_id: raw["positionID"]&.to_s.presence
+      raw_payload: attrs[:raw_payload] || {},
+      position_id: attrs[:position_id]
     )
     trade.save!
   rescue ActiveRecord::RecordNotUnique

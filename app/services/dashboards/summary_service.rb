@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class Dashboards::SummaryService
-  TRADES_LIMIT = 2000
-
   def self.call(user)
     new(user).call
   end
@@ -25,9 +23,8 @@ class Dashboards::SummaryService
   private
 
   def portfolio_summary
-    trades = @default_portfolio.trades_in_range.includes(:exchange_account).order(executed_at: :asc).limit(TRADES_LIMIT)
-    positions = PositionSummary.from_trades(trades)
-    PositionSummary.assign_balance!(positions, initial_balance: @default_portfolio.initial_balance.to_d)
+    trades = @default_portfolio.trades_in_range.includes(:exchange_account).order(executed_at: :asc).limit(PositionSummary::TRADES_LIMIT)
+    positions = PositionSummary.from_trades_with_balance(trades, initial_balance: @default_portfolio.initial_balance.to_d)
 
     {
       exchange_accounts: @exchange_accounts,
@@ -42,9 +39,8 @@ class Dashboards::SummaryService
   end
 
   def all_time_summary
-    trades = @user.trades.includes(:exchange_account).order(executed_at: :asc).limit(TRADES_LIMIT)
-    positions = PositionSummary.from_trades(trades)
-    PositionSummary.assign_balance!(positions)
+    trades = @user.trades.includes(:exchange_account).order(executed_at: :asc).limit(PositionSummary::TRADES_LIMIT)
+    positions = PositionSummary.from_trades_with_balance(trades)
 
     {
       exchange_accounts: @exchange_accounts,

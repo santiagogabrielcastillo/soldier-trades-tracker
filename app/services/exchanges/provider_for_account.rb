@@ -24,7 +24,8 @@ module Exchanges
       klass.new(api_key: @account.api_key, api_secret: @account.api_secret)
     end
 
-    # Returns true if the account has a supported provider and credentials.
+    # Lightweight check: registry + credentials only; does not instantiate the client.
+    # Use #client when you need the actual client.
     def supported?
       REGISTRY.key?(@account.provider_type.to_s.downcase) && @account.api_key.present? && @account.api_secret.present?
     end
