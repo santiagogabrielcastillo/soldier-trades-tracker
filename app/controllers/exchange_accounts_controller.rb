@@ -32,8 +32,8 @@ class ExchangeAccountsController < ApplicationController
   end
 
   def sync
-    if @exchange_account.provider_type != "bingx"
-      redirect_to exchange_accounts_path, alert: "Only BingX accounts can be synced."
+    unless Exchanges::ProviderForAccount.new(@exchange_account).supported?
+      redirect_to exchange_accounts_path, alert: "This exchange is not supported for sync."
       return
     end
     unless @exchange_account.can_sync?
