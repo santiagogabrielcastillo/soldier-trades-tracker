@@ -2,29 +2,14 @@
 
 class DashboardsController < ApplicationController
   def show
-    @exchange_accounts = current_user.exchange_accounts
-    @default_portfolio = current_user.default_portfolio
-
-    if @default_portfolio
-      trades = @default_portfolio.trades_in_range.includes(:exchange_account).order(executed_at: :asc).limit(2000)
-      positions = PositionSummary.from_trades(trades)
-      PositionSummary.assign_balance!(positions, initial_balance: @default_portfolio.initial_balance.to_d)
-      @summary_label = @default_portfolio.name
-      @summary_date_range = @default_portfolio.date_range_label
-      @summary_period_pl = positions.sum(&:net_pl)
-      @summary_balance = @default_portfolio.initial_balance.to_d + @summary_period_pl
-      @summary_position_count = positions.size
-      @summary_trades_path = trades_path(view: "portfolio", portfolio_id: @default_portfolio.id)
-    else
-      trades = current_user.trades.includes(:exchange_account).order(executed_at: :asc).limit(2000)
-      positions = PositionSummary.from_trades(trades)
-      PositionSummary.assign_balance!(positions)
-      @summary_label = "All time"
-      @summary_date_range = nil
-      @summary_period_pl = positions.sum(&:net_pl)
-      @summary_balance = @summary_period_pl
-      @summary_position_count = positions.size
-      @summary_trades_path = trades_path(view: "history")
-    end
+    result = Dashboards::SummaryService.call(current_user)
+    @exchange_accounts = result[:exchange_accounts]
+    @default_portfolio = result[:default_portfolio]
+    @summary_label = result[:summary_label]
+    @summary_date_range = result[:summary_date_range]
+    @summary_period_pl = result[:summary_period_pl]
+    @summary_balance = result[:summary_balance]
+    @summary_position_count = result[:summary_position_count]
+    @summary_trades_path = trades_path(result[:summary_trades_path_params])
   end
 end

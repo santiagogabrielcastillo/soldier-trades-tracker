@@ -12,7 +12,8 @@ class SyncDispatcherJob < ApplicationJob
     User.where.not(sync_interval: nil).find_each do |user|
       next unless user_due?(user, now)
 
-      user.exchange_accounts.where(provider_type: "bingx").find_each do |account|
+      user.exchange_accounts.find_each do |account|
+        next unless Exchanges::ProviderForAccount.new(account).supported?
         next unless account.can_sync?
 
         SyncExchangeAccountJob.perform_later(account.id)

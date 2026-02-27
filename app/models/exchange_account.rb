@@ -24,6 +24,8 @@ class ExchangeAccount < ApplicationRecord
 
   private
 
+  # Only BingX is verified via ping; see ExchangeAccountKeyValidator. For BingX, any failed
+  # verification (invalid key, network, or not read-only) uses the same message below.
   def read_only_api_key
     return if api_key.blank? || api_secret.blank?
 

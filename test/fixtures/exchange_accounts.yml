@@ -1,15 +1,16 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Schema columns are api_key, api_secret (Rails encryption). Use attribute names in fixtures.
 
 one:
   user: one
-  provider_type: MyString
-  encrypted_api_key: MyString
-  encrypted_api_secret: MyString
+  provider_type: bingx
+  api_key: test_key_one
+  api_secret: test_secret_one
   linked_at: 2026-02-26 12:21:55
 
 two:
   user: two
-  provider_type: MyString
-  encrypted_api_key: MyString
-  encrypted_api_secret: MyString
+  provider_type: bingx
+  api_key: test_key_two
+  api_secret: test_secret_two
   linked_at: 2026-02-26 12:21:55

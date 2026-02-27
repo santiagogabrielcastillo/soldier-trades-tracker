@@ -1,12 +1,8 @@
 # frozen_string_literal: true
 
-require "digest"
-require "openssl"
-require "net/http"
-
 module Exchanges
-  # BingX Swap (perpetual futures) API client. Uses signature authentication per:
-  # https://bingx-api.github.io/docs-v3/#/en/Quick%20Start/Signature%20Authentication
+  # BingX Swap (perpetual futures) API client. Uses Bingx::HttpClient for signed requests
+  # and Bingx::TradeNormalizer for payloads. See: https://bingx-api.github.io/docs-v3/
   class BingxClient < BaseProvider
     BASE_URL = "https://open-api.bingx.com"
     BASE_URL_TESTNET = "https://open-api-vst.bingx.com"
@@ -17,13 +13,14 @@ module Exchanges
     STABLEQUOTE_SYMBOLS = %w[USDT USDC].freeze
     SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
     V1_ORDER_LIMIT = 500
-    # BingX fill/income history may be limited; fallback to this when a long range returns empty.
     FALLBACK_LOOKBACK_DAYS = 90
 
     def initialize(api_key:, api_secret:, base_url: nil)
-      @api_key = api_key
-      @api_secret = api_secret
-      @base_url = base_url || BASE_URL
+      @http = Bingx::HttpClient.new(
+        api_key: api_key,
+        api_secret: api_secret,
+        base_url: base_url || BASE_URL
+      )
     end
 
     def fetch_my_trades(since:)
@@ -31,86 +28,52 @@ module Exchanges
       trades = fetch_trades_from_v1_full_order(since_ms)
       trades = fetch_trades_from_v2_fills(since_ms) if trades.empty?
       trades = fetch_trades_from_income(since_ms) if trades.empty?
-      # BingX fill/income history may be shorter than 6 months; retry with recent window if long range returned nothing.
       if trades.empty? && since < FALLBACK_LOOKBACK_DAYS.days.ago
-        fallback_since = FALLBACK_LOOKBACK_DAYS.days.ago
-        trades = fetch_my_trades(since: fallback_since)
+        trades = fetch_my_trades(since: FALLBACK_LOOKBACK_DAYS.days.ago)
       end
       trades
     end
 
-    # Debug helpers (console only). v1 fullOrder needs endTime; max range 7 days.
     def debug_fetch_fills(since:, limit: 10)
-      signed_get(SWAP_FILL_ORDERS_PATH, "startTime" => since.to_i * 1000, "limit" => limit)
+      @http.get(SWAP_FILL_ORDERS_PATH, "startTime" => since.to_i * 1000, "limit" => limit)
     end
 
     def debug_fetch_income(since:, limit: 20)
-      signed_get(SWAP_USER_INCOME_PATH, "startTime" => since.to_i * 1000, "limit" => limit)
+      @http.get(SWAP_USER_INCOME_PATH, "startTime" => since.to_i * 1000, "limit" => limit)
     end
 
     def debug_fetch_full_order(since:, limit: 100)
       since_ms = since.to_i * 1000
       end_ms = [since_ms + SEVEN_DAYS_MS - 1, (Time.now.to_f * 1000).to_i].min
-      signed_get(SWAP_V1_FULL_ORDER_PATH, "startTime" => since_ms, "endTime" => end_ms, "limit" => limit)
+      @http.get(SWAP_V1_FULL_ORDER_PATH, "startTime" => since_ms, "endTime" => end_ms, "limit" => limit)
     end
 
     def debug_fetch_balance
-      signed_get("/openApi/swap/v2/user/balance", {})
+      @http.get("/openApi/swap/v2/user/balance", {})
     end
 
-    # Returns raw API responses from all three sources for debugging. Run in console:
-    #   account = ExchangeAccount.find(...); client = Exchanges::BingxClient.new(...); client.debug_fetch_all_raw(since: 6.months.ago)
     def debug_fetch_all_raw(since:)
       since_ms = since.to_i * 1000
       end_ms = [since_ms + SEVEN_DAYS_MS - 1, (Time.now.to_f * 1000).to_i].min
       {
-        v1_full_order: signed_get(SWAP_V1_FULL_ORDER_PATH, "startTime" => since_ms, "endTime" => end_ms, "limit" => 10),
-        v2_fills: signed_get(SWAP_FILL_ORDERS_PATH, "startTime" => since_ms, "limit" => 10),
-        income: signed_get(SWAP_USER_INCOME_PATH, "startTime" => since_ms, "limit" => 10)
+        v1_full_order: @http.get(SWAP_V1_FULL_ORDER_PATH, "startTime" => since_ms, "endTime" => end_ms, "limit" => 10),
+        v2_fills: @http.get(SWAP_FILL_ORDERS_PATH, "startTime" => since_ms, "limit" => 10),
+        income: @http.get(SWAP_USER_INCOME_PATH, "startTime" => since_ms, "limit" => 10)
       }
     end
 
-    # Call a read-only endpoint to verify the key works. Used for key validation.
     def self.ping(api_key:, api_secret:)
       client = new(api_key: api_key, api_secret: api_secret)
-      client.signed_get(SWAP_FILL_ORDERS_PATH, "startTime" => (Time.current.to_i - 86400) * 1000, "limit" => 1)
+      client.debug_fetch_fills(since: 1.day.ago, limit: 1)
       true
     rescue => e
       Rails.logger.warn("[BingxClient] Ping failed: #{e.message}")
       false
     end
 
+    # Delegates to HttpClient. Public so tests can stub Net::HTTP and assert ApiError behavior.
     def signed_get(path, params = {})
-      if @api_secret.blank?
-        raise ArgumentError, "BingX API secret is missing. Ensure the exchange account credentials are set and encryption is available in this process."
-      end
-
-      timestamp = (Time.now.to_f * 1000).to_i
-      params = params.merge("timestamp" => timestamp)
-      query = params.sort.map { |k, v| "#{k}=#{v}" }.join("&")
-      signature = OpenSSL::HMAC.hexdigest("SHA256", @api_secret, query)
-
-      uri = URI("#{@base_url}#{path}")
-      uri.query = "#{query}&signature=#{signature}"
-
-      req = Net::HTTP::Get.new(uri)
-      req["X-BX-APIKEY"] = @api_key
-
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.open_timeout = 10
-      http.read_timeout = 15
-      res = http.request(req)
-
-      body = res.body.presence && JSON.parse(res.body)
-      if res.code != "200"
-        raise "BingX API error #{res.code}: #{body&.dig('msg') || body&.dig('code') || res.body}"
-      end
-
-      body
-    rescue JSON::ParserError => e
-      snippet = res.body.to_s[0..200].gsub(/\s+/, " ")
-      raise "BingX API returned non-JSON response (status #{res.code}): #{snippet}. #{e.message}"
+      @http.get(path, params)
     end
 
     private
@@ -128,11 +91,6 @@ module Exchanges
       []
     end
 
-    def executed_at_from(raw, *time_keys)
-      ms = time_keys.lazy.map { |k| raw[k] }.find(&:present?)
-      ms ? Time.at(ms.to_i / 1000.0).utc : nil
-    end
-
     def stablequote_pair?(symbol)
       return false if symbol.blank?
       quote = symbol.to_s.split("-").last.to_s.upcase
@@ -148,7 +106,7 @@ module Exchanges
         fills = extract_list(resp["data"], "fill_orders", "fills", "orders", "order")
         break if fills.empty?
         fills.each_with_index do |fill, idx|
-          normalized = normalize_fill_to_trade(fill, idx)
+          normalized = Bingx::TradeNormalizer.normalize_fill_to_trade(fill, idx)
           trades << normalized if normalized && stablequote_pair?(normalized[:symbol])
         end
         break if fills.size < limit
@@ -159,7 +117,6 @@ module Exchanges
       trades
     end
 
-    # v1 fullOrder: ≤ 7 days per request; paginate within window by orderId when full page returned.
     def fetch_trades_from_v1_full_order(since_ms)
       trades = []
       seen_ids = []
@@ -183,7 +140,7 @@ module Exchanges
             order_id = (order["orderId"] || order["order_id"])&.to_s
             next if order_id.blank? || seen_ids.include?(order_id)
             seen_ids << order_id
-            normalized = normalize_v1_order_to_trade(order)
+            normalized = Bingx::TradeNormalizer.normalize_v1_order_to_trade(order)
             trades << normalized if normalized && stablequote_pair?(normalized[:symbol])
           end
 
@@ -199,34 +156,6 @@ module Exchanges
       trades.sort_by { |t| t[:executed_at] }
     end
 
-    def normalize_v1_order_to_trade(order)
-      raw = order.is_a?(Hash) ? order : order.to_h
-      order_id = (raw["orderId"] || raw["order_id"])&.to_s
-      return nil if order_id.blank?
-
-      executed_at = executed_at_from(raw, "updateTime", "time")
-      return nil if executed_at.blank?
-
-      symbol = (raw["symbol"] || "").to_s
-      side = (raw["side"] || raw["type"])&.to_s&.downcase
-
-      price = (raw["avgPrice"] || raw["price"] || 0).to_d
-      qty = (raw["executedQty"] || raw["executed_qty"] || raw["origQty"] || 0).to_d
-      commission = (raw["commission"] || raw["fee"] || 0).to_d
-      notional = price * qty
-      net_amount = (side == "sell" ? notional - commission : -notional - commission)
-
-      {
-        exchange_reference_id: order_id,
-        symbol: symbol,
-        side: side,
-        fee: commission,
-        net_amount: net_amount,
-        executed_at: executed_at,
-        raw_payload: raw
-      }
-    end
-
     def fetch_trades_from_income(since_ms, limit: 100)
       trades = []
       start_time = since_ms
@@ -236,7 +165,7 @@ module Exchanges
         items = extract_list(resp["data"], "income", "incomes", "data")
         break if items.empty?
         items.each_with_index do |rec, idx|
-          normalized = normalize_income_to_trade(rec, idx)
+          normalized = Bingx::TradeNormalizer.normalize_income_to_trade(rec, idx)
           trades << normalized if normalized && stablequote_pair?(normalized[:symbol])
         end
         break if items.size < limit
@@ -245,68 +174,6 @@ module Exchanges
         start_time = last_time.to_i + 1
       end
       trades
-    end
-
-    def normalize_income_to_trade(rec, index = 0)
-      raw = rec.is_a?(Hash) ? rec : rec.to_h
-      return nil unless (raw["incomeType"] || raw["income_type"] || "").to_s.match?(/REALIZED_PNL|TRADE|CLOSE/i)
-
-      executed_at = executed_at_from(raw, "time", "updateTime", "createdAt")
-      return nil if executed_at.blank?
-
-      symbol = (raw["symbol"] || "").to_s
-      return nil if symbol.blank?
-
-      amount = (raw["income"] || raw["amount"] || 0).to_d
-      time_ms = (raw["time"] || raw["updateTime"] || raw["createdAt"]).to_i
-      api_id = raw["id"] || raw["tranId"]
-      exchange_reference_id = if api_id.present?
-        "income_#{time_ms}_#{index}_#{api_id}"
-      else
-        "income_#{Digest::SHA256.hexdigest("#{symbol}_#{time_ms}_#{index}_#{amount}")[0..15]}"
-      end
-
-      {
-        exchange_reference_id: exchange_reference_id,
-        symbol: symbol,
-        side: "close",
-        fee: 0,
-        net_amount: amount,
-        executed_at: executed_at,
-        raw_payload: raw
-      }
-    end
-
-    def normalize_fill_to_trade(fill, index = 0)
-      raw = fill.is_a?(Hash) ? fill : fill.to_h
-      order_id = (raw["orderId"] || raw["order_id"])&.to_s
-      return nil if order_id.blank?
-
-      executed_at = executed_at_from(raw, "time", "updateTime", "createdAt", "update_time")
-      return nil if executed_at.blank?
-
-      symbol = (raw["symbol"] || "").to_s
-      side = (raw["side"] || raw["type"])&.to_s&.downcase
-
-      price = (raw["avgPrice"] || raw["price"] || 0).to_d
-      qty = (raw["fillQty"] || raw["filledQty"] || raw["executedQty"] || raw["qty"] || 0).to_d
-      commission = (raw["commission"] || raw["fee"] || 0).to_d
-      notional = price * qty
-      net_amount = (side == "sell" ? notional - commission : -notional - commission)
-
-      fill_id = (raw["tradeId"] || raw["fillId"]).to_s.presence
-      ts_ms = (raw["time"] || raw["updateTime"] || raw["createdAt"] || raw["update_time"]).to_i
-      exchange_reference_id = fill_id.presence || "#{order_id}_#{ts_ms}_#{index}"
-
-      {
-        exchange_reference_id: exchange_reference_id,
-        symbol: symbol,
-        side: side,
-        fee: commission,
-        net_amount: net_amount,
-        executed_at: executed_at,
-        raw_payload: raw
-      }
     end
   end
 end
