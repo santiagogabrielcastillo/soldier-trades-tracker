@@ -18,11 +18,13 @@ class Trades::IndexService
     trades = load_trades(portfolio)
     initial_balance = portfolio&.initial_balance.to_d
     positions = PositionSummary.from_trades_with_balance(trades, initial_balance: initial_balance)
+    current_prices = fetch_current_prices_for_open_positions(positions)
 
     {
       view: @view,
       portfolio: portfolio,
       positions: positions,
+      current_prices: current_prices,
       initial_balance: initial_balance,
       portfolios: @view == "portfolio" ? @user.portfolios.default_first : nil
     }
@@ -43,5 +45,11 @@ class Trades::IndexService
       @user.trades.includes(:exchange_account)
     end
     relation.order(executed_at: :asc).limit(PositionSummary::TRADES_LIMIT)
+  end
+
+  def fetch_current_prices_for_open_positions(positions)
+    open_symbols = positions.select(&:open?).map(&:symbol).uniq
+    return {} if open_symbols.empty?
+    Exchanges::Bingx::TickerFetcher.fetch_prices(symbols: open_symbols)
   end
 end

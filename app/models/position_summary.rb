@@ -6,8 +6,8 @@ class PositionSummary
   # Max trades to load when building summaries (used by Trades::IndexService and Dashboards::SummaryService).
   TRADES_LIMIT = 2000
 
-  attr_reader :trades, :exchange_account, :symbol, :leverage, :open_at, :close_at, :margin_used, :net_pl
-  attr_accessor :balance
+  attr_reader :trades, :exchange_account, :symbol, :leverage, :open_at, :close_at, :net_pl
+  attr_accessor :balance, :remaining_quantity, :remaining_margin_used
 
   def initialize(trades:, exchange_account:, symbol:, leverage:, open_at:, close_at:, margin_used:, net_pl:)
     @trades = trades
@@ -23,7 +23,7 @@ class PositionSummary
 
   # Build position summaries from trades and assign running balance.
   # Optional initial_balance is the portfolio starting balance; defaults to 0 for all-time view.
-  # Returns array of PositionSummary sorted by close_at desc, with #balance set.
+  # Returns array of PositionSummary sorted open first then closed by date, with #balance set.
   def self.from_trades_with_balance(trades, initial_balance: nil)
     positions = from_trades(trades)
     assign_balance!(positions, initial_balance: initial_balance.to_d)
@@ -32,7 +32,7 @@ class PositionSummary
 
   # Build position summaries from a list of trades (e.g. current_user.trades).
   # One row per closing leg (matches BingX per take-profit), or one row for single-fill positions.
-  # Returns array of PositionSummary sorted by close_at desc.
+  # Returns array of PositionSummary sorted: open positions first, then closed by close_at desc.
   def self.from_trades(trades)
     list = trades.to_a
     return [] if list.empty?
@@ -43,12 +43,14 @@ class PositionSummary
       build_summaries(position_trades)
     end
 
-    # Sort by close_at desc (newest first)
-    summaries.sort_by! { |s| s.close_at || Time.at(0) }
-    summaries.reverse!
+    # Open first (0), then closed (1); within each group by most recent activity desc
+    recent_at = ->(s) { (s.close_at || s.open_at || Time.at(0)).to_i }
+    summaries.sort_by! { |s| [s.open? ? 0 : 1, -recent_at.call(s)] }
   end
 
   # One row per closing leg so margin/ROI match exchange (e.g. BingX). Single-fill => one row.
+  # When there are closing legs we only emit rows for each closed leg; "remaining open" (e.g. partial
+  # close) is not shown as an open row. See docs/plans and todos for future "remaining open" support.
   def self.build_summaries(position_trades)
     trades = position_trades.sort_by(&:executed_at)
     open_trade = trades.first
@@ -59,11 +61,36 @@ class PositionSummary
       return [build_one_aggregate(trades)]
     end
 
-    # One row per closing trade (each take-profit/stop)
+    # One row per closing trade (each take-profit/stop). Then one row for remaining open qty if partial close.
     leverage = open_trade.leverage_from_raw
-    closing.map do |close_trade|
-      build_one_leg(open_trade, close_trade, leverage)
+    open_notional = open_trade.notional_from_raw
+    open_margin = (leverage && leverage.positive? && open_notional.positive?) ? (open_notional / leverage).round(8) : nil
+    open_raw = open_trade.raw_payload || {}
+    open_qty = (open_raw["executedQty"] || open_raw["executed_qty"] || open_raw["origQty"] || 0).to_d
+    total_closed_qty = closing.sum(BigDecimal("0")) do |close_trade|
+      raw = close_trade.raw_payload || {}
+      (raw["executedQty"] || raw["executed_qty"] || raw["origQty"] || 0).to_d
     end
+    leg_rows = closing.map { |close_trade| build_one_leg(open_trade, close_trade, leverage) }
+    if open_margin && open_qty.positive? && total_closed_qty < open_qty
+      remaining_qty = (open_qty - total_closed_qty).round(8)
+      remainder_margin = (open_margin * (remaining_qty / open_qty)).round(8)
+      last_trade = trades.last
+      remainder = new(
+        trades: [open_trade],
+        exchange_account: open_trade.exchange_account,
+        symbol: open_trade.symbol,
+        leverage: leverage,
+        open_at: open_trade.executed_at,
+        close_at: last_trade.executed_at,
+        margin_used: remainder_margin,
+        net_pl: 0
+      )
+      remainder.remaining_quantity = remaining_qty
+      remainder.remaining_margin_used = remainder_margin
+      leg_rows << remainder
+    end
+    leg_rows
   end
 
   # BingX ROI = profit / (opening_margin * closed_qty / open_qty), not closing notional/leverage.
@@ -123,8 +150,10 @@ class PositionSummary
   end
 
   # Commission for this row. One-row-per-close: only this leg's fee; aggregate/single-fill: sum of fees.
+  # Remainder (remaining open) row reports 0 so we don't show open-trade fee on the "Open" row.
   # Returns a negative number (cost). Use .abs for display as "you paid $X.XX".
   def total_commission
+    return 0.to_d if @remaining_quantity.present?
     if trades.size == 2 && self.class.closing_leg?(trades.last, trades.first)
       trades.last.fee.to_d
     else
@@ -155,7 +184,12 @@ class PositionSummary
     (margin_used * ratio).round(8)
   end
 
+  def margin_used
+    @remaining_margin_used.presence || @margin_used
+  end
+
   def open_quantity
+    return @remaining_quantity if @remaining_quantity.present?
     first = trades.first
     return nil unless first
     raw = first.raw_payload || {}
@@ -198,6 +232,52 @@ class PositionSummary
   def closing_leg?(trade)
     return false if trades.empty?
     self.class.closing_leg?(trade, trades.first)
+  end
+
+  # True when this row has no closing leg (open position). Used for display and unrealized PnL/ROI.
+  def open?
+    trades.none? { |t| closing_leg?(t) }
+  end
+
+  # Entry price from the opening trade. Used for unrealized PnL. Returns nil if not available.
+  def entry_price
+    first = trades.first
+    return nil unless first
+    raw = first.raw_payload || {}
+    avg = raw["avgPrice"] || raw["avg_price"]
+    return avg.to_d if avg.present? && avg.to_s.to_d.nonzero?
+    qty = open_quantity
+    return nil if qty.blank? || qty.zero?
+    notional = first.notional_from_raw
+    return nil unless notional.present? && notional.positive?
+    (notional / qty).round(8)
+  end
+
+  # Unrealized PnL at current_price (quote/USDT). Long: (current - entry) * qty; short: (entry - current) * qty.
+  # Returns nil when open? is false, current_price is blank, or entry_price/qty is missing.
+  def unrealized_pnl(current_price)
+    return nil unless open?
+    return nil if current_price.blank?
+    price = current_price.to_d
+    entry = entry_price
+    return nil if entry.blank? || entry.zero?
+    qty = open_quantity
+    return nil if qty.blank? || qty.zero?
+    diff = case position_side
+    when "long" then (price - entry) * qty
+    when "short" then (entry - price) * qty
+    else nil
+    end
+    diff&.round(8)
+  end
+
+  # Unrealized ROI percent: (unrealized_pnl / margin_used) * 100. Returns nil when not open or data missing.
+  def unrealized_roi_percent(current_price)
+    return nil unless open?
+    return nil if margin_used.blank? || margin_used.zero?
+    pl = unrealized_pnl(current_price)
+    return nil if pl.nil?
+    (pl / margin_used * 100).round(2)
   end
 
   # Assign running balance (newest first): balance at row i = initial_balance + cumulative net_pl for that row and all rows below it.
