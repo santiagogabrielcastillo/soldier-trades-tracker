@@ -15,6 +15,7 @@ class TradesController < ApplicationController
     @view = result[:view]
     @portfolio = result[:portfolio]
     @positions = result[:positions]
+    @current_prices = result[:current_prices] || {}
     @pagy, @positions = pagy(:offset, result[:positions], limit: 25)
     @portfolios = result[:portfolios]
   end

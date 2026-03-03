@@ -38,16 +38,18 @@
         </thead>
         <tbody class="divide-y divide-slate-200 bg-white">
           <% @positions.each do |pos| %>
+            <% roi_val = pos.open? ? pos.unrealized_roi_percent(@current_prices[pos.symbol]) : pos.roi_percent %>
+            <% pnl_val = pos.open? ? pos.unrealized_pnl(@current_prices[pos.symbol]) : pos.net_pl %>
             <tr>
-              <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-900"><%= pos.close_at&.strftime("%Y-%m-%d") %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-900"><%= pos.open? ? "Open" : pos.close_at&.strftime("%Y-%m-%d") %></td>
               <td class="whitespace-nowrap px-6 py-4 text-sm capitalize text-slate-600"><%= pos.exchange_account.provider_type %></td>
               <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900"><%= pos.symbol %></td>
               <td class="whitespace-nowrap px-6 py-4 text-sm <%= pos.position_side == 'long' ? 'text-emerald-600' : pos.position_side == 'short' ? 'text-red-600' : 'text-slate-500' %>"><%= pos.position_side&.capitalize || "—" %></td>
               <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600"><%= pos.leverage ? "#{pos.leverage}X" : "—" %></td>
               <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-900"><%= pos.margin_used ? format_money(pos.margin_used) : "—" %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= pos.roi_percent && pos.roi_percent >= 0 ? 'text-emerald-600' : pos.roi_percent ? 'text-red-600' : 'text-slate-500' %>"><%= pos.roi_percent.nil? ? "—" : "#{number_with_precision(pos.roi_percent, precision: 2)}%" %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= roi_val && roi_val >= 0 ? 'text-emerald-600' : roi_val ? 'text-red-600' : 'text-slate-500' %>"><%= roi_val.nil? ? "—" : "#{number_with_precision(roi_val, precision: 2)}%" %></td>
               <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-600"><%= pos.total_commission.zero? ? "—" : format_money(pos.total_commission.abs) %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= pos.net_pl >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= format_money(pos.net_pl) %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= pnl_val.nil? ? 'text-slate-500' : pnl_val >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= pnl_val.nil? ? "—" : format_money(pnl_val) %></td>
               <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-slate-900"><%= format_money(pos.balance) %></td>
             </tr>
           <% end %>

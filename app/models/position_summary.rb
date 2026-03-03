@@ -200,6 +200,52 @@ class PositionSummary
     self.class.closing_leg?(trade, trades.first)
   end
 
+  # True when this row has no closing leg (open position). Used for display and unrealized PnL/ROI.
+  def open?
+    trades.none? { |t| closing_leg?(t) }
+  end
+
+  # Entry price from the opening trade. Used for unrealized PnL. Returns nil if not available.
+  def entry_price
+    first = trades.first
+    return nil unless first
+    raw = first.raw_payload || {}
+    avg = raw["avgPrice"] || raw["avg_price"]
+    return avg.to_d if avg.present? && avg.to_s.to_d.nonzero?
+    qty = open_quantity
+    return nil if qty.blank? || qty.zero?
+    notional = first.notional_from_raw
+    return nil unless notional.present? && notional.positive?
+    (notional / qty).round(8)
+  end
+
+  # Unrealized PnL at current_price (quote/USDT). Long: (current - entry) * qty; short: (entry - current) * qty.
+  # Returns nil when open? is false, current_price is blank, or entry_price/qty is missing.
+  def unrealized_pnl(current_price)
+    return nil unless open?
+    return nil if current_price.blank?
+    price = current_price.to_d
+    entry = entry_price
+    return nil if entry.blank? || entry.zero?
+    qty = open_quantity
+    return nil if qty.blank? || qty.zero?
+    diff = case position_side
+    when "long" then (price - entry) * qty
+    when "short" then (entry - price) * qty
+    else nil
+    end
+    diff&.round(8)
+  end
+
+  # Unrealized ROI percent: (unrealized_pnl / margin_used) * 100. Returns nil when not open or data missing.
+  def unrealized_roi_percent(current_price)
+    return nil unless open?
+    return nil if margin_used.blank? || margin_used.zero?
+    pl = unrealized_pnl(current_price)
+    return nil if pl.nil?
+    (pl / margin_used * 100).round(2)
+  end
+
   # Assign running balance (newest first): balance at row i = initial_balance + cumulative net_pl for that row and all rows below it.
   def self.assign_balance!(summaries, initial_balance: 0)
     base = initial_balance.to_d
