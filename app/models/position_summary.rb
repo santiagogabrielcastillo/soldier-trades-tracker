@@ -23,7 +23,7 @@ class PositionSummary
 
   # Build position summaries from trades and assign running balance.
   # Optional initial_balance is the portfolio starting balance; defaults to 0 for all-time view.
-  # Returns array of PositionSummary sorted by close_at desc, with #balance set.
+  # Returns array of PositionSummary sorted open first then closed by date, with #balance set.
   def self.from_trades_with_balance(trades, initial_balance: nil)
     positions = from_trades(trades)
     assign_balance!(positions, initial_balance: initial_balance.to_d)
@@ -32,7 +32,7 @@ class PositionSummary
 
   # Build position summaries from a list of trades (e.g. current_user.trades).
   # One row per closing leg (matches BingX per take-profit), or one row for single-fill positions.
-  # Returns array of PositionSummary sorted by close_at desc.
+  # Returns array of PositionSummary sorted: open positions first, then closed by close_at desc.
   def self.from_trades(trades)
     list = trades.to_a
     return [] if list.empty?
@@ -43,9 +43,9 @@ class PositionSummary
       build_summaries(position_trades)
     end
 
-    # Sort by close_at desc (newest first)
-    summaries.sort_by! { |s| s.close_at || Time.at(0) }
-    summaries.reverse!
+    # Open first (0), then closed (1); within each group by most recent activity desc
+    recent_at = ->(s) { (s.close_at || s.open_at || Time.at(0)).to_i }
+    summaries.sort_by! { |s| [s.open? ? 0 : 1, -recent_at.call(s)] }
   end
 
   # One row per closing leg so margin/ROI match exchange (e.g. BingX). Single-fill => one row.

@@ -23,6 +23,7 @@ module Exchanges
         return {} if symbols.blank?
         symbols = symbols.uniq
         result = {}
+        # Serial requests; acceptable for typical N (e.g. <10 open symbols). For many symbols, consider batching or parallel requests in a follow-up.
         symbols.each do |symbol|
           price = fetch_one(symbol)
           result[symbol] = price if price.present?
@@ -41,7 +42,10 @@ module Exchanges
         http.read_timeout = READ_TIMEOUT
         req = Net::HTTP::Get.new(uri)
         res = http.request(req)
-        return nil unless res.code.to_s == "200"
+        unless res.code.to_s == "200"
+          Rails.logger.warn("[TickerFetcher] HTTP #{res.code} for #{symbol}: #{res.body.to_s[0..200]}")
+          return nil
+        end
         data = JSON.parse(res.body)
         extract_price_from_ticker_response(data)
       rescue Net::OpenTimeout, Net::ReadTimeout, Timeout::Error => e
