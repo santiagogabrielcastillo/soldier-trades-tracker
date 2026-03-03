@@ -45,6 +45,20 @@ class TradesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "index shows closed leg and Open remainder row for partial close" do
+    Trade.where(exchange_account: @account).delete_all
+    create_partial_close_trades
+    Exchanges::Bingx::TickerFetcher.stub(:fetch_prices, { "BTC-USDT" => BigDecimal("108") }) do
+      sign_in_as(@user)
+      get trades_path(view: "history")
+      assert_response :success
+      # Two rows for same position: one closed leg (PnL), one remainder (Open)
+      assert_select "td", text: "Open"
+      # Closed leg: sold 1 at 105, bought 1 at 100 -> profit 5
+      assert_match(/5\.00/, response.body)
+    end
+  end
+
   private
 
   def sign_in_as(user)
@@ -70,6 +84,46 @@ class TradesControllerTest < ActionDispatch::IntegrationTest
         "leverage" => "10X"
       },
       position_id: "pos_open"
+    )
+  end
+
+  def create_partial_close_trades
+    # Open 3, close 1 -> closed leg row + remainder (Open) row
+    Trade.create!(
+      exchange_account_id: @account.id,
+      exchange_reference_id: "ref_partial_open",
+      symbol: "BTC-USDT",
+      side: "BUY",
+      fee: 0,
+      net_amount: -300,
+      executed_at: 2.hours.ago,
+      raw_payload: {
+        "side" => "BUY",
+        "executedQty" => "3",
+        "avgPrice" => "100",
+        "positionID" => "pos_partial",
+        "reduceOnly" => false,
+        "leverage" => "10X"
+      },
+      position_id: "pos_partial"
+    )
+    Trade.create!(
+      exchange_account_id: @account.id,
+      exchange_reference_id: "ref_partial_close",
+      symbol: "BTC-USDT",
+      side: "SELL",
+      fee: 0,
+      net_amount: 105,
+      executed_at: 1.hour.ago,
+      raw_payload: {
+        "side" => "SELL",
+        "executedQty" => "1",
+        "avgPrice" => "105",
+        "positionID" => "pos_partial",
+        "reduceOnly" => true,
+        "leverage" => "10X"
+      },
+      position_id: "pos_partial"
     )
   end
 

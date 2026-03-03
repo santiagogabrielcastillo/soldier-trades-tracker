@@ -6,8 +6,8 @@ class PositionSummary
   # Max trades to load when building summaries (used by Trades::IndexService and Dashboards::SummaryService).
   TRADES_LIMIT = 2000
 
-  attr_reader :trades, :exchange_account, :symbol, :leverage, :open_at, :close_at, :margin_used, :net_pl
-  attr_accessor :balance
+  attr_reader :trades, :exchange_account, :symbol, :leverage, :open_at, :close_at, :net_pl
+  attr_accessor :balance, :remaining_quantity, :remaining_margin_used
 
   def initialize(trades:, exchange_account:, symbol:, leverage:, open_at:, close_at:, margin_used:, net_pl:)
     @trades = trades
@@ -49,6 +49,8 @@ class PositionSummary
   end
 
   # One row per closing leg so margin/ROI match exchange (e.g. BingX). Single-fill => one row.
+  # When there are closing legs we only emit rows for each closed leg; "remaining open" (e.g. partial
+  # close) is not shown as an open row. See docs/plans and todos for future "remaining open" support.
   def self.build_summaries(position_trades)
     trades = position_trades.sort_by(&:executed_at)
     open_trade = trades.first
@@ -59,11 +61,36 @@ class PositionSummary
       return [build_one_aggregate(trades)]
     end
 
-    # One row per closing trade (each take-profit/stop)
+    # One row per closing trade (each take-profit/stop). Then one row for remaining open qty if partial close.
     leverage = open_trade.leverage_from_raw
-    closing.map do |close_trade|
-      build_one_leg(open_trade, close_trade, leverage)
+    open_notional = open_trade.notional_from_raw
+    open_margin = (leverage && leverage.positive? && open_notional.positive?) ? (open_notional / leverage).round(8) : nil
+    open_raw = open_trade.raw_payload || {}
+    open_qty = (open_raw["executedQty"] || open_raw["executed_qty"] || open_raw["origQty"] || 0).to_d
+    total_closed_qty = closing.sum(BigDecimal("0")) do |close_trade|
+      raw = close_trade.raw_payload || {}
+      (raw["executedQty"] || raw["executed_qty"] || raw["origQty"] || 0).to_d
     end
+    leg_rows = closing.map { |close_trade| build_one_leg(open_trade, close_trade, leverage) }
+    if open_margin && open_qty.positive? && total_closed_qty < open_qty
+      remaining_qty = (open_qty - total_closed_qty).round(8)
+      remainder_margin = (open_margin * (remaining_qty / open_qty)).round(8)
+      last_trade = trades.last
+      remainder = new(
+        trades: [open_trade],
+        exchange_account: open_trade.exchange_account,
+        symbol: open_trade.symbol,
+        leverage: leverage,
+        open_at: open_trade.executed_at,
+        close_at: last_trade.executed_at,
+        margin_used: remainder_margin,
+        net_pl: 0
+      )
+      remainder.remaining_quantity = remaining_qty
+      remainder.remaining_margin_used = remainder_margin
+      leg_rows << remainder
+    end
+    leg_rows
   end
 
   # BingX ROI = profit / (opening_margin * closed_qty / open_qty), not closing notional/leverage.
@@ -123,8 +150,10 @@ class PositionSummary
   end
 
   # Commission for this row. One-row-per-close: only this leg's fee; aggregate/single-fill: sum of fees.
+  # Remainder (remaining open) row reports 0 so we don't show open-trade fee on the "Open" row.
   # Returns a negative number (cost). Use .abs for display as "you paid $X.XX".
   def total_commission
+    return 0.to_d if @remaining_quantity.present?
     if trades.size == 2 && self.class.closing_leg?(trades.last, trades.first)
       trades.last.fee.to_d
     else
@@ -155,7 +184,12 @@ class PositionSummary
     (margin_used * ratio).round(8)
   end
 
+  def margin_used
+    @remaining_margin_used.presence || @margin_used
+  end
+
   def open_quantity
+    return @remaining_quantity if @remaining_quantity.present?
     first = trades.first
     return nil unless first
     raw = first.raw_payload || {}

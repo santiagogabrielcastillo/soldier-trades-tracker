@@ -88,6 +88,36 @@ class PositionSummaryTest < ActiveSupport::TestCase
     assert_equal 100.0, roi
   end
 
+  test "partial close yields closed leg row and remainder row (remaining open)" do
+    # Open 3, close 1 -> closed leg (qty 1) + remainder row (qty 2 open). Margin 30 total; leg 10, remainder 20.
+    trades = [
+      create_trade(account: @account, side: "BUY", qty: 3, avg_price: 100, position_id: "pos_partial", reduce_only: false, leverage: 10),
+      create_trade(account: @account, side: "SELL", qty: 1, avg_price: 105, position_id: "pos_partial", reduce_only: true, ref_suffix: "2")
+    ]
+    positions = PositionSummary.from_trades(trades)
+    assert_equal 2, positions.size, "Should have one closed leg and one remainder row"
+    closed_leg = positions.find { |p| !p.open? }
+    remainder = positions.find { |p| p.open? }
+    assert closed_leg, "One row should be closed leg"
+    assert remainder, "One row should be remainder (open)"
+    assert remainder.remaining_quantity.present?
+    assert_equal BigDecimal("2"), remainder.remaining_quantity
+    assert_equal 0, remainder.net_pl
+    # Open margin = 300/10 = 30; remainder = 30 * (2/3) = 20
+    assert_equal BigDecimal("20"), remainder.margin_used
+    assert_equal 0, remainder.total_commission, "Remainder row shows no commission"
+  end
+
+  test "full close yields no remainder row" do
+    trades = [
+      create_trade(account: @account, side: "BUY", qty: 1, avg_price: 100, position_id: "pos_full", reduce_only: false),
+      create_trade(account: @account, side: "SELL", qty: 1, avg_price: 105, position_id: "pos_full", reduce_only: true, ref_suffix: "2")
+    ]
+    positions = PositionSummary.from_trades(trades)
+    assert_equal 1, positions.size
+    refute positions.first.open?
+  end
+
   private
 
   def create_trade(account:, side:, qty:, avg_price:, position_id:, reduce_only:, ref_suffix: "1", leverage: 10)
