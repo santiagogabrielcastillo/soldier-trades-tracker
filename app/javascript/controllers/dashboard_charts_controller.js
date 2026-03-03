@@ -8,7 +8,13 @@ export default class extends Controller {
   static values = { value: String }
 
   connect() {
-    const data = JSON.parse(this.valueValue || "{}")
+    let data
+    try {
+      data = JSON.parse(this.valueValue || "{}")
+    } catch (e) {
+      console.warn("Dashboard charts: invalid data", e)
+      data = { balance_series: [], cumulative_pl_series: [] }
+    }
     const balanceSeries = data.balance_series || []
     const cumulativePlSeries = data.cumulative_pl_series || []
 
@@ -38,6 +44,17 @@ export default class extends Controller {
     if (this.plChart) this.plChart.destroy()
   }
 
+  chartOptions(yBeginAtZero) {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { type: "category" },
+        y: { beginAtZero: yBeginAtZero }
+      }
+    }
+  }
+
   renderBalanceChart(labels, values) {
     if (!this.hasBalanceCanvasTarget) return
     const ctx = this.balanceCanvasTarget.getContext("2d")
@@ -54,14 +71,7 @@ export default class extends Controller {
           tension: 0.2
         }]
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: { type: "category" },
-          y: { beginAtZero: false }
-        }
-      }
+      options: this.chartOptions(false)
     })
   }
 
@@ -82,14 +92,7 @@ export default class extends Controller {
           tension: 0.2
         }]
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: { type: "category" },
-          y: { beginAtZero: true }
-        }
-      }
+      options: this.chartOptions(true)
     })
   }
 }

@@ -4,53 +4,53 @@
 
   <section class="mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
     <h2 class="mb-4 text-lg font-medium text-slate-900">Period summary</h2>
-    <p class="mb-2 text-sm text-slate-600"><%= @summary_label %><% if @summary_date_range %> · <%= @summary_date_range %><% end %></p>
+    <p class="mb-2 text-sm text-slate-600"><%= @dashboard.summary_label %><% if @dashboard.summary_date_range %> · <%= @dashboard.summary_date_range %><% end %></p>
     <div class="mb-4 flex flex-wrap items-baseline gap-6">
       <div>
         <span class="text-sm text-slate-500">Balance</span>
-        <p class="text-xl font-semibold text-slate-900"><%= format_money(@summary_balance) %></p>
+        <p class="text-xl font-semibold text-slate-900"><%= format_money(@dashboard.summary_balance) %></p>
       </div>
       <div>
         <span class="text-sm text-slate-500">Period P&amp;L</span>
-        <p class="text-xl font-semibold <%= @summary_period_pl >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= format_money(@summary_period_pl) %></p>
+        <p class="text-xl font-semibold <%= @dashboard.summary_period_pl >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= format_money(@dashboard.summary_period_pl) %></p>
       </div>
       <div>
         <span class="text-sm text-slate-500">Total return</span>
-        <p class="text-xl font-semibold <%= @summary_total_return_pct.nil? ? 'text-slate-900' : (@summary_total_return_pct >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= @summary_total_return_pct.nil? ? "—" : "#{number_with_precision(@summary_total_return_pct, precision: 2)}%" %></p>
+        <p class="text-xl font-semibold <%= @dashboard.summary_total_return_pct.nil? ? 'text-slate-900' : (@dashboard.summary_total_return_pct >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= @dashboard.summary_total_return_pct.nil? ? "—" : "#{number_with_precision(@dashboard.summary_total_return_pct, precision: 2)}%" %></p>
       </div>
       <div>
         <span class="text-sm text-slate-500">Positions</span>
-        <p class="text-xl font-semibold text-slate-900"><%= @summary_position_count %></p>
+        <p class="text-xl font-semibold text-slate-900"><%= @dashboard.summary_position_count %></p>
       </div>
     </div>
     <div class="mb-4 flex flex-wrap items-baseline gap-6">
       <span class="text-sm font-medium text-slate-700">Consistency</span>
       <div>
         <span class="text-sm text-slate-500">Win rate</span>
-        <p class="text-lg font-semibold text-slate-900"><%= @summary_win_rate.nil? ? "—" : "#{number_with_precision(@summary_win_rate, precision: 1)}%" %></p>
+        <p class="text-lg font-semibold text-slate-900"><%= @dashboard.summary_win_rate.nil? ? "—" : "#{number_with_precision(@dashboard.summary_win_rate, precision: 1)}%" %></p>
       </div>
       <div>
         <span class="text-sm text-slate-500">Avg win</span>
-        <p class="text-lg font-semibold text-emerald-600"><%= @summary_avg_win.nil? ? "—" : format_money(@summary_avg_win) %></p>
+        <p class="text-lg font-semibold text-emerald-600"><%= @dashboard.summary_avg_win.nil? ? "—" : format_money(@dashboard.summary_avg_win) %></p>
       </div>
       <div>
         <span class="text-sm text-slate-500">Avg loss</span>
-        <p class="text-lg font-semibold text-red-600"><%= @summary_avg_loss.nil? ? "—" : format_money(@summary_avg_loss) %></p>
+        <p class="text-lg font-semibold text-red-600"><%= @dashboard.summary_avg_loss.nil? ? "—" : format_money(@dashboard.summary_avg_loss) %></p>
       </div>
       <div>
         <span class="text-sm text-slate-500">Closed</span>
-        <p class="text-lg font-semibold text-slate-900"><%= @summary_closed_count || 0 %></p>
+        <p class="text-lg font-semibold text-slate-900"><%= @dashboard.summary_closed_count || 0 %></p>
       </div>
     </div>
-    <%= link_to "View trades", @summary_trades_path, class: "inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
-    <% if @default_portfolio.nil? && current_user.portfolios.any? %>
+    <%= link_to "View trades", @dashboard.summary_trades_path, class: "inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+    <% if @dashboard.default_portfolio.nil? && current_user.portfolios.any? %>
       <span class="ml-3 text-sm text-slate-500">or <%= link_to "set a default portfolio", portfolios_path, class: "text-slate-700 underline hover:text-slate-900" %></span>
-    <% elsif @default_portfolio.nil? %>
+    <% elsif @dashboard.default_portfolio.nil? %>
       <span class="ml-3 text-sm text-slate-500">or <%= link_to "create a portfolio", new_portfolio_path, class: "text-slate-700 underline hover:text-slate-900" %></span>
     <% end %>
   </section>
 
-  <%= content_tag :section, class: "mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm", data: { controller: "dashboard-charts", dashboard_charts_value_value: { balance_series: @chart_balance_series, cumulative_pl_series: @chart_cumulative_pl_series } } do %>
+  <%= content_tag :section, class: "mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm", data: { controller: "dashboard-charts", dashboard_charts_value_value: { balance_series: @dashboard.chart_balance_series, cumulative_pl_series: @dashboard.chart_cumulative_pl_series } } do %>
     <h2 class="mb-4 text-lg font-medium text-slate-900">Performance over time</h2>
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <div>
@@ -72,9 +72,9 @@
 
   <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
     <h2 class="mb-4 text-lg font-medium text-slate-900">Exchange accounts</h2>
-    <% if @exchange_accounts.any? %>
+    <% if @dashboard.exchange_accounts.any? %>
       <ul class="space-y-3">
-        <% @exchange_accounts.each do |account| %>
+        <% @dashboard.exchange_accounts.each do |account| %>
           <li class="flex items-center justify-between rounded-md border border-slate-100 py-2 px-3">
             <span class="font-medium capitalize"><%= account.provider_type %></span>
             <span class="text-sm text-slate-500">Linked <%= time_ago_in_words(account.linked_at || account.created_at) %> ago</span>

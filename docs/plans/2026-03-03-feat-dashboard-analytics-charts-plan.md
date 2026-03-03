@@ -3,7 +3,7 @@
 ---
 title: Dashboard analytics and charts (Approach A)
 type: feat
-status: active
+status: completed
 date: 2026-03-03
 source_brainstorm: docs/brainstorms/2026-03-03-dashboard-analytics-charts-brainstorm.md
 ---

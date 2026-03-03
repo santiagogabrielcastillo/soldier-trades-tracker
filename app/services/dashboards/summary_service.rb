@@ -76,12 +76,13 @@ class Dashboards::SummaryService
     avg_win = winners.any? ? (winners.sum(&:net_pl) / winners.size).round(8) : nil
     avg_loss = losers.any? ? (losers.sum(&:net_pl) / losers.size).round(8) : nil
 
-    balance_series = closed_sorted.map { |s| { date: (s.close_at || Time.current).iso8601, value: s.balance.to_f } }
+    date_label = ->(t) { (t || Time.current).to_date.strftime("%b %d, %Y") }
+    balance_series = closed_sorted.map { |s| { date: date_label.call(s.close_at), value: s.balance.to_f } }
     cumulative_pl_series = if initial_balance.present? && initial_balance.positive?
-      closed_sorted.map { |s| { date: (s.close_at || Time.current).iso8601, value: (s.balance - initial_balance).to_f } }
+      closed_sorted.map { |s| { date: date_label.call(s.close_at), value: (s.balance - initial_balance).to_f } }
     else
       cum = 0.to_d
-      closed_sorted.map { |s| cum += s.net_pl; { date: (s.close_at || Time.current).iso8601, value: cum.to_f } }
+      closed_sorted.map { |s| cum += s.net_pl; { date: date_label.call(s.close_at), value: cum.to_f } }
     end
 
     {
