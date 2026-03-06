@@ -48,8 +48,19 @@ class Trades::IndexService
   end
 
   def fetch_current_prices_for_open_positions(positions)
-    open_symbols = positions.select(&:open?).map(&:symbol).uniq
-    return {} if open_symbols.empty?
-    Exchanges::Bingx::TickerFetcher.fetch_prices(symbols: open_symbols)
+    open_positions = positions.select(&:open?)
+    return {} if open_positions.empty?
+    by_provider = open_positions.group_by { |p| p.exchange_account&.provider_type.to_s.presence || "bingx" }
+    result = {}
+    by_provider.each do |provider_type, group|
+      symbols = group.map(&:symbol).uniq
+      next if symbols.empty?
+      prices = case provider_type
+      when "binance" then Exchanges::Binance::TickerFetcher.fetch_prices(symbols: symbols)
+      else Exchanges::Bingx::TickerFetcher.fetch_prices(symbols: symbols)
+      end
+      result.merge!(prices)
+    end
+    result
   end
 end

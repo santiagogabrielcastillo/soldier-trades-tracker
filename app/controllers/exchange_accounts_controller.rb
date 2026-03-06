@@ -8,7 +8,7 @@ class ExchangeAccountsController < ApplicationController
   end
 
   def new
-    @exchange_account = current_user.exchange_accounts.build
+    @exchange_account = current_user.exchange_accounts.build(provider_type: "bingx")
   end
 
   def create

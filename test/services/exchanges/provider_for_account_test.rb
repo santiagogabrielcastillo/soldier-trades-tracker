@@ -9,8 +9,13 @@ module Exchanges
       assert ProviderForAccount.new(account).supported?
     end
 
-    test "supported? returns false for unknown provider" do
+    test "supported? returns true for binance with credentials" do
       account = OpenStruct.new(provider_type: "binance", api_key: "k", api_secret: "s")
+      assert ProviderForAccount.new(account).supported?
+    end
+
+    test "supported? returns false for unknown provider" do
+      account = OpenStruct.new(provider_type: "other", api_key: "k", api_secret: "s")
       refute ProviderForAccount.new(account).supported?
     end
 
@@ -21,6 +26,13 @@ module Exchanges
 
     test "client returns a client for bingx that responds to fetch_my_trades" do
       account = OpenStruct.new(provider_type: "bingx", api_key: "k", api_secret: "s")
+      client = ProviderForAccount.new(account).client
+      assert client
+      assert_respond_to client, :fetch_my_trades
+    end
+
+    test "client returns a client for binance that responds to fetch_my_trades" do
+      account = OpenStruct.new(provider_type: "binance", api_key: "k", api_secret: "s")
       client = ProviderForAccount.new(account).client
       assert client
       assert_respond_to client, :fetch_my_trades
