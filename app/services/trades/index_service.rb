@@ -50,7 +50,13 @@ class Trades::IndexService
   def fetch_current_prices_for_open_positions(positions)
     open_positions = positions.select(&:open?)
     return {} if open_positions.empty?
-    by_provider = open_positions.group_by { |p| p.exchange_account&.provider_type.to_s.presence || "bingx" }
+    with_account = open_positions.select { |p| p.exchange_account.present? }
+    open_positions.reject { |p| p.exchange_account.present? }.each do |p|
+      Rails.logger.warn("[IndexService] Skipping position with nil exchange_account: symbol=#{p.symbol}")
+    end
+    open_positions = with_account
+    return {} if open_positions.empty?
+    by_provider = open_positions.group_by { |p| p.exchange_account.provider_type.to_s.presence || "bingx" }
     result = {}
     by_provider.each do |provider_type, group|
       symbols = group.map(&:symbol).uniq

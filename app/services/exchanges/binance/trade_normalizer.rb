@@ -50,7 +50,7 @@ module Exchanges
             base = s[0...(s.length - quote.length)]
             return "#{base}-#{quote}" if base.present?
           end
-          symbol
+          s
         end
 
         private

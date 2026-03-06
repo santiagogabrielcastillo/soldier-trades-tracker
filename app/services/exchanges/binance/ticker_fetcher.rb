@@ -47,7 +47,7 @@ module Exchanges
           return nil
         end
         data = JSON.parse(res.body)
-        extract_mark_price(data, symbol)
+        extract_mark_price(data)
       rescue Net::OpenTimeout, Net::ReadTimeout, Timeout::Error => e
         Rails.logger.warn("[Binance::TickerFetcher] Timeout for #{symbol}: #{e.message}")
         nil
@@ -59,7 +59,7 @@ module Exchanges
         nil
       end
 
-      def extract_mark_price(data, symbol)
+      def extract_mark_price(data)
         return nil if data.blank?
         val = data["markPrice"] || data["mark_price"]
         return nil if val.blank?

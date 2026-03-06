@@ -22,6 +22,11 @@ module Exchanges
         assert_nil TradeNormalizer.normalize_symbol(nil)
       end
 
+      test "normalize_symbol returns upcased symbol for unknown quote pair" do
+        assert_equal "FOOBAR", TradeNormalizer.normalize_symbol("foobar")
+        assert_equal "XYZ", TradeNormalizer.normalize_symbol("  xyz  ")
+      end
+
       test "user_trade_to_hash returns nil when id blank" do
         raw = { "symbol" => "BTCUSDT", "side" => "BUY", "price" => "50000", "qty" => "0.01", "time" => (Time.now.to_i * 1000) }
         assert_nil TradeNormalizer.user_trade_to_hash(raw)

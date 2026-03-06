@@ -50,6 +50,14 @@ module Exchanges
       end
     end
 
+    test "fetch_my_trades raises ApiError when Binance returns 200 with error body" do
+      @client.stub(:signed_get, { "code" => -2015, "msg" => "Invalid API key" }) do
+        err = assert_raises(ApiError) { @client.fetch_my_trades(since: 1.day.ago) }
+        assert_match(/Invalid API key/, err.message)
+        assert_match(/-2015/, err.message)
+      end
+    end
+
     test "fetch_my_trades discovers symbols from positionRisk and fetches userTrades" do
       time_ms = (Time.now.to_i - 3600) * 1000
       raw_trade = {
