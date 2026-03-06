@@ -21,6 +21,7 @@ Rails.application.routes.draw do
     end
   end
   resources :trades, only: :index
+  patch "user_preferences/trades_index_columns", to: "user_preferences#update_trades_index_columns", as: :user_preferences_trades_index_columns
   resources :portfolios do
     member do
       post :set_default

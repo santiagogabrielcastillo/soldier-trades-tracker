@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_26_210905) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_06_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -186,6 +186,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_210905) do
     t.index ["exchange_account_id"], name: "index_trades_on_exchange_account_id"
   end
 
+  create_table "user_preferences", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "key", null: false
+    t.jsonb "value", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "key"], name: "index_user_preferences_on_user_id_and_key", unique: true
+    t.index ["user_id"], name: "index_user_preferences_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email"
     t.string "password_digest"
@@ -205,4 +215,5 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_210905) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "sync_runs", "exchange_accounts"
   add_foreign_key "trades", "exchange_accounts"
+  add_foreign_key "user_preferences", "users"
 end

@@ -20,6 +20,16 @@ class TradesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index includes default visible columns including Entry price when positions exist" do
+    Trade.where(exchange_account: @account).delete_all
+    create_open_trade
+    sign_in_as(@user)
+    get trades_path(view: "history")
+    assert_response :success
+    assert_select "th", text: "Entry price"
+    assert_select "button", text: "Columns"
+  end
+
   test "index shows Open and unrealized PnL when open position and price available" do
     Trade.where(exchange_account: @account).delete_all
     create_open_trade

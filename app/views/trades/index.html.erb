@@ -20,20 +20,38 @@
   <% end %>
 
   <% if @positions.any? %>
+    <% visible_ids = @visible_column_ids || TradesIndexColumns::DEFAULT_VISIBLE %>
+    <div class="mb-2 flex items-center justify-end" data-controller="dialog">
+      <button type="button" data-action="dialog#open" aria-label="Choose columns" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500">
+        Columns
+      </button>
+      <dialog data-dialog-target="dialog" class="rounded-lg border border-slate-200 bg-white p-6 shadow-xl backdrop:bg-slate-900/20">
+        <h2 class="mb-4 text-lg font-semibold text-slate-900">Visible columns</h2>
+        <%= form_with url: user_preferences_trades_index_columns_path, method: :patch, local: true, data: { turbo: false } do |f| %>
+          <%= f.hidden_field :view, value: @view %>
+          <%= f.hidden_field :portfolio_id, value: @portfolio&.id %>
+          <div class="grid grid-cols-2 gap-2">
+            <% TradesIndexColumns::ALL_IDS.each do |col_id| %>
+              <label class="flex items-center gap-2 text-sm">
+                <%= f.check_box :column_ids, { multiple: true, checked: visible_ids.include?(col_id) }, col_id, nil %>
+                <%= TradesIndexColumns::LABELS[col_id] %>
+              </label>
+            <% end %>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <%= f.submit "Save", class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+            <button type="button" data-action="dialog#close" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Cancel</button>
+          </div>
+        <% end %>
+      </dialog>
+    </div>
     <div class="overflow-y-hidden overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
       <table class="min-w-full divide-y divide-slate-200">
         <thead class="bg-slate-50">
           <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Closed</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Exchange</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Symbol</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Side</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Leverage</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Margin used</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">ROI</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Commission</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Net P&amp;L</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Balance</th>
+            <% visible_ids.each do |col_id| %>
+              <th scope="col" class="<%= col_id.in?(%w[margin_used roi commission net_pl balance entry_price exit_price]) ? 'text-right' : 'text-left' %> px-6 py-3 text-xs font-medium uppercase tracking-wider text-slate-600"><%= TradesIndexColumns::LABELS[col_id] %></th>
+            <% end %>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-200 bg-white">
@@ -41,16 +59,11 @@
             <% roi_val = pos.open? ? pos.unrealized_roi_percent(@current_prices[pos.symbol]) : pos.roi_percent %>
             <% pnl_val = pos.open? ? pos.unrealized_pnl(@current_prices[pos.symbol]) : pos.net_pl %>
             <tr>
-              <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-900"><%= pos.open? ? "Open" : pos.close_at&.strftime("%Y-%m-%d") %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-sm capitalize text-slate-600"><%= pos.exchange_account.provider_type %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900"><%= pos.symbol %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-sm <%= pos.position_side == 'long' ? 'text-emerald-600' : pos.position_side == 'short' ? 'text-red-600' : 'text-slate-500' %>"><%= pos.position_side&.capitalize || "—" %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600"><%= pos.leverage ? "#{pos.leverage}X" : "—" %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-900"><%= pos.margin_used ? format_money(pos.margin_used) : "—" %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= roi_val && roi_val >= 0 ? 'text-emerald-600' : roi_val ? 'text-red-600' : 'text-slate-500' %>"><%= roi_val.nil? ? "—" : "#{number_with_precision(roi_val, precision: 2)}%" %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-600"><%= pos.total_commission.zero? ? "—" : format_money(pos.total_commission.abs) %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= pnl_val.nil? ? 'text-slate-500' : pnl_val >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= pnl_val.nil? ? "—" : format_money(pnl_val) %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-slate-900"><%= format_money(pos.balance) %></td>
+              <% visible_ids.each do |col_id| %>
+                <td class="<%= trades_index_cell_css(pos, col_id, roi_val: roi_val, pnl_val: pnl_val) %>">
+                  <%= trades_index_cell_content(pos, col_id, roi_val: roi_val, pnl_val: pnl_val) %>
+                </td>
+              <% end %>
             </tr>
           <% end %>
         </tbody>
