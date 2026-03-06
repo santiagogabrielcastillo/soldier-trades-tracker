@@ -18,5 +18,13 @@ class TradesController < ApplicationController
     @current_prices = result[:current_prices] || {}
     @pagy, @positions = pagy(:offset, result[:positions], limit: 25)
     @portfolios = result[:portfolios]
+    @visible_column_ids = visible_trades_column_ids
+  end
+
+  private
+
+  def visible_trades_column_ids
+    pref = current_user.user_preferences.find_by(key: "trades_index_visible_columns")
+    TradesIndexColumns.visible_columns(pref&.value)
   end
 end

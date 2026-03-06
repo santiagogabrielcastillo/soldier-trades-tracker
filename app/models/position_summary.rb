@@ -45,7 +45,7 @@ class PositionSummary
 
     # Open first (0), then closed (1); within each group by most recent activity desc
     recent_at = ->(s) { (s.close_at || s.open_at || Time.at(0)).to_i }
-    summaries.sort_by! { |s| [s.open? ? 0 : 1, -recent_at.call(s)] }
+    summaries.sort_by! { |s| [ s.open? ? 0 : 1, -recent_at.call(s) ] }
   end
 
   # One row per closing leg so margin/ROI match exchange (e.g. BingX). Single-fill => one row.
@@ -58,7 +58,7 @@ class PositionSummary
 
     if closing.empty?
       # Single-fill position or no close yet: one row using whole position
-      return [build_one_aggregate(trades)]
+      return [ build_one_aggregate(trades) ]
     end
 
     # One row per closing trade (each take-profit/stop). Then one row for remaining open qty if partial close.
@@ -77,7 +77,7 @@ class PositionSummary
       remainder_margin = (open_margin * (remaining_qty / open_qty)).round(8)
       last_trade = trades.last
       remainder = new(
-        trades: [open_trade],
+        trades: [ open_trade ],
         exchange_account: open_trade.exchange_account,
         symbol: open_trade.symbol,
         leverage: leverage,
@@ -108,7 +108,7 @@ class PositionSummary
     net_pl = profit.nil? ? close_trade.net_amount : profit
 
     new(
-      trades: [open_trade, close_trade],
+      trades: [ open_trade, close_trade ],
       exchange_account: open_trade.exchange_account,
       symbol: open_trade.symbol,
       leverage: leverage,
@@ -237,6 +237,21 @@ class PositionSummary
   # True when this row has no closing leg (open position). Used for display and unrealized PnL/ROI.
   def open?
     trades.none? { |t| closing_leg?(t) }
+  end
+
+  # Exit price from the closing trade (for closed legs only). Returns nil when open? or when closing trade has no price.
+  def exit_price
+    return nil if open?
+    close_trade = trades.last
+    return nil unless close_trade
+    raw = close_trade.raw_payload || {}
+    avg = raw["avgPrice"] || raw["avg_price"]
+    return avg.to_d if avg.present? && avg.to_s.to_d.nonzero?
+    qty = closed_quantity
+    return nil if qty.blank? || qty.zero?
+    notional = close_trade.notional_from_raw
+    return nil unless notional.present? && notional.positive?
+    (notional / qty).round(8)
   end
 
   # Entry price from the opening trade. Used for unrealized PnL. Returns nil if not available.

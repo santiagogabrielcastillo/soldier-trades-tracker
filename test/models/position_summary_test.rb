@@ -43,6 +43,34 @@ class PositionSummaryTest < ActiveSupport::TestCase
     assert_equal BigDecimal("25"), pos.entry_price
   end
 
+  test "#exit_price returns nil when open" do
+    trades = [ create_trade(account: @account, side: "BUY", qty: 1, avg_price: 100, position_id: "p", reduce_only: false) ]
+    pos = PositionSummary.from_trades(trades).first
+    assert pos.open?
+    assert_nil pos.exit_price
+  end
+
+  test "#exit_price from avgPrice in closing trade" do
+    trades = [
+      create_trade(account: @account, side: "BUY", qty: 1, avg_price: 100, position_id: "p", reduce_only: false),
+      create_trade(account: @account, side: "SELL", qty: 1, avg_price: 105, position_id: "p", reduce_only: true, ref_suffix: "2")
+    ]
+    pos = PositionSummary.from_trades(trades).first
+    refute pos.open?
+    assert_equal BigDecimal("105"), pos.exit_price
+  end
+
+  test "#exit_price from notional/closed_quantity when avgPrice missing on close" do
+    # Closing trade with executedQty but no avgPrice: use notional/closed_quantity
+    trades = [
+      create_trade(account: @account, side: "BUY", qty: 2, avg_price: 50, position_id: "p", reduce_only: false),
+      create_trade(account: @account, side: "SELL", qty: 2, avg_price: 55, position_id: "p", reduce_only: true, ref_suffix: "2")
+    ]
+    pos = PositionSummary.from_trades(trades).first
+    # Closing trade has avgPrice 55 in payload from create_trade, so we get 55
+    assert_equal BigDecimal("55"), pos.exit_price
+  end
+
   test "#unrealized_pnl returns nil when not open" do
     trades = [
       create_trade(account: @account, side: "BUY", qty: 1, avg_price: 100, position_id: "p", reduce_only: false),
@@ -53,27 +81,27 @@ class PositionSummaryTest < ActiveSupport::TestCase
   end
 
   test "#unrealized_pnl returns nil when current_price is nil" do
-    trades = [create_trade(account: @account, side: "BUY", qty: 1, avg_price: 100, position_id: "p", reduce_only: false)]
+    trades = [ create_trade(account: @account, side: "BUY", qty: 1, avg_price: 100, position_id: "p", reduce_only: false) ]
     pos = PositionSummary.from_trades(trades).first
     assert_nil pos.unrealized_pnl(nil)
   end
 
   test "#unrealized_pnl long: profit when current price above entry" do
-    trades = [create_trade(account: @account, side: "BUY", qty: 2, avg_price: 100, position_id: "p", reduce_only: false)]
+    trades = [ create_trade(account: @account, side: "BUY", qty: 2, avg_price: 100, position_id: "p", reduce_only: false) ]
     pos = PositionSummary.from_trades(trades).first
     # (110 - 100) * 2 = 20
     assert_equal BigDecimal("20"), pos.unrealized_pnl(110)
   end
 
   test "#unrealized_pnl short: profit when current price below entry" do
-    trades = [create_trade(account: @account, side: "SELL", qty: 3, avg_price: 50, position_id: "p", reduce_only: false)]
+    trades = [ create_trade(account: @account, side: "SELL", qty: 3, avg_price: 50, position_id: "p", reduce_only: false) ]
     pos = PositionSummary.from_trades(trades).first
     # (50 - 40) * 3 = 30
     assert_equal BigDecimal("30"), pos.unrealized_pnl(40)
   end
 
   test "#unrealized_roi_percent returns nil when margin_used blank" do
-    trades = [create_trade(account: @account, side: "BUY", qty: 1, avg_price: 100, position_id: "p", reduce_only: false, leverage: nil)]
+    trades = [ create_trade(account: @account, side: "BUY", qty: 1, avg_price: 100, position_id: "p", reduce_only: false, leverage: nil) ]
     pos = PositionSummary.from_trades(trades).first
     assert pos.open?
     assert_nil pos.unrealized_roi_percent(110)
@@ -81,7 +109,7 @@ class PositionSummaryTest < ActiveSupport::TestCase
 
   test "#unrealized_roi_percent computes (unrealized_pnl / margin_used) * 100" do
     # margin = notional/leverage = 100*1/10 = 10, pnl = (110-100)*1 = 10, roi = 100%
-    trades = [create_trade(account: @account, side: "BUY", qty: 1, avg_price: 100, position_id: "p", reduce_only: false, leverage: 10)]
+    trades = [ create_trade(account: @account, side: "BUY", qty: 1, avg_price: 100, position_id: "p", reduce_only: false, leverage: 10) ]
     pos = PositionSummary.from_trades(trades).first
     roi = pos.unrealized_roi_percent(110)
     assert_not_nil roi
