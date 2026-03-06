@@ -1,6 +1,14 @@
 # frozen_string_literal: true
 
 module TradesHelper
+  TRADES_INDEX_PARAMS = %w[view from_date to_date exchange_account_id portfolio_id].freeze
+
+  def trades_index_filter_params(overrides = {})
+    p = params.permit(TRADES_INDEX_PARAMS).to_h
+    p = p.merge(overrides.stringify_keys).delete_if { |_, v| v.blank? }
+    p.presence || {}
+  end
+
   def trades_index_cell_content(pos, column_id, roi_val:, pnl_val:)
     case column_id
     when "closed"

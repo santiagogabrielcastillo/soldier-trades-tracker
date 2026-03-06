@@ -48,6 +48,6 @@ class PortfoliosController < ApplicationController
   end
 
   def portfolio_params
-    params.require(:portfolio).permit(:name, :start_date, :end_date, :initial_balance, :notes, :default)
+    params.require(:portfolio).permit(:name, :start_date, :end_date, :initial_balance, :notes, :default, :exchange_account_id)
   end
 end

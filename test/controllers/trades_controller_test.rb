@@ -55,6 +55,20 @@ class TradesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "index view=exchange with own exchange_account_id returns 200" do
+    sign_in_as(@user)
+    get trades_path(view: "exchange", exchange_account_id: @account.id)
+    assert_response :success
+  end
+
+  test "index view=exchange with invalid exchange_account_id redirects to history with flash" do
+    sign_in_as(@user)
+    other_account = exchange_accounts(:two)
+    get trades_path(view: "exchange", exchange_account_id: other_account.id)
+    assert_redirected_to trades_path(view: "history")
+    assert_match /wasn't found/i, flash[:alert].to_s
+  end
+
   test "index shows closed leg and Open remainder row for partial close" do
     Trade.where(exchange_account: @account).delete_all
     create_partial_close_trades
