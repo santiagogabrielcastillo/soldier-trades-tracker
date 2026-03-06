@@ -1,6 +1,6 @@
 <div class="mx-auto max-w-lg">
   <h1 class="mb-2 text-2xl font-semibold text-slate-900">Link exchange account</h1>
-  <p class="mb-6 text-sm text-slate-600">Link your BingX perpetual futures account with a read-only API key. Create one under BingX → User Center → API Management; keep permissions read-only. Only perpetual futures trades are synced.</p>
+  <p class="mb-6 text-sm text-slate-600">Link your exchange with a read-only API key. Create one under your exchange (BingX → User Center → API Management; Binance Futures → API Management). Keep permissions read-only. Only perpetual futures trades are synced.</p>
 
   <%= form_with model: @exchange_account, url: exchange_accounts_path, local: true, class: "space-y-4", data: { turbo: false } do |f| %>
     <% if @exchange_account.errors.any? %>
@@ -15,8 +15,7 @@
 
     <div>
       <%= f.label :provider_type, "Exchange", class: "block text-sm font-medium text-slate-700" %>
-      <%= f.hidden_field :provider_type, value: "bingx" %>
-    <p class="text-sm text-slate-600">Exchange: BingX (Perpetual futures)</p>
+      <%= f.select :provider_type, [["BingX (Perpetual futures)", "bingx"], ["Binance (USDⓈ-M Futures)", "binance"]], {}, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
     </div>
 
     <div>

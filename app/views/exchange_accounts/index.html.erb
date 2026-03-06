@@ -17,9 +17,10 @@
               <% end %>
             </div>
             <div class="flex items-center gap-3">
-              <% if account.provider_type == "bingx" && account.can_sync? %>
+              <% provider_supported = Exchanges::ProviderForAccount.new(account).supported? %>
+              <% if provider_supported && account.can_sync? %>
                 <%= button_to "Sync now", sync_exchange_account_path(account), method: :post, class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50" %>
-              <% elsif account.provider_type == "bingx" && !account.can_sync? %>
+              <% elsif provider_supported && !account.can_sync? %>
                 <span class="text-sm text-slate-400">Rate limit (2/day)</span>
               <% end %>
               <%= button_to "Remove", exchange_account_path(account), method: :delete, data: { turbo_confirm: "Remove this exchange account?" }, class: "text-sm text-slate-600 hover:text-red-600" %>

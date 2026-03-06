@@ -5,6 +5,7 @@ module Exchanges
   # and validator so no code branches on provider_type or references BingxClient directly.
   class ProviderForAccount
     REGISTRY = {
+      "binance" => "Exchanges::BinanceClient",
       "bingx" => "Exchanges::BingxClient"
     }.freeze
 
