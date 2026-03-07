@@ -27,7 +27,8 @@ class Trades::IndexService
     portfolio = resolve_portfolio
     trades = load_trades(portfolio)
     initial_balance = portfolio&.initial_balance.to_d
-    positions = PositionSummary.from_trades_with_balance(trades, initial_balance: initial_balance)
+    leverage_by_symbol = fetch_binance_leverage_by_symbol(trades)
+    positions = PositionSummary.from_trades_with_balance(trades, initial_balance: initial_balance, leverage_by_symbol: leverage_by_symbol)
     current_prices = fetch_current_prices_for_open_positions(positions)
     exchange_account = @exchange_account_id.present? ? @user.exchange_accounts.find_by(id: @exchange_account_id) : nil
 
@@ -73,6 +74,23 @@ class Trades::IndexService
       relation = relation.where(exchange_account_id: @exchange_account_id) if @view == "history" && @exchange_account_id.present?
     end
     relation.order(executed_at: :asc).limit(PositionSummary::TRADES_LIMIT)
+  end
+
+  # Binance userTrades does not return leverage; positionRisk does. Fetch once per Binance account and merge.
+  def fetch_binance_leverage_by_symbol(trades)
+    accounts = trades.map(&:exchange_account).compact.uniq.select { |a| a.provider_type.to_s.downcase == "binance" }
+    return {} if accounts.empty?
+    merged = {}
+    accounts.each do |account|
+      client = Exchanges::ProviderForAccount.new(account).client
+      next unless client.respond_to?(:leverage_by_symbol)
+      leverage_by_symbol = client.leverage_by_symbol
+      merged.merge!(leverage_by_symbol) if leverage_by_symbol.present?
+    end
+    merged
+  rescue StandardError => e
+    Rails.logger.warn("[IndexService] Binance leverage_by_symbol failed: #{e.message}")
+    {}
   end
 
   def fetch_current_prices_for_open_positions(positions)

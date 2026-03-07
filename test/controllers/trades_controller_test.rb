@@ -145,7 +145,8 @@ class TradesControllerTest < ActionDispatch::IntegrationTest
         "avgPrice" => "105",
         "positionID" => "pos_partial",
         "reduceOnly" => true,
-        "leverage" => "10X"
+        "leverage" => "10X",
+        "profit" => "5"
       },
       position_id: "pos_partial"
     )

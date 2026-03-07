@@ -93,6 +93,22 @@ module Exchanges
       end
     end
 
+    test "leverage_by_symbol returns app symbol => leverage from positionRisk" do
+      position_risk = [
+        { "symbol" => "BTCUSDT", "positionAmt" => "0.1", "leverage" => "5" },
+        { "symbol" => "ETHUSDT", "positionAmt" => "0", "leverage" => "10" }
+      ]
+      @client.stub(:signed_get, ->(path, _params) {
+        return position_risk if path == BinanceClient::POSITION_RISK_PATH
+        []
+      }) do
+        result = @client.leverage_by_symbol
+        assert_equal 5, result["BTC-USDT"]
+        assert_equal 10, result["ETH-USDT"]
+        assert_equal 2, result.size
+      end
+    end
+
     private
 
     def fake_response(code:, body:, headers: {})

@@ -11,18 +11,18 @@ class Trade < ApplicationRecord
     str.sub(/\A(\d+).*\z/, "\\1").to_i.then { |n| n.positive? ? n : nil }
   end
 
-  # Notional (position size) from raw: avgPrice * executedQty. Used for margin = notional / leverage.
+  # Notional (position size) from raw: price * qty. BingX: avgPrice, executedQty; Binance: price, qty.
   def notional_from_raw
     raw = raw_payload || {}
-    avg = (raw["avgPrice"] || raw["price"] || 0).to_d
-    qty = (raw["executedQty"] || raw["executed_qty"] || raw["origQty"] || 0).to_d
+    avg = (raw["avgPrice"] || raw["avg_price"] || raw["price"] || 0).to_d
+    qty = (raw["executedQty"] || raw["executed_qty"] || raw["origQty"] || raw["qty"] || 0).to_d
     (avg * qty).to_d
   end
 
-  # Exchange-reported realized P&L for this fill (e.g. BingX "profit"). Used for position Net P&L instead of net_amount sum.
+  # Exchange-reported realized P&L for this fill. BingX: "profit"; Binance: "realizedPnl" / "realized_pnl".
   def realized_profit_from_raw
     raw = raw_payload || {}
-    val = raw["profit"].to_s.strip
+    val = (raw["profit"] || raw["realizedPnl"] || raw["realized_pnl"]).to_s.strip
     return nil if val.blank?
     val.to_d
   end

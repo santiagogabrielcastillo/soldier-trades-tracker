@@ -59,10 +59,8 @@ class Dashboards::SummaryService
   end
 
   def build_analytics(positions, initial_balance)
-    # Closed = one row per closing leg (build_one_leg); open/single-fill rows have trades.size != 2 or no closing_leg?
-    closed = positions.select do |s|
-      s.trades.size == 2 && PositionSummary.closing_leg?(s.trades.last, s.trades.first)
-    end
+    # Closed = any row that is not open (one row per position, possibly aggregated from multiple legs)
+    closed = positions.reject(&:open?)
     closed_sorted = closed.sort_by { |s| s.close_at || Time.at(0) }
 
     total_return_pct = if initial_balance.present? && initial_balance.positive?

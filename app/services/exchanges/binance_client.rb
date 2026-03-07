@@ -55,6 +55,25 @@ module Exchanges
       @http.get(path, params)
     end
 
+    # Returns Hash[app_symbol => leverage (Integer)]. Uses positionRisk; symbols normalized to app form (e.g. BTC-USDT).
+    # userTrades does not return leverage, so the index uses this to show leverage/margin/ROI for Binance positions.
+    def leverage_by_symbol
+      resp = signed_get(POSITION_RISK_PATH, {})
+      self.class.check_binance_error!(resp)
+      return {} unless resp.is_a?(Array)
+
+      resp.each_with_object({}) do |pos, out|
+        sym = (pos["symbol"] || pos["symbol_name"])&.to_s&.strip
+        next if sym.blank?
+        app_sym = Binance::TradeNormalizer.normalize_symbol(sym)
+        next if app_sym.blank?
+        lev = (pos["leverage"] || pos["leverage_value"]).to_s.strip
+        next if lev.blank?
+        n = lev.to_i
+        out[app_sym] = n if n.positive?
+      end
+    end
+
     private
 
     def discover_symbols(since_ms)

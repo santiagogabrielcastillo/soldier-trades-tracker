@@ -146,9 +146,52 @@ class PositionSummaryTest < ActiveSupport::TestCase
     refute positions.first.open?
   end
 
+  test "BOTH position_id splits into chains at zero-cross (Binance one-way)" do
+    # 4 trades: BUY 0.007, SELL 0.015 (over-close), SELL 0.007, BUY 0.007 -> chains: [t1,t2], [t3,t4]; t2 excess = 0.008 Short open
+    base_time = Time.utc(2025, 11, 13, 21, 0)
+    trades = [
+      create_trade(account: @account, side: "BUY", qty: 0.007, avg_price: 98_387.90, position_id: "BOTH", reduce_only: false, ref_suffix: "1", executed_at: base_time),
+      create_trade(account: @account, side: "SELL", qty: 0.015, avg_price: 94_428.60, position_id: "BOTH", reduce_only: true, ref_suffix: "2", executed_at: base_time + 1.day),
+      create_trade(account: @account, side: "SELL", qty: 0.007, avg_price: 94_750, position_id: "BOTH", reduce_only: true, ref_suffix: "3", executed_at: base_time + 2.days),
+      create_trade(account: @account, side: "BUY", qty: 0.007, avg_price: 80_600.20, position_id: "BOTH", reduce_only: false, ref_suffix: "4", executed_at: base_time + 3.days)
+    ]
+    positions = PositionSummary.from_trades(trades)
+    assert_equal 3, positions.size, "Two closed (Long t1+t2, Short t3+t4) plus one open (excess 0.008 Short from over-close)"
+    closed = positions.reject(&:open?)
+    assert_equal 2, closed.size
+    long_closed = closed.find { |p| p.position_side == "long" }
+    short_closed = closed.find { |p| p.position_side == "short" }
+    assert long_closed, "One closed Long"
+    assert short_closed, "One closed Short"
+    open_positions = positions.select(&:open?)
+    assert_equal 1, open_positions.size, "One open: excess Short from over-close"
+    excess_short = open_positions.first
+    assert_equal "short", excess_short.position_side
+    assert_equal 0.008, excess_short.open_quantity.to_f
+    assert_equal 94_428.60, excess_short.entry_price.to_f
+  end
+
+  test "leverage_by_symbol supplies leverage when trade raw has none (e.g. Binance)" do
+    # Binance userTrades do not return leverage; we pass it from positionRisk via leverage_by_symbol.
+    trades = [
+      create_trade(account: @account, side: "BUY", qty: 1, avg_price: 100, position_id: "LONG", reduce_only: false, leverage: nil),
+      create_trade(account: @account, side: "SELL", qty: 1, avg_price: 105, position_id: "LONG", reduce_only: true, ref_suffix: "2", leverage: nil)
+    ]
+    positions = PositionSummary.from_trades(trades)
+    assert positions.first.margin_used.blank?, "Without leverage_by_symbol, margin_used is nil"
+    assert positions.first.roi_percent.nil?, "Without leverage_by_symbol, roi_percent is nil"
+
+    positions = PositionSummary.from_trades(trades, leverage_by_symbol: { "BTC-USDT" => 5 })
+    pos = positions.first
+    assert_equal 5, pos.leverage
+    assert pos.margin_used.present?, "With leverage_by_symbol, margin_used is set (notional/leverage)"
+    assert_equal 20, pos.margin_used.to_f, "100 notional / 5 = 20 margin"
+    assert pos.roi_percent.present?, "With margin_used, roi_percent is computed"
+  end
+
   private
 
-  def create_trade(account:, side:, qty:, avg_price:, position_id:, reduce_only:, ref_suffix: "1", leverage: 10)
+  def create_trade(account:, side:, qty:, avg_price:, position_id:, reduce_only:, ref_suffix: "1", leverage: 10, executed_at: nil)
     ref_id = "ref_#{position_id}_#{ref_suffix}"
     payload = {
       "side" => side,
@@ -157,7 +200,7 @@ class PositionSummaryTest < ActiveSupport::TestCase
       "positionID" => position_id,
       "reduceOnly" => reduce_only
     }
-    payload["leverage"] = "#{leverage}X" if leverage
+    payload["leverage"] = "#{leverage}X" if leverage.present?
     Trade.create!(
       exchange_account_id: account.id,
       exchange_reference_id: ref_id,
@@ -165,7 +208,7 @@ class PositionSummaryTest < ActiveSupport::TestCase
       side: side,
       fee: 0,
       net_amount: side == "BUY" ? -avg_price * qty : avg_price * qty,
-      executed_at: Time.current,
+      executed_at: executed_at || Time.current,
       raw_payload: payload,
       position_id: position_id
     )
