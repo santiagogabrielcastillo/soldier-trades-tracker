@@ -2,9 +2,37 @@
   <h1 class="mb-4 text-2xl font-semibold text-slate-900">Trades</h1>
 
   <nav class="mb-6 flex gap-1 border-b border-slate-200" aria-label="Tabs">
-    <%= link_to "History", trades_path(view: "history"), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'history' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}" %>
-    <%= link_to "Portfolio", trades_path(view: "portfolio"), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'portfolio' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}" %>
+    <%= link_to "History", trades_path(trades_index_filter_params.merge("view" => "history")), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'history' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}" %>
+    <% (@exchange_accounts || []).each do |account| %>
+      <%= link_to account.provider_type.to_s.capitalize, trades_path(trades_index_filter_params.merge("view" => "exchange", "exchange_account_id" => account.id)), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'exchange' && @exchange_account&.id == account.id ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}" %>
+    <% end %>
+    <%= link_to "Portfolio", trades_path(trades_index_filter_params.merge("view" => "portfolio", "portfolio_id" => @portfolio&.id)), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'portfolio' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}" %>
   </nav>
+
+  <% if @view == "history" %>
+    <%= form_with url: trades_path, method: :get, local: true, class: "mb-4 flex flex-wrap items-end gap-3", data: { turbo: false } do |f| %>
+      <%= f.hidden_field :view, value: "history" %>
+      <%= f.label :from_date, "From", class: "text-sm font-medium text-slate-700" %>
+      <%= f.date_field :from_date, value: @from_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+      <%= f.label :to_date, "To", class: "text-sm font-medium text-slate-700" %>
+      <%= f.date_field :to_date, value: @to_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+      <%= f.label :exchange_account_id, "Exchange", class: "text-sm font-medium text-slate-700" %>
+      <%= f.select :exchange_account_id, options_for_select([["All exchanges", nil]] + (@exchange_accounts || []).map { |a| [a.provider_type.to_s.capitalize, a.id] }, params[:exchange_account_id]), {}, { class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" } %>
+      <%= f.submit "Filter", class: "rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+    <% end %>
+  <% end %>
+
+  <% if @view == "exchange" %>
+    <%= form_with url: trades_path, method: :get, local: true, class: "mb-4 flex flex-wrap items-end gap-3", data: { turbo: false } do |f| %>
+      <%= f.hidden_field :view, value: "exchange" %>
+      <%= f.hidden_field :exchange_account_id, value: @exchange_account&.id %>
+      <%= f.label :from_date, "From", class: "text-sm font-medium text-slate-700" %>
+      <%= f.date_field :from_date, value: @from_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+      <%= f.label :to_date, "To", class: "text-sm font-medium text-slate-700" %>
+      <%= f.date_field :to_date, value: @to_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+      <%= f.submit "Filter", class: "rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+    <% end %>
+  <% end %>
 
   <% if @view == "portfolio" && @portfolios.present? %>
     <div class="mb-4 flex items-center gap-3">
@@ -14,7 +42,7 @@
         <%= f.select :portfolio_id, options_from_collection_for_select(@portfolios, :id, :name, @portfolio&.id), { include_blank: "Select a portfolio" }, { class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", id: "portfolio_id", onchange: "this.form.submit()" } %>
       <% end %>
       <% if @portfolio %>
-        <span class="text-sm text-slate-500"><%= @portfolio.date_range_label %><% if @portfolio.initial_balance != 0 %> · Floor <%= format_money(@portfolio.initial_balance) %><% end %></span>
+        <span class="text-sm text-slate-500"><%= @portfolio.date_range_label %><% if @portfolio.exchange_account.present? %> · <%= @portfolio.exchange_account.provider_type.to_s.capitalize %> only<% end %><% if @portfolio.initial_balance != 0 %> · Floor <%= format_money(@portfolio.initial_balance) %><% end %></span>
       <% end %>
     </div>
   <% end %>
@@ -30,6 +58,9 @@
         <%= form_with url: user_preferences_trades_index_columns_path, method: :patch, local: true, data: { turbo: false } do |f| %>
           <%= f.hidden_field :view, value: @view %>
           <%= f.hidden_field :portfolio_id, value: @portfolio&.id %>
+          <%= f.hidden_field :exchange_account_id, value: @exchange_account&.id %>
+          <%= f.hidden_field :from_date, value: @from_date %>
+          <%= f.hidden_field :to_date, value: @to_date %>
           <div class="grid grid-cols-2 gap-2">
             <% TradesIndexColumns::ALL_IDS.each do |col_id| %>
               <label class="flex items-center gap-2 text-sm">
@@ -78,6 +109,9 @@
     <div class="rounded-lg border border-slate-200 bg-white p-12 text-center text-slate-600">
       <% if @view == "portfolio" && @portfolio %>
         <p>No trades in this portfolio's date range.</p>
+      <% elsif @view == "exchange" %>
+        <p>No trades for this exchange.</p>
+        <p class="mt-2 text-sm"><%= link_to "Sync now", exchange_accounts_path, class: "text-slate-800 underline hover:no-underline" %> or link another account.</p>
       <% else %>
         <p>No trades yet. Link an exchange account and sync will run on your schedule.</p>
       <% end %>

@@ -14,7 +14,8 @@ class UserPreferencesController < ApplicationController
     pref = current_user.user_preferences.find_or_initialize_by(key: "trades_index_visible_columns")
     pref.value = column_ids
     if pref.save
-      redirect_to trades_path(view: params[:view], portfolio_id: params[:portfolio_id]), notice: "Columns saved."
+      redirect_params = params.permit(TradesHelper::TRADES_INDEX_PARAMS).to_h.compact_blank
+      redirect_to trades_path(redirect_params), notice: "Columns saved."
     else
       redirect_back fallback_location: trades_path, alert: "Could not save columns."
     end

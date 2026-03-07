@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_06_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_06_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -36,6 +36,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_06_120000) do
     t.boolean "default", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "exchange_account_id"
+    t.index ["exchange_account_id"], name: "index_portfolios_on_exchange_account_id"
     t.index ["user_id"], name: "index_portfolios_on_user_id"
   end
 
@@ -206,6 +208,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_06_120000) do
   end
 
   add_foreign_key "exchange_accounts", "users"
+  add_foreign_key "portfolios", "exchange_accounts", on_delete: :nullify
   add_foreign_key "portfolios", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
