@@ -115,9 +115,9 @@ Improve trades index and platform performance in two phases: **Phase 1** deliver
 
 ### Phase 2 (follow-up)
 
-- [ ] Position table exists with required columns and associations; sync (or post-sync job) creates/updates/closes Position rows from Trade data.
-- [ ] Trades index and dashboard read from Position with appropriate scopes and pagination.
-- [ ] Backfill script or task populates Position from existing trades; no regression in displayed data.
+- [x] Position table exists with required columns and associations; sync (or post-sync job) creates/updates/closes Position rows from Trade data.
+- [x] Trades index and dashboard read from Position with appropriate scopes and pagination (with fallback to PositionSummary when no Position rows).
+- [x] Backfill script or task populates Position from existing trades; no regression in displayed data.
 
 ## Success Metrics
 

@@ -25,10 +25,8 @@ class Trades::IndexService
 
   def call
     portfolio = resolve_portfolio
-    trades = load_trades(portfolio)
     initial_balance = portfolio&.initial_balance.to_d
-    leverage_by_symbol = Positions::CurrentDataFetcher.leverage_by_symbol(trades)
-    positions = PositionSummary.from_trades_with_balance(trades, initial_balance: initial_balance, leverage_by_symbol: leverage_by_symbol)
+    positions = load_positions_with_fallback(portfolio, initial_balance)
     current_prices = Positions::CurrentDataFetcher.current_prices_for_open_positions(positions)
     exchange_account = @exchange_account_id.present? ? @user.exchange_accounts.find_by(id: @exchange_account_id) : nil
 
@@ -58,6 +56,37 @@ class Trades::IndexService
     return nil unless @view == "portfolio"
     return @user.portfolios.includes(:exchange_account).find_by(id: @portfolio_id) if @portfolio_id.present?
     @user.default_portfolio
+  end
+
+  def load_positions_with_fallback(portfolio, initial_balance)
+    positions_relation = load_positions(portfolio)
+    positions = positions_relation.ordered_for_display.includes(:exchange_account).to_a
+    if positions.any?
+      Position.assign_balance!(positions, initial_balance: initial_balance)
+      return positions
+    end
+    # Fallback: no Position rows (e.g. before backfill or in tests). Build from trades.
+    trades = load_trades(portfolio)
+    return [] if trades.empty?
+
+    leverage_by_symbol = Positions::CurrentDataFetcher.leverage_by_symbol(trades)
+    PositionSummary.from_trades_with_balance(trades, initial_balance: initial_balance, leverage_by_symbol: leverage_by_symbol)
+  end
+
+  def load_positions(portfolio)
+    base = if portfolio
+      if portfolio.exchange_account_id.present?
+        Position.for_exchange_account(portfolio.exchange_account_id)
+      else
+        Position.for_user(@user)
+      end.in_date_range(portfolio.start_date, portfolio.end_date)
+    elsif @view == "exchange" && @exchange_account_id.present?
+      Position.for_exchange_account(@exchange_account_id).in_date_range(@from_date, @to_date)
+    else
+      Position.for_user(@user).in_date_range(@from_date, @to_date)
+    end
+    base = base.for_exchange_account(@exchange_account_id) if @view == "history" && @exchange_account_id.present?
+    base
   end
 
   def load_trades(portfolio)

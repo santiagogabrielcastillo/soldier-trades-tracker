@@ -26,6 +26,7 @@ class ExchangeAccounts::SyncService
 
     SyncRun.create!(exchange_account_id: @account.id, ran_at: Time.current.utc)
     @account.update_column(:last_synced_at, Time.current.utc)
+    Positions::RebuildForAccountService.call(@account)
     :ok
   end
 

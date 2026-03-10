@@ -1,5 +1,7 @@
 class Trade < ApplicationRecord
   belongs_to :exchange_account
+  has_many :position_trades, dependent: :destroy
+  has_many :positions, through: :position_trades
 
   validates :exchange_reference_id, uniqueness: { scope: :exchange_account_id }
 
