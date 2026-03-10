@@ -146,6 +146,32 @@ class PositionSummaryTest < ActiveSupport::TestCase
     refute positions.first.open?
   end
 
+  test "multiple partial closes yield one row per closing leg plus remainder row" do
+    # Open 10, close 5 (profit 5), close 1 (profit 3) -> 2 closed rows + 1 remainder (4 open). Margin 100 total; leg1=50, leg2=10, remainder=40.
+    trades = [
+      create_trade(account: @account, side: "BUY", qty: 10, avg_price: 100, position_id: "pos_multi", reduce_only: false, leverage: 10),
+      create_trade(account: @account, side: "SELL", qty: 5, avg_price: 105, position_id: "pos_multi", reduce_only: true, ref_suffix: "2", profit: "5"),
+      create_trade(account: @account, side: "SELL", qty: 1, avg_price: 110, position_id: "pos_multi", reduce_only: true, ref_suffix: "3", profit: "3")
+    ]
+    positions = PositionSummary.from_trades(trades)
+    closed = positions.reject(&:open?)
+    remainder = positions.find(&:open?)
+    assert_equal 3, positions.size, "Two closed legs + one remainder row"
+    assert_equal 2, closed.size, "One row per closing leg"
+    assert remainder&.remaining_quantity.present?
+    assert_equal BigDecimal("4"), remainder.remaining_quantity
+
+    leg1 = closed.min_by { |p| p.close_at }
+    leg2 = closed.max_by { |p| p.close_at }
+    assert_equal BigDecimal("5"), leg1.net_pl
+    assert_equal BigDecimal("3"), leg2.net_pl
+    assert_equal BigDecimal("50"), leg1.margin_used, "First leg: 100 * (5/10) = 50"
+    assert_equal BigDecimal("10"), leg2.margin_used, "Second leg: 100 * (1/10) = 10"
+    assert_equal 10.0, leg1.roi_percent, "5/50 * 100 = 10%"
+    assert_equal 30.0, leg2.roi_percent, "3/10 * 100 = 30%"
+    assert_equal BigDecimal("40"), remainder.margin_used, "Remainder: 100 * (4/10) = 40"
+  end
+
   test "BOTH position_id splits into chains at zero-cross (Binance one-way)" do
     # 4 trades: BUY 0.007, SELL 0.015 (over-close), SELL 0.007, BUY 0.007 -> chains: [t1,t2], [t3,t4]; t2 excess = 0.008 Short open
     base_time = Time.utc(2025, 11, 13, 21, 0)
@@ -191,7 +217,7 @@ class PositionSummaryTest < ActiveSupport::TestCase
 
   private
 
-  def create_trade(account:, side:, qty:, avg_price:, position_id:, reduce_only:, ref_suffix: "1", leverage: 10, executed_at: nil)
+  def create_trade(account:, side:, qty:, avg_price:, position_id:, reduce_only:, ref_suffix: "1", leverage: 10, executed_at: nil, profit: nil)
     ref_id = "ref_#{position_id}_#{ref_suffix}"
     payload = {
       "side" => side,
@@ -201,6 +227,7 @@ class PositionSummaryTest < ActiveSupport::TestCase
       "reduceOnly" => reduce_only
     }
     payload["leverage"] = "#{leverage}X" if leverage.present?
+    payload["profit"] = profit.to_s if profit.present?
     Trade.create!(
       exchange_account_id: account.id,
       exchange_reference_id: ref_id,

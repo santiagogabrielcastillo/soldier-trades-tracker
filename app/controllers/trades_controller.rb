@@ -41,7 +41,7 @@ class TradesController < ApplicationController
   end
 
   def visible_trades_column_ids
-    pref = current_user.user_preferences.find_by(key: "trades_index_visible_columns")
-    TradesIndexColumns.visible_columns(pref&.value)
+    tab_key = helpers.trades_index_tab_key(@view, @exchange_account&.id, @portfolio&.id)
+    helpers.trades_index_visible_column_ids_for(current_user, tab_key)
   end
 end

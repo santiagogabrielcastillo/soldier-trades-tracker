@@ -19,6 +19,10 @@
         <p class="text-xl font-semibold <%= @dashboard.summary_total_return_pct.nil? ? 'text-slate-900' : (@dashboard.summary_total_return_pct >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= @dashboard.summary_total_return_pct.nil? ? "—" : "#{number_with_precision(@dashboard.summary_total_return_pct, precision: 2)}%" %></p>
       </div>
       <div>
+        <span class="text-sm text-slate-500">Unrealized P&amp;L</span>
+        <p class="text-xl font-semibold <%= @dashboard.summary_unrealized_pl.nil? ? 'text-slate-900' : (@dashboard.summary_unrealized_pl >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= @dashboard.summary_unrealized_pl.nil? ? "—" : format_money(@dashboard.summary_unrealized_pl) %></p>
+      </div>
+      <div>
         <span class="text-sm text-slate-500">Positions</span>
         <p class="text-xl font-semibold text-slate-900"><%= @dashboard.summary_position_count %></p>
       </div>
