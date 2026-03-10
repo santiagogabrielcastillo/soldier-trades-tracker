@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  spot_account: one
+  executed_at: 2026-01-14 10:05:00 UTC
+  token: AAVE
+  side: buy
+  price_usd: 174.52
+  amount: 2.292
+  total_value_usd: 400
+  notes:
+  row_signature: sig_aave_buy_1
+
+two:
+  spot_account: one
+  executed_at: 2026-01-14 10:00:00 UTC
+  token: WLD
+  side: buy
+  price_usd: 0.606
+  amount: 330
+  total_value_usd: 199.98
+  notes:
+  row_signature: sig_wld_buy_1
