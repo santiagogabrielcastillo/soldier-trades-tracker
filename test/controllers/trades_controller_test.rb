@@ -69,6 +69,40 @@ class TradesControllerTest < ActionDispatch::IntegrationTest
     assert_match /wasn't found/i, flash[:alert].to_s
   end
 
+  test "index uses tab-scoped column preference when present for history" do
+    Trade.where(exchange_account: @account).delete_all
+    create_open_trade
+    @user.user_preferences.create!(key: "trades_index_visible_columns:history", value: %w[symbol side])
+    sign_in_as(@user)
+    get trades_path(view: "history")
+    assert_response :success
+    assert_select "th", text: "Symbol"
+    assert_select "th", text: "Side"
+    assert_select "th", text: "Balance", count: 0
+  end
+
+  test "index falls back to legacy column preference when no tab-scoped key" do
+    Trade.where(exchange_account: @account).delete_all
+    create_open_trade
+    @user.user_preferences.create!(key: "trades_index_visible_columns", value: %w[symbol side])
+    sign_in_as(@user)
+    get trades_path(view: "history")
+    assert_response :success
+    assert_select "th", text: "Symbol"
+    assert_select "th", text: "Side"
+    assert_select "th", text: "Balance", count: 0
+  end
+
+  test "index uses default columns when no preference" do
+    Trade.where(exchange_account: @account).delete_all
+    create_open_trade
+    @user.user_preferences.where(key: ["trades_index_visible_columns", "trades_index_visible_columns:history"]).destroy_all
+    sign_in_as(@user)
+    get trades_path(view: "history")
+    assert_response :success
+    assert_select "th", text: "Entry price"
+  end
+
   test "index shows closed leg and Open remainder row for partial close" do
     Trade.where(exchange_account: @account).delete_all
     create_partial_close_trades

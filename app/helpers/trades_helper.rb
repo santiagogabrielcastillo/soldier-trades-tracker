@@ -3,6 +3,30 @@
 module TradesHelper
   TRADES_INDEX_PARAMS = %w[view from_date to_date exchange_account_id portfolio_id].freeze
 
+  # Returns a stable key for the current trades index tab for use in preference keys.
+  # Used by TradesController (lookup) and UserPreferencesController (save).
+  def trades_index_tab_key(view, exchange_account_id = nil, portfolio_id = nil)
+    view = view.to_s
+    case view
+    when "history" then "history"
+    when "exchange" then exchange_account_id.present? ? "exchange:#{exchange_account_id}" : "history"
+    when "portfolio" then portfolio_id.present? ? "portfolio:#{portfolio_id}" : "portfolio"
+    else "history"
+    end
+  end
+
+  # Resolves visible column IDs for a tab: tab-scoped key → legacy key → default.
+  # user: User; tab_key: from trades_index_tab_key.
+  def trades_index_visible_column_ids_for(user, tab_key)
+    pref = user.user_preferences.find_by(key: "trades_index_visible_columns:#{tab_key}")
+    return TradesIndexColumns.visible_columns(pref.value) if pref.present?
+
+    legacy = user.user_preferences.find_by(key: "trades_index_visible_columns")
+    return TradesIndexColumns.visible_columns(legacy.value) if legacy.present?
+
+    TradesIndexColumns.visible_columns(TradesIndexColumns::DEFAULT_VISIBLE)
+  end
+
   def trades_index_filter_params(overrides = {})
     p = params.permit(TRADES_INDEX_PARAMS).to_h
     p = p.merge(overrides.stringify_keys).delete_if { |_, v| v.blank? }
