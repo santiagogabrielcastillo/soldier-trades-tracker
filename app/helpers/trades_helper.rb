@@ -17,14 +17,13 @@ module TradesHelper
 
   # Resolves visible column IDs for a tab: tab-scoped key → legacy key → default.
   # user: User; tab_key: from trades_index_tab_key.
+  # Uses a single query to load both tab-scoped and legacy preference keys.
   def trades_index_visible_column_ids_for(user, tab_key)
-    pref = user.user_preferences.find_by(key: "trades_index_visible_columns:#{tab_key}")
-    return TradesIndexColumns.visible_columns(pref.value) if pref.present?
-
-    legacy = user.user_preferences.find_by(key: "trades_index_visible_columns")
-    return TradesIndexColumns.visible_columns(legacy.value) if legacy.present?
-
-    TradesIndexColumns.visible_columns(TradesIndexColumns::DEFAULT_VISIBLE)
+    tab_scoped_key = "trades_index_visible_columns:#{tab_key}"
+    legacy_key = "trades_index_visible_columns"
+    prefs = user.user_preferences.where(key: [ tab_scoped_key, legacy_key ]).index_by(&:key)
+    value = prefs[tab_scoped_key]&.value || prefs[legacy_key]&.value
+    TradesIndexColumns.visible_columns(value)
   end
 
   def trades_index_filter_params(overrides = {})
@@ -33,47 +32,57 @@ module TradesHelper
     p.presence || {}
   end
 
-  def trades_index_cell_content(pos, column_id, roi_val:, pnl_val:)
+  def trades_index_cell_content(pos, column_id, roi_val:, pnl_val:, memoized: {})
+    open_flag = memoized[:open].nil? ? pos.open? : memoized[:open]
+    position_side = memoized[:position_side].nil? ? pos.position_side : memoized[:position_side]
+    margin_used = memoized[:margin_used].nil? ? pos.margin_used : memoized[:margin_used]
+    total_commission = memoized[:total_commission].nil? ? pos.total_commission : memoized[:total_commission]
+    entry_price = memoized[:entry_price].nil? ? pos.entry_price : memoized[:entry_price]
+    exit_price = memoized[:exit_price].nil? ? pos.exit_price : memoized[:exit_price]
+    open_quantity = memoized[:open_quantity]
+    closed_quantity = memoized[:closed_quantity]
+    qty_for_display = open_flag ? (open_quantity || pos.open_quantity) : (closed_quantity || pos.closed_quantity)
+
     case column_id
     when "closed"
-      pos.open? ? "Open" : pos.close_at&.strftime("%Y-%m-%d")
+      open_flag ? "Open" : pos.close_at&.strftime("%Y-%m-%d")
     when "exchange"
       pos.exchange_account.provider_type&.capitalize
     when "symbol"
       pos.symbol
     when "side"
-      pos.position_side&.capitalize || "—"
+      position_side&.capitalize || "—"
     when "leverage"
       pos.leverage ? "#{pos.leverage}X" : "—"
     when "margin_used"
-      pos.margin_used ? format_money(pos.margin_used) : "—"
+      margin_used ? format_money(margin_used) : "—"
     when "roi"
       roi_val.nil? ? "—" : "#{number_with_precision(roi_val, precision: 2)}%"
     when "commission"
-      pos.total_commission.zero? ? "—" : format_money(pos.total_commission.abs)
+      (total_commission || 0).to_d.zero? ? "—" : format_money((total_commission || 0).to_d.abs)
     when "net_pl"
       pnl_val.nil? ? "—" : format_money(pnl_val)
     when "balance"
       format_money(pos.balance)
     when "entry_price"
-      pos.entry_price ? format_money(pos.entry_price) : "—"
+      entry_price ? format_money(entry_price) : "—"
     when "exit_price"
-      pos.exit_price ? format_money(pos.exit_price) : "—"
+      exit_price ? format_money(exit_price) : "—"
     when "open_date"
       pos.open_at&.strftime("%Y-%m-%d") || "—"
     when "quantity"
-      qty = pos.open? ? pos.open_quantity : pos.closed_quantity
-      qty.present? && !qty.zero? ? number_with_precision(qty, precision: 8) : "—"
+      qty_for_display.present? && !qty_for_display.to_d.zero? ? number_with_precision(qty_for_display.to_d, precision: 8) : "—"
     else
       "—"
     end
   end
 
-  def trades_index_cell_css(pos, column_id, roi_val:, pnl_val:)
+  def trades_index_cell_css(pos, column_id, roi_val:, pnl_val:, memoized: {})
+    position_side = memoized[:position_side].nil? ? pos.position_side : memoized[:position_side]
     base = "whitespace-nowrap px-6 py-4 text-sm "
     case column_id
     when "side"
-      base + (pos.position_side == "long" ? "text-emerald-600" : pos.position_side == "short" ? "text-red-600" : "text-slate-500")
+      base + (position_side == "long" ? "text-emerald-600" : position_side == "short" ? "text-red-600" : "text-slate-500")
     when "roi"
       base + (roi_val && roi_val >= 0 ? "text-emerald-600 text-right" : roi_val ? "text-red-600 text-right" : "text-slate-500 text-right")
     when "net_pl"

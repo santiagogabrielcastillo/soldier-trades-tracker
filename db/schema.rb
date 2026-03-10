@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_06_130000) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_10_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -184,6 +184,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_06_130000) do
     t.datetime "updated_at", null: false
     t.string "position_id"
     t.index ["exchange_account_id", "exchange_reference_id"], name: "index_trades_on_account_and_reference", unique: true
+    t.index ["exchange_account_id", "executed_at"], name: "index_trades_on_exchange_account_id_and_executed_at"
     t.index ["exchange_account_id", "position_id"], name: "index_trades_on_account_and_position_id"
     t.index ["exchange_account_id"], name: "index_trades_on_exchange_account_id"
   end
