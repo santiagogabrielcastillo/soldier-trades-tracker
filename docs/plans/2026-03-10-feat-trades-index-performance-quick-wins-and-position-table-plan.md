@@ -3,7 +3,7 @@
 ---
 title: Trades index performance — quick wins and Position table
 type: feat
-status: active
+status: completed
 date: 2026-03-10
 source_brainstorm: docs/brainstorms/2026-03-10-trades-index-attributes-and-platform-performance-brainstorm.md
 ---
