@@ -3,6 +3,7 @@ class ExchangeAccount < ApplicationRecord
 
   belongs_to :user
   has_many :trades, dependent: :destroy
+  has_many :positions, dependent: :destroy
   has_many :sync_runs, dependent: :destroy
   has_many :portfolios, dependent: :nullify
 

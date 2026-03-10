@@ -23,12 +23,10 @@ class Dashboards::SummaryService
   private
 
   def portfolio_summary
-    trades = @default_portfolio.trades_in_range.includes(:exchange_account).order(executed_at: :asc).limit(PositionSummary::TRADES_LIMIT)
     initial = @default_portfolio.initial_balance.to_d
-    leverage_by_symbol = fetch_binance_leverage_by_symbol(trades)
-    positions = PositionSummary.from_trades_with_balance(trades, initial_balance: initial, leverage_by_symbol: leverage_by_symbol)
+    positions = load_positions_for_portfolio_with_fallback(@default_portfolio, initial)
     balance = initial + positions.sum(&:net_pl)
-    current_prices = fetch_current_prices_for_open_positions(positions)
+    current_prices = Positions::CurrentDataFetcher.current_prices_for_open_positions(positions)
     summary_unrealized_pl = total_unrealized_pl(positions, current_prices)
     analytics = build_analytics(positions, initial)
 
@@ -46,10 +44,8 @@ class Dashboards::SummaryService
   end
 
   def all_time_summary
-    trades = @user.trades.includes(:exchange_account).order(executed_at: :asc).limit(PositionSummary::TRADES_LIMIT)
-    leverage_by_symbol = fetch_binance_leverage_by_symbol(trades)
-    positions = PositionSummary.from_trades_with_balance(trades, leverage_by_symbol: leverage_by_symbol)
-    current_prices = fetch_current_prices_for_open_positions(positions)
+    positions = load_positions_all_time_with_fallback
+    current_prices = Positions::CurrentDataFetcher.current_prices_for_open_positions(positions)
     summary_unrealized_pl = total_unrealized_pl(positions, current_prices)
     analytics = build_analytics(positions, 0.to_d)
 
@@ -64,6 +60,42 @@ class Dashboards::SummaryService
       summary_unrealized_pl: summary_unrealized_pl,
       summary_trades_path_params: { view: "history" }
     }.merge(analytics)
+  end
+
+  def load_positions_for_portfolio_with_fallback(portfolio, initial_balance)
+    relation = load_positions_for_portfolio(portfolio)
+    positions = relation.ordered_for_display.includes(:exchange_account).to_a
+    if positions.any?
+      Position.assign_balance!(positions, initial_balance: initial_balance)
+      return positions
+    end
+    trades = portfolio.trades_in_range.includes(:exchange_account).order(executed_at: :asc).limit(PositionSummary::TRADES_LIMIT)
+    return [] if trades.empty?
+
+    leverage_by_symbol = Positions::CurrentDataFetcher.leverage_by_symbol(trades)
+    PositionSummary.from_trades_with_balance(trades, initial_balance: initial_balance, leverage_by_symbol: leverage_by_symbol)
+  end
+
+  def load_positions_all_time_with_fallback
+    positions = Position.for_user(@user).ordered_for_display.includes(:exchange_account).to_a
+    if positions.any?
+      Position.assign_balance!(positions, initial_balance: 0)
+      return positions
+    end
+    trades = @user.trades.includes(:exchange_account).order(executed_at: :asc).limit(PositionSummary::TRADES_LIMIT)
+    return [] if trades.empty?
+
+    leverage_by_symbol = Positions::CurrentDataFetcher.leverage_by_symbol(trades)
+    PositionSummary.from_trades_with_balance(trades, leverage_by_symbol: leverage_by_symbol)
+  end
+
+  def load_positions_for_portfolio(portfolio)
+    base = if portfolio.exchange_account_id.present?
+      Position.for_exchange_account(portfolio.exchange_account_id)
+    else
+      Position.for_user(@user)
+    end
+    base.in_date_range(portfolio.start_date, portfolio.end_date)
   end
 
   def build_analytics(positions, initial_balance)
@@ -106,44 +138,5 @@ class Dashboards::SummaryService
     open_positions = positions.select(&:open?)
     return 0.to_d if open_positions.empty?
     open_positions.sum(BigDecimal("0")) { |p| (p.unrealized_pnl(current_prices[p.symbol]) || 0).to_d }
-  end
-
-  def fetch_current_prices_for_open_positions(positions)
-    open_positions = positions.select(&:open?)
-    return {} if open_positions.empty?
-    with_account = open_positions.select { |p| p.exchange_account.present? }
-    open_positions.reject { |p| p.exchange_account.present? }.each do |p|
-      Rails.logger.warn("[Dashboards::SummaryService] Skipping position with nil exchange_account: symbol=#{p.symbol}")
-    end
-    open_positions = with_account
-    return {} if open_positions.empty?
-    by_provider = open_positions.group_by { |p| p.exchange_account.provider_type.to_s.presence || "bingx" }
-    result = {}
-    by_provider.each do |provider_type, group|
-      symbols = group.map(&:symbol).uniq
-      next if symbols.empty?
-      prices = case provider_type
-      when "binance" then Exchanges::Binance::TickerFetcher.fetch_prices(symbols: symbols)
-      else Exchanges::Bingx::TickerFetcher.fetch_prices(symbols: symbols)
-      end
-      result.merge!(prices)
-    end
-    result
-  end
-
-  def fetch_binance_leverage_by_symbol(trades)
-    accounts = trades.map(&:exchange_account).compact.uniq.select { |a| a.provider_type.to_s.downcase == "binance" }
-    return {} if accounts.empty?
-    merged = {}
-    accounts.each do |account|
-      client = Exchanges::ProviderForAccount.new(account).client
-      next unless client.respond_to?(:leverage_by_symbol)
-      leverage_by_symbol = client.leverage_by_symbol
-      merged.merge!(leverage_by_symbol) if leverage_by_symbol.present?
-    end
-    merged
-  rescue StandardError => e
-    Rails.logger.warn("[Dashboards::SummaryService] Binance leverage_by_symbol failed: #{e.message}")
-    {}
   end
 end

@@ -25,11 +25,9 @@ class Trades::IndexService
 
   def call
     portfolio = resolve_portfolio
-    trades = load_trades(portfolio)
     initial_balance = portfolio&.initial_balance.to_d
-    leverage_by_symbol = fetch_binance_leverage_by_symbol(trades)
-    positions = PositionSummary.from_trades_with_balance(trades, initial_balance: initial_balance, leverage_by_symbol: leverage_by_symbol)
-    current_prices = fetch_current_prices_for_open_positions(positions)
+    positions = load_positions_with_fallback(portfolio, initial_balance)
+    current_prices = Positions::CurrentDataFetcher.current_prices_for_open_positions(positions)
     exchange_account = @exchange_account_id.present? ? @user.exchange_accounts.find_by(id: @exchange_account_id) : nil
 
     {
@@ -60,6 +58,37 @@ class Trades::IndexService
     @user.default_portfolio
   end
 
+  def load_positions_with_fallback(portfolio, initial_balance)
+    positions_relation = load_positions(portfolio)
+    positions = positions_relation.ordered_for_display.includes(:exchange_account).to_a
+    if positions.any?
+      Position.assign_balance!(positions, initial_balance: initial_balance)
+      return positions
+    end
+    # Fallback: no Position rows (e.g. before backfill or in tests). Build from trades.
+    trades = load_trades(portfolio)
+    return [] if trades.empty?
+
+    leverage_by_symbol = Positions::CurrentDataFetcher.leverage_by_symbol(trades)
+    PositionSummary.from_trades_with_balance(trades, initial_balance: initial_balance, leverage_by_symbol: leverage_by_symbol)
+  end
+
+  def load_positions(portfolio)
+    base = if portfolio
+      if portfolio.exchange_account_id.present?
+        Position.for_exchange_account(portfolio.exchange_account_id)
+      else
+        Position.for_user(@user)
+      end.in_date_range(portfolio.start_date, portfolio.end_date)
+    elsif @view == "exchange" && @exchange_account_id.present?
+      Position.for_exchange_account(@exchange_account_id).in_date_range(@from_date, @to_date)
+    else
+      Position.for_user(@user).in_date_range(@from_date, @to_date)
+    end
+    base = base.for_exchange_account(@exchange_account_id) if @view == "history" && @exchange_account_id.present?
+    base
+  end
+
   def load_trades(portfolio)
     relation = if portfolio
       portfolio.trades_in_range.includes(:exchange_account)
@@ -74,45 +103,5 @@ class Trades::IndexService
       relation = relation.where(exchange_account_id: @exchange_account_id) if @view == "history" && @exchange_account_id.present?
     end
     relation.order(executed_at: :asc).limit(PositionSummary::TRADES_LIMIT)
-  end
-
-  # Binance userTrades does not return leverage; positionRisk does. Fetch once per Binance account and merge.
-  def fetch_binance_leverage_by_symbol(trades)
-    accounts = trades.map(&:exchange_account).compact.uniq.select { |a| a.provider_type.to_s.downcase == "binance" }
-    return {} if accounts.empty?
-    merged = {}
-    accounts.each do |account|
-      client = Exchanges::ProviderForAccount.new(account).client
-      next unless client.respond_to?(:leverage_by_symbol)
-      leverage_by_symbol = client.leverage_by_symbol
-      merged.merge!(leverage_by_symbol) if leverage_by_symbol.present?
-    end
-    merged
-  rescue StandardError => e
-    Rails.logger.warn("[IndexService] Binance leverage_by_symbol failed: #{e.message}")
-    {}
-  end
-
-  def fetch_current_prices_for_open_positions(positions)
-    open_positions = positions.select(&:open?)
-    return {} if open_positions.empty?
-    with_account = open_positions.select { |p| p.exchange_account.present? }
-    open_positions.reject { |p| p.exchange_account.present? }.each do |p|
-      Rails.logger.warn("[IndexService] Skipping position with nil exchange_account: symbol=#{p.symbol}")
-    end
-    open_positions = with_account
-    return {} if open_positions.empty?
-    by_provider = open_positions.group_by { |p| p.exchange_account.provider_type.to_s.presence || "bingx" }
-    result = {}
-    by_provider.each do |provider_type, group|
-      symbols = group.map(&:symbol).uniq
-      next if symbols.empty?
-      prices = case provider_type
-      when "binance" then Exchanges::Binance::TickerFetcher.fetch_prices(symbols: symbols)
-      else Exchanges::Bingx::TickerFetcher.fetch_prices(symbols: symbols)
-      end
-      result.merge!(prices)
-    end
-    result
   end
 end

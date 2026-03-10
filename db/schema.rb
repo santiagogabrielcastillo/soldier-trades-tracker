@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_06_130000) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_10_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -39,6 +39,38 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_06_130000) do
     t.bigint "exchange_account_id"
     t.index ["exchange_account_id"], name: "index_portfolios_on_exchange_account_id"
     t.index ["user_id"], name: "index_portfolios_on_user_id"
+  end
+
+  create_table "position_trades", force: :cascade do |t|
+    t.bigint "position_id", null: false
+    t.bigint "trade_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["position_id", "trade_id"], name: "index_position_trades_on_position_id_and_trade_id", unique: true
+    t.index ["position_id"], name: "index_position_trades_on_position_id"
+    t.index ["trade_id"], name: "index_position_trades_on_trade_id"
+  end
+
+  create_table "positions", force: :cascade do |t|
+    t.bigint "exchange_account_id", null: false
+    t.string "symbol", null: false
+    t.string "position_side"
+    t.integer "leverage"
+    t.datetime "open_at", null: false
+    t.datetime "close_at"
+    t.decimal "margin_used", precision: 20, scale: 8
+    t.decimal "net_pl", precision: 20, scale: 8, default: "0.0", null: false
+    t.decimal "entry_price", precision: 20, scale: 8
+    t.decimal "exit_price", precision: 20, scale: 8
+    t.decimal "open_quantity", precision: 20, scale: 8
+    t.decimal "closed_quantity", precision: 20, scale: 8
+    t.decimal "total_commission", precision: 20, scale: 8, default: "0.0", null: false
+    t.boolean "open", default: true, null: false
+    t.boolean "excess_from_over_close", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["exchange_account_id", "open", "close_at"], name: "index_positions_on_account_open_close_at"
+    t.index ["exchange_account_id"], name: "index_positions_on_exchange_account_id"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -184,6 +216,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_06_130000) do
     t.datetime "updated_at", null: false
     t.string "position_id"
     t.index ["exchange_account_id", "exchange_reference_id"], name: "index_trades_on_account_and_reference", unique: true
+    t.index ["exchange_account_id", "executed_at"], name: "index_trades_on_exchange_account_id_and_executed_at"
     t.index ["exchange_account_id", "position_id"], name: "index_trades_on_account_and_position_id"
     t.index ["exchange_account_id"], name: "index_trades_on_exchange_account_id"
   end
@@ -210,6 +243,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_06_130000) do
   add_foreign_key "exchange_accounts", "users"
   add_foreign_key "portfolios", "exchange_accounts", on_delete: :nullify
   add_foreign_key "portfolios", "users"
+  add_foreign_key "position_trades", "positions"
+  add_foreign_key "position_trades", "trades"
+  add_foreign_key "positions", "exchange_accounts"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

@@ -87,12 +87,14 @@
         </thead>
         <tbody class="divide-y divide-slate-200 bg-white">
           <% @positions.each do |pos| %>
-            <% roi_val = pos.open? ? pos.unrealized_roi_percent(@current_prices[pos.symbol]) : pos.roi_percent %>
-            <% pnl_val = pos.open? ? pos.unrealized_pnl(@current_prices[pos.symbol]) : pos.net_pl %>
+            <% open_flag = pos.open? %>
+            <% roi_val = open_flag ? pos.unrealized_roi_percent(@current_prices[pos.symbol]) : pos.roi_percent %>
+            <% pnl_val = open_flag ? pos.unrealized_pnl(@current_prices[pos.symbol]) : pos.net_pl %>
+            <% memoized = { open: open_flag, entry_price: pos.entry_price, exit_price: pos.exit_price, open_quantity: pos.open_quantity, closed_quantity: pos.closed_quantity, position_side: pos.position_side, total_commission: pos.total_commission, margin_used: pos.margin_used } %>
             <tr>
               <% visible_ids.each do |col_id| %>
-                <td class="<%= trades_index_cell_css(pos, col_id, roi_val: roi_val, pnl_val: pnl_val) %>">
-                  <%= trades_index_cell_content(pos, col_id, roi_val: roi_val, pnl_val: pnl_val) %>
+                <td class="<%= trades_index_cell_css(pos, col_id, roi_val: roi_val, pnl_val: pnl_val, memoized: memoized) %>">
+                  <%= trades_index_cell_content(pos, col_id, roi_val: roi_val, pnl_val: pnl_val, memoized: memoized) %>
                 </td>
               <% end %>
             </tr>
