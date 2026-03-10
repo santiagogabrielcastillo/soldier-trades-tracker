@@ -25,8 +25,11 @@ class Dashboards::SummaryService
   def portfolio_summary
     trades = @default_portfolio.trades_in_range.includes(:exchange_account).order(executed_at: :asc).limit(PositionSummary::TRADES_LIMIT)
     initial = @default_portfolio.initial_balance.to_d
-    positions = PositionSummary.from_trades_with_balance(trades, initial_balance: initial)
+    leverage_by_symbol = fetch_binance_leverage_by_symbol(trades)
+    positions = PositionSummary.from_trades_with_balance(trades, initial_balance: initial, leverage_by_symbol: leverage_by_symbol)
     balance = initial + positions.sum(&:net_pl)
+    current_prices = fetch_current_prices_for_open_positions(positions)
+    summary_unrealized_pl = total_unrealized_pl(positions, current_prices)
     analytics = build_analytics(positions, initial)
 
     {
@@ -37,13 +40,17 @@ class Dashboards::SummaryService
       summary_period_pl: positions.sum(&:net_pl),
       summary_balance: balance,
       summary_position_count: positions.size,
+      summary_unrealized_pl: summary_unrealized_pl,
       summary_trades_path_params: { view: "portfolio", portfolio_id: @default_portfolio.id }
     }.merge(analytics)
   end
 
   def all_time_summary
     trades = @user.trades.includes(:exchange_account).order(executed_at: :asc).limit(PositionSummary::TRADES_LIMIT)
-    positions = PositionSummary.from_trades_with_balance(trades)
+    leverage_by_symbol = fetch_binance_leverage_by_symbol(trades)
+    positions = PositionSummary.from_trades_with_balance(trades, leverage_by_symbol: leverage_by_symbol)
+    current_prices = fetch_current_prices_for_open_positions(positions)
+    summary_unrealized_pl = total_unrealized_pl(positions, current_prices)
     analytics = build_analytics(positions, 0.to_d)
 
     {
@@ -54,6 +61,7 @@ class Dashboards::SummaryService
       summary_period_pl: positions.sum(&:net_pl),
       summary_balance: positions.sum(&:net_pl),
       summary_position_count: positions.size,
+      summary_unrealized_pl: summary_unrealized_pl,
       summary_trades_path_params: { view: "history" }
     }.merge(analytics)
   end
@@ -92,5 +100,50 @@ class Dashboards::SummaryService
       chart_balance_series: balance_series,
       chart_cumulative_pl_series: cumulative_pl_series
     }
+  end
+
+  def total_unrealized_pl(positions, current_prices)
+    open_positions = positions.select(&:open?)
+    return 0.to_d if open_positions.empty?
+    open_positions.sum(BigDecimal("0")) { |p| (p.unrealized_pnl(current_prices[p.symbol]) || 0).to_d }
+  end
+
+  def fetch_current_prices_for_open_positions(positions)
+    open_positions = positions.select(&:open?)
+    return {} if open_positions.empty?
+    with_account = open_positions.select { |p| p.exchange_account.present? }
+    open_positions.reject { |p| p.exchange_account.present? }.each do |p|
+      Rails.logger.warn("[Dashboards::SummaryService] Skipping position with nil exchange_account: symbol=#{p.symbol}")
+    end
+    open_positions = with_account
+    return {} if open_positions.empty?
+    by_provider = open_positions.group_by { |p| p.exchange_account.provider_type.to_s.presence || "bingx" }
+    result = {}
+    by_provider.each do |provider_type, group|
+      symbols = group.map(&:symbol).uniq
+      next if symbols.empty?
+      prices = case provider_type
+      when "binance" then Exchanges::Binance::TickerFetcher.fetch_prices(symbols: symbols)
+      else Exchanges::Bingx::TickerFetcher.fetch_prices(symbols: symbols)
+      end
+      result.merge!(prices)
+    end
+    result
+  end
+
+  def fetch_binance_leverage_by_symbol(trades)
+    accounts = trades.map(&:exchange_account).compact.uniq.select { |a| a.provider_type.to_s.downcase == "binance" }
+    return {} if accounts.empty?
+    merged = {}
+    accounts.each do |account|
+      client = Exchanges::ProviderForAccount.new(account).client
+      next unless client.respond_to?(:leverage_by_symbol)
+      leverage_by_symbol = client.leverage_by_symbol
+      merged.merge!(leverage_by_symbol) if leverage_by_symbol.present?
+    end
+    merged
+  rescue StandardError => e
+    Rails.logger.warn("[Dashboards::SummaryService] Binance leverage_by_symbol failed: #{e.message}")
+    {}
   end
 end

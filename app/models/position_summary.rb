@@ -82,7 +82,7 @@ class PositionSummary
       return [ build_one_aggregate(trades, leverage: leverage) ]
     end
 
-    # One aggregated row for the closed position (all closing legs combined). Plus remainder row if partial close.
+    # One row per closing leg (so each partial close shows its own margin and ROI). Plus remainder row if partial close.
     open_notional = open_trades.sum { |t| t.notional_from_raw.to_d }
     open_margin = (leverage && leverage.positive? && open_notional.positive?) ? (open_notional / leverage).round(8) : nil
     open_qty = open_trades.sum(BigDecimal("0")) do |t|
@@ -94,8 +94,8 @@ class PositionSummary
       (raw["executedQty"] || raw["executed_qty"] || raw["origQty"] || raw["qty"] || 0).to_d
     end
 
-    closed_row = build_one_aggregate_closed(open_trades, closing, leverage, open_margin)
-    rows = closed_row ? [ closed_row ] : []
+    closed_rows = closing.sort_by(&:executed_at).filter_map { |close_trade| build_one_leg(open_trades, close_trade, leverage) }
+    rows = closed_rows
 
     if open_margin && open_qty.positive? && total_closed_qty < open_qty
       remaining_qty = (open_qty - total_closed_qty).round(8)
@@ -249,8 +249,9 @@ class PositionSummary
   # Margin that actually generated the realized P&L. For one-row-per-close we already store margin for this leg => margin_used.
   def effective_margin_for_roi
     return nil if margin_used.blank?
-    # One row per closing leg: margin_used is already this leg's margin.
-    return margin_used if trades.size == 2 && self.class.closing_leg?(trades.last, trades.first)
+    # One row per closing leg: margin_used is already this leg's margin (from build_one_leg).
+    closing_legs = trades.select { |t| closing_leg?(t) }
+    return margin_used if closing_legs.size == 1
     open_qty = open_quantity
     closed_qty = closed_quantity
     return nil if open_qty.blank? || open_qty.zero?

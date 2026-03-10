@@ -49,6 +49,15 @@ class Dashboards::SummaryServiceTest < ActiveSupport::TestCase
     assert_equal "value", result[:chart_balance_series].first.keys.second.to_s
   end
 
+  test "summary includes unrealized_pl (zero when no open positions)" do
+    Trade.where(exchange_account: @account).delete_all
+    portfolio = Portfolio.create!(user: @user, name: "Test", start_date: 2.weeks.ago, end_date: 1.day.from_now, initial_balance: 0, default: true)
+    create_closed_position(profit: 10)
+    result = Dashboards::SummaryService.call(@user)
+    assert result.key?(:summary_unrealized_pl)
+    assert_equal 0, result[:summary_unrealized_pl].to_f, "No open positions => unrealized PnL is 0"
+  end
+
   test "no closed positions yields empty chart series and nil win rate" do
     portfolio = Portfolio.create!(user: @user, name: "Test", start_date: 2.weeks.ago, end_date: 1.day.from_now, initial_balance: 100, default: true)
     # Only open trade, no close
