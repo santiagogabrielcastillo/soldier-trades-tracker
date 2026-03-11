@@ -79,6 +79,20 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, spot_account.spot_transactions.where(token: "ETH", side: "sell").count
   end
 
+  test "create with valid params as JSON returns 201" do
+    sign_in_as(@user)
+    spot_account = SpotAccount.find_or_create_default_for(@user)
+    post spot_transactions_path, params: {
+      token: "SOL",
+      side: "buy",
+      amount: "2",
+      price_usd: "150",
+      executed_at: "2026-03-11T09:00"
+    }, as: :json
+    assert_response :created
+    assert_equal 1, spot_account.spot_transactions.where(token: "SOL").count
+  end
+
   test "create with invalid params re-renders index with 422 and modal open" do
     sign_in_as(@user)
     SpotAccount.find_or_create_default_for(@user)
