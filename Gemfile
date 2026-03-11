@@ -36,6 +36,9 @@ gem "kamal", "~> 2.0"
 # Pagination
 gem "pagy"
 
+# CSV parsing (required explicitly from Ruby 3.4)
+gem "csv"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
