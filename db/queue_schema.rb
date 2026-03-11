@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_10_150000) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_10_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -194,6 +194,33 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_10_150000) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "spot_accounts", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "name", null: false
+    t.boolean "default", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "default"], name: "index_spot_accounts_on_user_id_and_default"
+    t.index ["user_id"], name: "index_spot_accounts_on_user_id"
+  end
+
+  create_table "spot_transactions", force: :cascade do |t|
+    t.bigint "spot_account_id", null: false
+    t.datetime "executed_at", null: false
+    t.string "token", null: false
+    t.string "side", null: false
+    t.decimal "price_usd", precision: 20, scale: 8, null: false
+    t.decimal "amount", precision: 20, scale: 8, null: false
+    t.decimal "total_value_usd", precision: 20, scale: 8, null: false
+    t.text "notes"
+    t.string "row_signature", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["spot_account_id", "executed_at"], name: "index_spot_transactions_on_spot_account_id_and_executed_at"
+    t.index ["spot_account_id", "row_signature"], name: "index_spot_transactions_on_spot_account_id_and_row_signature", unique: true
+    t.index ["spot_account_id"], name: "index_spot_transactions_on_spot_account_id"
+  end
+
   create_table "sync_runs", force: :cascade do |t|
     t.bigint "exchange_account_id", null: false
     t.datetime "ran_at", null: false
@@ -252,6 +279,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_10_150000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "spot_accounts", "users"
+  add_foreign_key "spot_transactions", "spot_accounts"
   add_foreign_key "sync_runs", "exchange_accounts"
   add_foreign_key "trades", "exchange_accounts"
   add_foreign_key "user_preferences", "users"

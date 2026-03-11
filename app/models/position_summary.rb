@@ -46,15 +46,15 @@ class PositionSummary
       by_position = symbol_trades.group_by { |t| t.position_id.presence || "single_#{t.exchange_reference_id}" }
       by_position.flat_map do |key, position_trades|
         if key.to_s.upcase == "BOTH"
-          split_both_chains(position_trades).map { |chain| [ nil, chain ] }
+          split_both_chains(position_trades).map { |chain| [ nil, chain, true ] }
         else
-          [ [ key, position_trades ] ]
+          [ [ key, position_trades, false ] ]
         end
       end
     end
 
-    summaries = position_groups.flat_map do |_key, position_trades|
-      build_summaries(position_trades, leverage_by_symbol: leverage_by_symbol)
+    summaries = position_groups.flat_map do |_key, position_trades, from_both_chain|
+      build_summaries(position_trades, leverage_by_symbol: leverage_by_symbol, from_both_chain: from_both_chain)
     end.compact
 
     # Open first (0), then closed (1); within each group by most recent activity desc
@@ -65,12 +65,19 @@ class PositionSummary
   # One row per position: open-only => one row; closed (one or many legs) => one aggregated row (+ remainder if partial).
   # Supports multiple opening trades (same side) per chain, e.g. Binance one-way add-to-position.
   # leverage_by_symbol: optional Hash[app_symbol => Integer] for providers that don't return leverage per trade (e.g. Binance).
-  def self.build_summaries(position_trades, leverage_by_symbol: nil)
+  def self.build_summaries(position_trades, leverage_by_symbol: nil, from_both_chain: false)
     trades = position_trades.sort_by(&:executed_at)
-    first = trades.first
-    open_trades = trades.take_while { |t| same_side?(t, first) }
-    closing = trades - open_trades
+    if from_both_chain
+      first = trades.first
+      open_trades = trades.take_while { |t| same_side?(t, first) }
+      closing = trades - open_trades
+    else
+      open_trades = trades.reject { |t| reduce_only?(t) }.sort_by(&:executed_at)
+      closing = trades.select { |t| reduce_only?(t) }.sort_by(&:executed_at)
+    end
+    return [] if open_trades.empty?
 
+    first = open_trades.first
     leverage = first.leverage_from_raw
     if leverage.blank? && leverage_by_symbol.present? && first.symbol.present?
       n = leverage_by_symbol[first.symbol].to_i
@@ -299,9 +306,15 @@ class PositionSummary
     nil
   end
 
+  # True when the trade is a reduce-only (closing) fill. Used to partition opening vs closing trades per position_id.
+  def self.reduce_only?(trade)
+    raw = trade.raw_payload || {}
+    raw["reduceOnly"] == true || raw["reduceOnly"].to_s == "true" || raw["reduce_only"] == true || raw["reduce_only"].to_s == "true"
+  end
+
   def self.closing_leg?(trade, open_trade)
     raw = trade.raw_payload || {}
-    return true if raw["reduceOnly"] == true || raw["reduceOnly"].to_s == "true"
+    return true if reduce_only?(trade)
     open_side = (open_trade.raw_payload || {})["side"].to_s.upcase
     trade_side = raw["side"].to_s.upcase
     return false if open_side.blank? || trade_side.blank?
