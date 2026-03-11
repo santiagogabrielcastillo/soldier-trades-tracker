@@ -13,13 +13,15 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to login_path
   end
 
-  test "index returns 200 when signed in and shows upload form" do
+  test "index returns 200 when signed in and shows upload form and New transaction" do
     sign_in_as(@user)
     get spot_path
     assert_response :success
     assert_select "h1", text: /Spot portfolio/
     assert_select "form[action=?]", spot_import_path
     assert_select "input[type=file][name=?]", "csv_file"
+    assert_select "button[aria-label='New transaction']", text: /New transaction/
+    assert_select "form[action=?]", spot_transactions_path
   end
 
   test "import redirects with alert when no file" do
@@ -41,6 +43,56 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to spot_path
     assert_match(/Imported 1 row/, flash[:notice])
     assert_equal 1, @user.spot_accounts.first.spot_transactions.count
+  end
+
+  test "create with valid params creates transaction and redirects" do
+    sign_in_as(@user)
+    spot_account = SpotAccount.find_or_create_default_for(@user)
+    assert_difference("spot_account.spot_transactions.count", 1) do
+      post spot_transactions_path, params: {
+        token: "BTC",
+        side: "buy",
+        amount: "1",
+        price_usd: "50000",
+        executed_at: "2026-03-10T12:00"
+      }
+    end
+    assert_redirected_to spot_path
+    assert_equal "Transaction added.", flash[:notice]
+    tx = spot_account.spot_transactions.reorder(created_at: :desc).first
+    assert_equal "BTC", tx.token
+    assert_equal "buy", tx.side
+    assert_equal 1, tx.amount.to_i
+    assert_equal 50_000, tx.price_usd.to_i
+    assert_equal 50_000, tx.total_value_usd.to_i
+  end
+
+  test "create with duplicate params redirects with alert" do
+    sign_in_as(@user)
+    spot_account = SpotAccount.find_or_create_default_for(@user)
+    params = { token: "ETH", side: "sell", amount: "0.5", price_usd: "3000", executed_at: "2026-03-10T14:30" }
+    post spot_transactions_path, params: params
+    assert_redirected_to spot_path
+    post spot_transactions_path, params: params
+    assert_redirected_to spot_path
+    assert_equal "This transaction already exists.", flash[:alert]
+    assert_equal 1, spot_account.spot_transactions.where(token: "ETH", side: "sell").count
+  end
+
+  test "create with invalid params re-renders index with 422 and modal open" do
+    sign_in_as(@user)
+    SpotAccount.find_or_create_default_for(@user)
+    post spot_transactions_path, params: {
+      token: "",
+      side: "buy",
+      amount: "1",
+      price_usd: "100",
+      executed_at: "2026-03-10T12:00"
+    }
+    assert_response :unprocessable_entity
+    assert_select "h1", text: /Spot portfolio/
+    assert_select "form[action=?]", spot_transactions_path
+    assert_select "[data-dialog-open-on-connect-value='true']"
   end
 
   def sign_in_as(user)

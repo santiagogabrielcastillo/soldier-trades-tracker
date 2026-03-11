@@ -30,4 +30,5 @@ Rails.application.routes.draw do
 
   get "spot", to: "spot#index", as: :spot
   post "spot/import", to: "spot#import", as: :spot_import
+  post "spot/transactions", to: "spot#create", as: :spot_transactions
 end
