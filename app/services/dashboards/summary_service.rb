@@ -13,11 +13,12 @@ class Dashboards::SummaryService
     @exchange_accounts = @user.exchange_accounts
     @default_portfolio = @user.default_portfolio
 
-    if @default_portfolio
+    base = if @default_portfolio
       portfolio_summary
     else
       all_time_summary
     end
+    base.merge(spot_summary)
   end
 
   private
@@ -138,5 +139,26 @@ class Dashboards::SummaryService
     open_positions = positions.select(&:open?)
     return 0.to_d if open_positions.empty?
     open_positions.sum(BigDecimal("0")) { |p| (p.unrealized_pnl(current_prices[p.symbol]) || 0).to_d }
+  end
+
+  def spot_summary
+    spot_account = SpotAccount.find_or_create_default_for(@user)
+    positions = Spot::PositionStateService.call(spot_account: spot_account)
+    open_positions = positions.select(&:open?)
+    return { spot_value: 0.to_d, spot_unrealized_pl: 0.to_d, spot_position_count: 0 } if open_positions.empty?
+
+    open_tokens = open_positions.map(&:token).uniq
+    current_prices = Spot::CurrentPriceFetcher.call(user: @user, tokens: open_tokens)
+    spot_value = open_positions.sum(BigDecimal("0")) { |pos| (current_prices[pos.token] || 0).to_d * pos.balance }
+    spot_unrealized_pl = open_positions.sum(BigDecimal("0")) do |pos|
+      price = current_prices[pos.token]
+      next 0.to_d unless price && pos.breakeven
+      (price.to_d - pos.breakeven.to_d) * pos.balance
+    end
+    {
+      spot_value: spot_value,
+      spot_unrealized_pl: spot_unrealized_pl,
+      spot_position_count: open_positions.size
+    }
   end
 end

@@ -5,16 +5,19 @@ class SpotController < ApplicationController
 
   def index
     @spot_account = SpotAccount.find_or_create_default_for(current_user)
-    all_positions = Spot::PositionStateService.call(spot_account: @spot_account)
-    open_positions = all_positions.select(&:open?)
-    open_tokens = open_positions.map(&:token).uniq
-    @current_prices = Spot::CurrentPriceFetcher.call(user: current_user, tokens: open_tokens)
-    # Sort by current net value descending (largest position first); no price => treat as 0
-    @positions = open_positions.sort_by { |pos|
-      price = @current_prices[pos.token]
-      -(price.to_d * pos.balance)
-    }
-    @tokens_for_select = tokens_for_select_for(@spot_account)
+    @view = (params[:view].to_s == "transactions") ? "transactions" : "portfolio"
+
+    if @view == "transactions"
+      relation = load_spot_transactions_filtered
+      @pagy, @transactions = pagy(:offset, relation, limit: 25)
+      @from_date = params[:from_date].presence
+      @to_date = params[:to_date].presence
+      @filter_token = params[:token].presence
+      @filter_side = params[:side].presence if params[:side].to_s.in?(%w[buy sell])
+      @tokens_for_filter = @spot_account.spot_transactions.distinct.pluck(:token).sort
+    else
+      load_index_data
+    end
   end
 
   def import
@@ -82,6 +85,7 @@ class SpotController < ApplicationController
 
     respond_to do |format|
       format.html do
+        @view = "portfolio"
         load_index_data
         @open_new_transaction_modal = true
         render :index, status: :unprocessable_entity
@@ -118,6 +122,18 @@ class SpotController < ApplicationController
       total_value_usd: (amt && pr ? amt * pr : nil),
       row_signature: SecureRandom.hex(32)
     ).tap(&:validate)
+  end
+
+  def load_spot_transactions_filtered
+    relation = @spot_account.spot_transactions.newest_first
+    relation = relation.where("executed_at >= ?", params[:from_date].to_date.beginning_of_day) if params[:from_date].present?
+    relation = relation.where("executed_at <= ?", params[:to_date].to_date.end_of_day) if params[:to_date].present?
+    relation = relation.where(token: params[:token]) if params[:token].present?
+    relation = relation.where(side: params[:side]) if params[:side].to_s.in?(%w[buy sell])
+    relation
+  rescue ArgumentError, TypeError
+    # Invalid date params: ignore filter
+    @spot_account.spot_transactions.newest_first
   end
 
   def load_index_data

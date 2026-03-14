@@ -58,6 +58,24 @@ class Dashboards::SummaryServiceTest < ActiveSupport::TestCase
     assert_equal 0, result[:summary_unrealized_pl].to_f, "No open positions => unrealized PnL is 0"
   end
 
+  test "result includes spot_value, spot_unrealized_pl, spot_position_count" do
+    result = Dashboards::SummaryService.call(@user)
+    assert result.key?(:spot_value)
+    assert result.key?(:spot_unrealized_pl)
+    assert result.key?(:spot_position_count)
+    assert result[:spot_value].is_a?(BigDecimal)
+    assert result[:spot_unrealized_pl].is_a?(BigDecimal)
+    assert result[:spot_position_count].is_a?(Integer)
+  end
+
+  test "spot_position_count is 0 when user has no spot positions" do
+    SpotAccount.find_or_create_default_for(@user).spot_transactions.destroy_all
+    result = Dashboards::SummaryService.call(@user)
+    assert_equal 0, result[:spot_position_count]
+    assert_equal 0, result[:spot_value].to_f
+    assert_equal 0, result[:spot_unrealized_pl].to_f
+  end
+
   test "no closed positions yields empty chart series and nil win rate" do
     portfolio = Portfolio.create!(user: @user, name: "Test", start_date: 2.weeks.ago, end_date: 1.day.from_now, initial_balance: 100, default: true)
     # Only open trade, no close

@@ -74,6 +74,25 @@
     </div>
   <% end %>
 
+  <section class="mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <h2 class="mb-4 text-lg font-medium text-slate-900">Spot</h2>
+    <div class="mb-4 flex flex-wrap items-baseline gap-6">
+      <div>
+        <span class="text-sm text-slate-500">Total value</span>
+        <p class="text-xl font-semibold text-slate-900"><%= format_money(@dashboard.spot_value) %></p>
+      </div>
+      <div>
+        <span class="text-sm text-slate-500">Unrealized P&amp;L</span>
+        <p class="text-xl font-semibold <%= (@dashboard.spot_unrealized_pl || 0).to_d >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= format_money(@dashboard.spot_unrealized_pl) %></p>
+      </div>
+      <div>
+        <span class="text-sm text-slate-500">Open positions</span>
+        <p class="text-xl font-semibold text-slate-900"><%= @dashboard.spot_position_count || 0 %></p>
+      </div>
+    </div>
+    <%= link_to "View spot portfolio", spot_path, class: "inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+  </section>
+
   <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
     <h2 class="mb-4 text-lg font-medium text-slate-900">Exchange accounts</h2>
     <% if @dashboard.exchange_accounts.any? %>

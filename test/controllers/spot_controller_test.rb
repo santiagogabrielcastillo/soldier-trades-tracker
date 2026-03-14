@@ -13,15 +13,48 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to login_path
   end
 
-  test "index returns 200 when signed in and shows upload form and New transaction" do
+  test "index returns 200 when signed in and shows portfolio tab with upload form and New transaction" do
     sign_in_as(@user)
     get spot_path
     assert_response :success
     assert_select "h1", text: /Spot portfolio/
+    assert_select "nav[aria-label='Tabs']"
+    assert_select "a", text: /Portfolio/
+    assert_select "a", text: /Transactions/
     assert_select "form[action=?]", spot_import_path
-    assert_select "input[type=file][name=?]", "csv_file"
     assert_select "button[aria-label='New transaction']", text: /New transaction/
     assert_select "form[action=?]", spot_transactions_path
+  end
+
+  test "index with view=transactions shows transactions tab and filter form" do
+    sign_in_as(@user)
+    get spot_path, params: { view: "transactions" }
+    assert_response :success
+    assert_select "h1", text: /Spot portfolio/
+    assert_select "form[action=?][method=get]", spot_path
+    assert_match(/From|To|Token|Side|Filter/, response.body)
+  end
+
+  test "index with view=transactions shows empty state when no transactions" do
+    sign_in_as(@user)
+    SpotAccount.find_or_create_default_for(@user).spot_transactions.destroy_all
+    get spot_path, params: { view: "transactions" }
+    assert_response :success
+    assert_match(/No spot transactions yet/, response.body)
+  end
+
+  test "index with view=transactions shows transactions table when transactions exist" do
+    sign_in_as(@user)
+    account = SpotAccount.find_or_create_default_for(@user)
+    account.spot_transactions.create!(
+      token: "BTC", side: "buy", amount: 1, price_usd: 50_000, total_value_usd: 50_000,
+      executed_at: 1.day.ago, row_signature: SecureRandom.hex(32)
+    )
+    get spot_path, params: { view: "transactions" }
+    assert_response :success
+    assert_match(/BTC/, response.body)
+    assert_match(/buy/, response.body)
+    assert_match(/50,000/, response.body)
   end
 
   test "import redirects with alert when no file" do

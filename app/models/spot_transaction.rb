@@ -12,4 +12,5 @@ class SpotTransaction < ApplicationRecord
   validates :row_signature, presence: true, uniqueness: { scope: :spot_account_id }
 
   scope :ordered_by_executed_at, -> { order(executed_at: :asc) }
+  scope :newest_first, -> { order(executed_at: :desc) }
 end
