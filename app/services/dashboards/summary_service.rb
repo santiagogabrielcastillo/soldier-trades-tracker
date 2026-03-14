@@ -143,22 +143,59 @@ class Dashboards::SummaryService
 
   def spot_summary
     spot_account = SpotAccount.find_or_create_default_for(@user)
+    cash_balance = spot_account.cash_balance
     positions = Spot::PositionStateService.call(spot_account: spot_account)
     open_positions = positions.select(&:open?)
-    return { spot_value: 0.to_d, spot_unrealized_pl: 0.to_d, spot_position_count: 0 } if open_positions.empty?
+    if open_positions.empty?
+      total = 0.to_d + cash_balance
+      spot_cash_pct = total.positive? ? (cash_balance / total * 100).round(2) : nil
+      return {
+        spot_value: 0.to_d,
+        spot_unrealized_pl: 0.to_d,
+        spot_cost_basis: 0.to_d,
+        spot_roi_pct: nil,
+        spot_position_count: 0,
+        spot_cash_balance: cash_balance,
+        spot_cash_pct: spot_cash_pct,
+        spot_chart_series: spot_cost_basis_series(spot_account)
+      }
+    end
 
     open_tokens = open_positions.map(&:token).uniq
     current_prices = Spot::CurrentPriceFetcher.call(user: @user, tokens: open_tokens)
     spot_value = open_positions.sum(BigDecimal("0")) { |pos| (current_prices[pos.token] || 0).to_d * pos.balance }
+    spot_cost_basis = open_positions.sum(BigDecimal("0")) { |pos| pos.net_usd_invested.to_d }
     spot_unrealized_pl = open_positions.sum(BigDecimal("0")) do |pos|
       price = current_prices[pos.token]
       next 0.to_d unless price && pos.breakeven
       (price.to_d - pos.breakeven.to_d) * pos.balance
     end
+    spot_roi_pct = spot_cost_basis.positive? ? (spot_unrealized_pl / spot_cost_basis * 100).round(2) : nil
+    total = spot_value + cash_balance
+    spot_cash_pct = total.positive? ? (cash_balance / total * 100).round(2) : nil
+
     {
       spot_value: spot_value,
       spot_unrealized_pl: spot_unrealized_pl,
-      spot_position_count: open_positions.size
+      spot_cost_basis: spot_cost_basis,
+      spot_roi_pct: spot_roi_pct,
+      spot_position_count: open_positions.size,
+      spot_cash_balance: cash_balance,
+      spot_cash_pct: spot_cash_pct,
+      spot_chart_series: spot_cost_basis_series(spot_account)
     }
+  end
+
+  def spot_cost_basis_series(spot_account)
+    txs = spot_account.spot_transactions.trades.ordered_by_executed_at
+    return [] if txs.empty?
+
+    running = 0.to_d
+    series = []
+    txs.each do |tx|
+      running += tx.side == "buy" ? tx.total_value_usd.to_d : -tx.total_value_usd.to_d
+      series << { date: tx.executed_at.to_date.strftime("%b %d, %Y"), value: running.to_f }
+    end
+    series
   end
 end

@@ -126,6 +126,27 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, spot_account.spot_transactions.where(token: "SOL").count
   end
 
+  test "create with side deposit creates cash transaction" do
+    sign_in_as(@user)
+    spot_account = SpotAccount.find_or_create_default_for(@user)
+    assert_difference("spot_account.spot_transactions.count", 1) do
+      post spot_transactions_path, params: {
+        side: "deposit",
+        amount: "250",
+        executed_at: "2026-03-12T10:00"
+      }
+    end
+    assert_redirected_to spot_path
+    assert_equal "Cash movement added.", flash[:notice]
+    tx = spot_account.spot_transactions.reorder(created_at: :desc).first
+    assert_equal "USDT", tx.token
+    assert_equal "deposit", tx.side
+    assert_equal 250, tx.amount.to_i
+    assert_equal 1, tx.price_usd.to_i
+    assert_equal 250, tx.total_value_usd.to_i
+    assert tx.row_signature.start_with?("cash|")
+  end
+
   test "create with invalid params re-renders index with 422 and modal open" do
     sign_in_as(@user)
     SpotAccount.find_or_create_default_for(@user)

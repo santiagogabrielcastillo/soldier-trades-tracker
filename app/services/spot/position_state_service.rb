@@ -29,7 +29,7 @@ module Spot
     end
 
     def call
-      transactions = @spot_account.spot_transactions.ordered_by_executed_at.to_a
+      transactions = @spot_account.spot_transactions.trades.ordered_by_executed_at.to_a
       return [] if transactions.empty?
 
       by_token = transactions.group_by(&:token)
