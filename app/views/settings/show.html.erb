@@ -3,15 +3,7 @@
   <p class="mb-6 text-sm text-slate-600">Configure how often your exchange accounts are synced. This applies to all your linked accounts.</p>
 
   <%= form_with model: current_user, url: settings_path, method: :patch, local: true, class: "space-y-6" do |f| %>
-    <% if current_user.errors.any? %>
-      <div class="rounded-md bg-amber-50 p-4 text-sm text-amber-800">
-        <ul class="list-disc pl-5">
-          <% current_user.errors.full_messages.each do |msg| %>
-            <li><%= msg %></li>
-          <% end %>
-        </ul>
-      </div>
-    <% end %>
+    <%= render ErrorSummaryComponent.new(model: current_user) %>
 
     <fieldset>
       <legend class="block text-sm font-medium text-slate-900">Sync interval</legend>
@@ -34,7 +26,7 @@
           <% if last_run %>
             Last sync across accounts: <%= time_ago_in_words(last_run) %> ago.
           <% else %>
-            No sync has run yet; set an interval and wait for the next run, or use “Sync now” on Exchange accounts.
+            No sync has run yet; set an interval and wait for the next run, or use "Sync now" on Exchange accounts.
           <% end %>
         </p>
       <% end %>

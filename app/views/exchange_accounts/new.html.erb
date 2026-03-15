@@ -3,30 +3,15 @@
   <p class="mb-6 text-sm text-slate-600">Link your exchange with a read-only API key. Create one under your exchange (BingX → User Center → API Management; Binance Futures → API Management). Keep permissions read-only. Only perpetual futures trades are synced.</p>
 
   <%= form_with model: @exchange_account, url: exchange_accounts_path, local: true, class: "space-y-4", data: { turbo: false } do |f| %>
-    <% if @exchange_account.errors.any? %>
-      <div class="rounded-md bg-amber-50 p-4 text-sm text-amber-800">
-        <ul class="list-disc pl-5">
-          <% @exchange_account.errors.full_messages.each do |msg| %>
-            <li><%= msg %></li>
-          <% end %>
-        </ul>
-      </div>
-    <% end %>
+    <%= render ErrorSummaryComponent.new(model: @exchange_account) %>
 
     <div>
       <%= f.label :provider_type, "Exchange", class: "block text-sm font-medium text-slate-700" %>
       <%= f.select :provider_type, [["BingX (Perpetual futures)", "bingx"], ["Binance (USDⓈ-M Futures)", "binance"]], {}, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
     </div>
 
-    <div>
-      <%= f.label :api_key, "API Key", class: "block text-sm font-medium text-slate-700" %>
-      <%= f.text_field :api_key, autocomplete: "off", class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "Your read-only API key" %>
-    </div>
-
-    <div>
-      <%= f.label :api_secret, "API Secret", class: "block text-sm font-medium text-slate-700" %>
-      <%= f.password_field :api_secret, autocomplete: "off", class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "Your API secret" %>
-    </div>
+    <%= render FormFieldComponent.new(form: f, attribute: :api_key, label: "API Key", autocomplete: "off", placeholder: "Your read-only API key") %>
+    <%= render FormFieldComponent.new(form: f, attribute: :api_secret, label: "API Secret", type: :password, autocomplete: "off", placeholder: "Your API secret") %>
 
     <div class="flex gap-3 pt-2">
       <%= f.submit "Link account", class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>

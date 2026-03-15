@@ -6,33 +6,15 @@
     <h2 class="mb-4 text-lg font-medium text-slate-900">Period summary</h2>
     <p class="mb-2 text-sm text-slate-600"><%= @dashboard.summary_label %><% if @dashboard.summary_date_range %> · <%= @dashboard.summary_date_range %><% end %></p>
     <div class="mb-4 flex flex-wrap items-baseline gap-6">
-      <div>
-        <span class="text-sm text-slate-500">Balance</span>
-        <p class="text-xl font-semibold text-slate-900"><%= format_money(@dashboard.summary_balance) %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Period P&amp;L</span>
-        <p class="text-xl font-semibold <%= @dashboard.summary_period_pl >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= format_money(@dashboard.summary_period_pl) %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Total return</span>
-        <p class="text-xl font-semibold <%= @dashboard.summary_total_return_pct.nil? ? 'text-slate-900' : (@dashboard.summary_total_return_pct >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= @dashboard.summary_total_return_pct.nil? ? "—" : "#{number_with_precision(@dashboard.summary_total_return_pct, precision: 2)}%" %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Unrealized P&amp;L</span>
-        <p class="text-xl font-semibold <%= @dashboard.summary_unrealized_pl.nil? ? 'text-slate-900' : (@dashboard.summary_unrealized_pl >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= @dashboard.summary_unrealized_pl.nil? ? "—" : format_money(@dashboard.summary_unrealized_pl) %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Positions</span>
-        <p class="text-xl font-semibold text-slate-900"><%= @dashboard.summary_position_count %></p>
-      </div>
+      <%= render StatCardComponent.new(label: "Balance", value: format_money(@dashboard.summary_balance)) %>
+      <%= render StatCardComponent.new(label: "Period P&L", value: format_money(@dashboard.summary_period_pl), signed: true, color_value: @dashboard.summary_period_pl) %>
+      <%= render StatCardComponent.new(label: "Total return", value: @dashboard.summary_total_return_pct.nil? ? nil : "#{number_with_precision(@dashboard.summary_total_return_pct, precision: 2)}%", signed: true, color_value: @dashboard.summary_total_return_pct) %>
+      <%= render StatCardComponent.new(label: "Unrealized P&L", value: @dashboard.summary_unrealized_pl.nil? ? nil : format_money(@dashboard.summary_unrealized_pl), signed: true, color_value: @dashboard.summary_unrealized_pl) %>
+      <%= render StatCardComponent.new(label: "Positions", value: @dashboard.summary_position_count) %>
     </div>
     <div class="mb-4 flex flex-wrap items-baseline gap-6">
       <span class="text-sm font-medium text-slate-700">Consistency</span>
-      <div>
-        <span class="text-sm text-slate-500">Win rate</span>
-        <p class="text-lg font-semibold text-slate-900"><%= @dashboard.summary_win_rate.nil? ? "—" : "#{number_with_precision(@dashboard.summary_win_rate, precision: 1)}%" %></p>
-      </div>
+      <%= render StatCardComponent.new(label: "Win rate", value: @dashboard.summary_win_rate.nil? ? nil : "#{number_with_precision(@dashboard.summary_win_rate, precision: 1)}%") %>
       <div>
         <span class="text-sm text-slate-500">Avg win</span>
         <p class="text-lg font-semibold text-emerald-600"><%= @dashboard.summary_avg_win.nil? ? "—" : format_money(@dashboard.summary_avg_win) %></p>
@@ -41,10 +23,7 @@
         <span class="text-sm text-slate-500">Avg loss</span>
         <p class="text-lg font-semibold text-red-600"><%= @dashboard.summary_avg_loss.nil? ? "—" : format_money(@dashboard.summary_avg_loss) %></p>
       </div>
-      <div>
-        <span class="text-sm text-slate-500">Closed</span>
-        <p class="text-lg font-semibold text-slate-900"><%= @dashboard.summary_closed_count || 0 %></p>
-      </div>
+      <%= render StatCardComponent.new(label: "Closed", value: @dashboard.summary_closed_count || 0) %>
     </div>
     <%= link_to "View trades", @dashboard.summary_trades_path, class: "inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
     <% if @dashboard.default_portfolio.nil? && current_user.portfolios.any? %>
@@ -77,34 +56,13 @@
   <%= content_tag :section, class: "mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm", data: { controller: "spot-chart", spot_chart_series_value: (@dashboard.spot_chart_series || []) } do %>
     <h2 class="mb-4 text-lg font-medium text-slate-900">Spot</h2>
     <div class="mb-4 flex flex-wrap items-baseline gap-6">
-      <div>
-        <span class="text-sm text-slate-500">Total value</span>
-        <p class="text-xl font-semibold text-slate-900"><%= format_money(@dashboard.spot_value) %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Cost basis</span>
-        <p class="text-xl font-semibold text-slate-900"><%= format_money(@dashboard.spot_cost_basis) %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Unrealized P&amp;L</span>
-        <p class="text-xl font-semibold <%= (@dashboard.spot_unrealized_pl || 0).to_d >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= format_money(@dashboard.spot_unrealized_pl) %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Unrealized ROI</span>
-        <p class="text-xl font-semibold <%= @dashboard.spot_roi_pct.nil? ? 'text-slate-900' : (@dashboard.spot_roi_pct >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= @dashboard.spot_roi_pct.nil? ? "—" : "#{number_with_precision(@dashboard.spot_roi_pct, precision: 2)}%" %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Open positions</span>
-        <p class="text-xl font-semibold text-slate-900"><%= @dashboard.spot_position_count || 0 %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Cash balance</span>
-        <p class="text-xl font-semibold <%= (@dashboard.spot_cash_balance || 0).to_d >= 0 ? 'text-slate-900' : 'text-red-600' %>"><%= format_money(@dashboard.spot_cash_balance || 0) %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Cash % of portfolio</span>
-        <p class="text-xl font-semibold text-slate-900"><%= @dashboard.spot_cash_pct.nil? ? "—" : "#{number_with_precision(@dashboard.spot_cash_pct, precision: 2)}%" %></p>
-      </div>
+      <%= render StatCardComponent.new(label: "Total value", value: format_money(@dashboard.spot_value)) %>
+      <%= render StatCardComponent.new(label: "Cost basis", value: format_money(@dashboard.spot_cost_basis)) %>
+      <%= render StatCardComponent.new(label: "Unrealized P&L", value: format_money(@dashboard.spot_unrealized_pl), signed: true, color_value: @dashboard.spot_unrealized_pl) %>
+      <%= render StatCardComponent.new(label: "Unrealized ROI", value: @dashboard.spot_roi_pct.nil? ? nil : "#{number_with_precision(@dashboard.spot_roi_pct, precision: 2)}%", signed: true, color_value: @dashboard.spot_roi_pct) %>
+      <%= render StatCardComponent.new(label: "Open positions", value: @dashboard.spot_position_count || 0) %>
+      <%= render StatCardComponent.new(label: "Cash balance", value: format_money(@dashboard.spot_cash_balance || 0)) %>
+      <%= render StatCardComponent.new(label: "Cash % of portfolio", value: @dashboard.spot_cash_pct.nil? ? nil : "#{number_with_precision(@dashboard.spot_cash_pct, precision: 2)}%") %>
     </div>
     <div class="mb-4">
       <p class="mb-2 text-sm text-slate-500">Cost basis over time</p>
@@ -119,26 +77,11 @@
   <section class="mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
     <h2 class="mb-4 text-lg font-medium text-slate-900">Stocks</h2>
     <div class="mb-4 flex flex-wrap items-baseline gap-6">
-      <div>
-        <span class="text-sm text-slate-500">Market value</span>
-        <p class="text-xl font-semibold text-slate-900"><%= format_money(@dashboard.stocks_value) %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Cost basis</span>
-        <p class="text-xl font-semibold text-slate-900"><%= format_money(@dashboard.stocks_cost_basis) %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Unrealized P&amp;L</span>
-        <p class="text-xl font-semibold <%= (@dashboard.stocks_unrealized_pl || 0).to_d >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= format_money(@dashboard.stocks_unrealized_pl) %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Unrealized ROI</span>
-        <p class="text-xl font-semibold <%= @dashboard.stocks_roi_pct.nil? ? 'text-slate-900' : (@dashboard.stocks_roi_pct >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= @dashboard.stocks_roi_pct.nil? ? "—" : "#{number_with_precision(@dashboard.stocks_roi_pct, precision: 2)}%" %></p>
-      </div>
-      <div>
-        <span class="text-sm text-slate-500">Open positions</span>
-        <p class="text-xl font-semibold text-slate-900"><%= @dashboard.stocks_position_count || 0 %></p>
-      </div>
+      <%= render StatCardComponent.new(label: "Market value", value: format_money(@dashboard.stocks_value)) %>
+      <%= render StatCardComponent.new(label: "Cost basis", value: format_money(@dashboard.stocks_cost_basis)) %>
+      <%= render StatCardComponent.new(label: "Unrealized P&L", value: format_money(@dashboard.stocks_unrealized_pl), signed: true, color_value: @dashboard.stocks_unrealized_pl) %>
+      <%= render StatCardComponent.new(label: "Unrealized ROI", value: @dashboard.stocks_roi_pct.nil? ? nil : "#{number_with_precision(@dashboard.stocks_roi_pct, precision: 2)}%", signed: true, color_value: @dashboard.stocks_roi_pct) %>
+      <%= render StatCardComponent.new(label: "Open positions", value: @dashboard.stocks_position_count || 0) %>
     </div>
     <%= link_to "View stock portfolio", stocks_path, class: "inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
   </section>

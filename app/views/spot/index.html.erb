@@ -1,18 +1,14 @@
 <div>
   <h1 class="mb-4 text-2xl font-semibold text-slate-900">Spot portfolio</h1>
 
-  <nav class="mb-6 flex gap-1 border-b border-slate-200" aria-label="Tabs">
-    <%= link_to "Portfolio", spot_path(spot_index_filter_params.merge("view" => "portfolio")), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'portfolio' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}", **(@view == 'portfolio' ? { 'aria-current': 'page' } : {}) %>
-    <%= link_to "Transactions", spot_path(spot_index_filter_params.merge("view" => "transactions")), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'transactions' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}", **(@view == 'transactions' ? { 'aria-current': 'page' } : {}) %>
-  </nav>
+  <%= render TabNavComponent.new(tabs: [
+    { label: "Portfolio", url: spot_path(spot_index_filter_params.merge("view" => "portfolio")), active: @view == "portfolio" },
+    { label: "Transactions", url: spot_path(spot_index_filter_params.merge("view" => "transactions")), active: @view == "transactions" }
+  ]) %>
 
   <% if @view == "portfolio" %>
-  <div class="mb-6 flex flex-wrap items-center gap-3" data-controller="dialog" data-dialog-open-on-connect-value="<%= @open_new_transaction_modal.present? %>">
-    <button type="button" data-action="click->dialog#open" aria-label="New transaction" class="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500">
-      New transaction
-    </button>
-    <dialog data-dialog-target="dialog" class="rounded-lg border border-slate-200 bg-white p-6 shadow-xl backdrop:bg-slate-900/20">
-      <h2 class="mb-4 text-lg font-semibold text-slate-900">New transaction</h2>
+  <div class="mb-6 flex flex-wrap items-center gap-3">
+    <%= render ModalComponent.new(title: "New transaction", trigger_label: "New transaction", open_on_connect: @open_new_transaction_modal.present?) do %>
       <%= form_with url: spot_transactions_path, method: :post, local: true, data: { turbo: false, controller: "spot-transaction-form" } do |f| %>
         <div class="space-y-4">
           <div>
@@ -60,7 +56,7 @@
           <button type="button" data-action="dialog#close" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Cancel</button>
         </div>
       <% end %>
-    </dialog>
+    <% end %>
   </div>
 
   <div class="mb-4 flex flex-wrap items-baseline gap-6">
@@ -83,45 +79,38 @@
   </div>
 
   <% if @positions.any? %>
-    <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-      <table class="min-w-full divide-y divide-slate-200">
-        <thead class="bg-slate-50">
-          <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Token</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Avg buy price</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Current qty</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Current price</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Current net value</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Unrealized PnL</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Unrealized ROI</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Status</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-200 bg-white">
-          <% @positions.each do |pos| %>
-            <% current_price = @current_prices[pos.token] %>
-            <% unrealized = pos.open? && current_price ? (current_price - pos.breakeven.to_d) * pos.balance : nil %>
-            <% current_net_value = pos.open? && current_price ? (current_price.to_d * pos.balance) : nil %>
-            <% unrealized_roi = unrealized && pos.net_usd_invested.to_d.positive? ? (unrealized / pos.net_usd_invested.to_d * 100) : nil %>
-            <tr>
-              <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900"><%= pos.token %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= pos.breakeven ? format_money(pos.breakeven) : "—" %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_delimiter(pos.balance, delimiter: ",", precision: 8) %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_price ? format_money(current_price) : "—" %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_net_value ? format_money(current_net_value) : "—" %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized.nil? ? 'text-slate-500' : (unrealized >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized.nil? ? "—" : format_money(unrealized) %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized_roi.nil? ? 'text-slate-500' : (unrealized_roi >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized_roi.nil? ? "—" : number_to_percentage(unrealized_roi, precision: 2) %></td>
-              <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600"><%= pos.open? ? "Open" : "Closed" %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+    <%= render DataTableComponent.new(columns: [
+      { label: "Token", classes: "text-left" },
+      { label: "Avg buy price", classes: "text-right" },
+      { label: "Current qty", classes: "text-right" },
+      { label: "Current price", classes: "text-right" },
+      { label: "Current net value", classes: "text-right" },
+      { label: "Unrealized PnL", classes: "text-right" },
+      { label: "Unrealized ROI", classes: "text-right" },
+      { label: "Status", classes: "text-left" }
+    ]) do |table| %>
+      <% @positions.each do |pos| %>
+        <% current_price = @current_prices[pos.token] %>
+        <% unrealized = pos.open? && current_price ? (current_price - pos.breakeven.to_d) * pos.balance : nil %>
+        <% current_net_value = pos.open? && current_price ? (current_price.to_d * pos.balance) : nil %>
+        <% unrealized_roi = unrealized && pos.net_usd_invested.to_d.positive? ? (unrealized / pos.net_usd_invested.to_d * 100) : nil %>
+        <% table.with_row do %>
+          <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900"><%= pos.token %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= pos.breakeven ? format_money(pos.breakeven) : "—" %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_delimiter(pos.balance, delimiter: ",", precision: 8) %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_price ? format_money(current_price) : "—" %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_net_value ? format_money(current_net_value) : "—" %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized.nil? ? 'text-slate-500' : (unrealized >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized.nil? ? "—" : format_money(unrealized) %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized_roi.nil? ? 'text-slate-500' : (unrealized_roi >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized_roi.nil? ? "—" : number_to_percentage(unrealized_roi, precision: 2) %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600"><%= pos.open? ? "Open" : "Closed" %></td>
+        <% end %>
+      <% end %>
+    <% end %>
     <% if current_user.exchange_accounts.empty? %>
       <p class="mt-4 text-sm text-slate-500">Connect an <%= link_to "exchange account", exchange_accounts_path, class: "text-slate-700 underline" %> to see live prices, current net value, and unrealized PnL/ROI.</p>
     <% end %>
   <% else %>
-    <p class="text-slate-600">No spot positions yet. Upload a transaction history CSV above to get started.</p>
+    <%= render EmptyStateComponent.new(message: "No spot positions yet. Upload a transaction history CSV above to get started.") %>
   <% end %>
   <% end %>
 
@@ -154,42 +143,33 @@
     <% end %>
 
     <% if @transactions.present? %>
-      <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-        <table class="min-w-full divide-y divide-slate-200">
-          <thead class="bg-slate-50">
-            <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Date</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Token</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Side</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Amount</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Price (USD)</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Total value (USD)</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-200 bg-white">
-            <% @transactions.each do |tx| %>
-              <% deposit_or_buy = tx.side == "buy" || tx.side == "deposit" %>
-              <tr class="<%= deposit_or_buy ? 'bg-emerald-50/50' : 'bg-red-50/50' %>">
-                <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-700"><%= tx.executed_at.strftime("%b %d, %Y") %></td>
-                <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900"><%= tx.token %></td>
-                <td class="whitespace-nowrap px-6 py-4 text-sm font-medium capitalize <%= deposit_or_buy ? 'text-emerald-700' : 'text-red-700' %>"><%= tx.side %></td>
-                <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_delimiter(tx.amount, delimiter: ",", precision: 8) %></td>
-                <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= tx.side.in?(%w[deposit withdraw]) ? "—" : format_money(tx.price_usd) %></td>
-                <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= format_money(tx.total_value_usd) %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
+      <%= render DataTableComponent.new(columns: [
+        { label: "Date", classes: "text-left" },
+        { label: "Token", classes: "text-left" },
+        { label: "Side", classes: "text-left" },
+        { label: "Amount", classes: "text-right" },
+        { label: "Price (USD)", classes: "text-right" },
+        { label: "Total value (USD)", classes: "text-right" }
+      ]) do |table| %>
+        <% @transactions.each do |tx| %>
+          <% deposit_or_buy = tx.side == "buy" || tx.side == "deposit" %>
+          <% table.with_row(classes: deposit_or_buy ? "bg-emerald-50/50" : "bg-red-50/50") do %>
+            <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-700"><%= tx.executed_at.strftime("%b %d, %Y") %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900"><%= tx.token %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium capitalize <%= deposit_or_buy ? 'text-emerald-700' : 'text-red-700' %>"><%= tx.side %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_delimiter(tx.amount, delimiter: ",", precision: 8) %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= tx.side.in?(%w[deposit withdraw]) ? "—" : format_money(tx.price_usd) %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= format_money(tx.total_value_usd) %></td>
+          <% end %>
+        <% end %>
+      <% end %>
       <% if @pagy.last > 1 %>
         <div class="mt-4 flex justify-center">
           <%== @pagy.series_nav %>
         </div>
       <% end %>
     <% else %>
-      <div class="rounded-lg border border-slate-200 bg-white p-12 text-center text-slate-600">
-        <p>No spot transactions yet.</p>
-      </div>
+      <%= render EmptyStateComponent.new(message: "No spot transactions yet.") %>
     <% end %>
   <% end %>
 </div>

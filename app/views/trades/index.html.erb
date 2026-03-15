@@ -120,19 +120,18 @@
     </div>
     <% if @pagy.last > 1 %>
       <div class="mt-4 flex justify-center">
-          <%== @pagy.series_nav %>
-        </div>
+        <%== @pagy.series_nav %>
+      </div>
     <% end %>
   <% else %>
-    <div class="rounded-lg border border-slate-200 bg-white p-12 text-center text-slate-600">
-      <% if @view == "portfolio" && @portfolio %>
-        <p>No trades in this portfolio's date range.</p>
-      <% elsif @view == "exchange" %>
-        <p>No trades for this exchange.</p>
-        <p class="mt-2 text-sm"><%= link_to "Sync now", exchange_accounts_path, class: "text-slate-800 underline hover:no-underline" %> or link another account.</p>
-      <% else %>
-        <p>No trades yet. Link an exchange account and sync will run on your schedule.</p>
+    <% if @view == "portfolio" && @portfolio %>
+      <%= render EmptyStateComponent.new(message: "No trades in this portfolio's date range.") %>
+    <% elsif @view == "exchange" %>
+      <%= render EmptyStateComponent.new(message: "No trades for this exchange.") do %>
+        <p class="text-sm"><%= link_to "Sync now", exchange_accounts_path, class: "text-slate-800 underline hover:no-underline" %> or link another account.</p>
       <% end %>
-    </div>
+    <% else %>
+      <%= render EmptyStateComponent.new(message: "No trades yet. Link an exchange account and sync will run on your schedule.") %>
+    <% end %>
   <% end %>
 </div>

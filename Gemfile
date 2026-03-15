@@ -36,6 +36,9 @@ gem "kamal", "~> 2.0"
 # Pagination
 gem "pagy"
 
+# View components
+gem "view_component", "~> 3.22"
+
 # CSV parsing (required explicitly from Ruby 3.4)
 gem "csv"
 

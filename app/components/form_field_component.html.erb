@@ -1,0 +1,4 @@
+<div>
+  <%= @form.label @attribute, @label, class: "block text-sm font-medium text-slate-700" %>
+  <%= @form.send(:"#{@type}_field", @attribute, class: FormFieldComponent::INPUT_CLASSES, required: @required, **@field_options) %>
+</div>
