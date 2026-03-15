@@ -1,0 +1,5 @@
+<nav class="mb-6 flex gap-1 border-b border-slate-200" aria-label="Tabs">
+  <% @tabs.each do |tab| %>
+    <%= link_to tab.label, tab.url, class: tab_css(tab.active), **(tab.active ? { "aria-current": "page" } : {}) %>
+  <% end %>
+</nav>

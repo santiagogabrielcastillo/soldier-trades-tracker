@@ -1,0 +1,6 @@
+<section <%= tag.attributes(**@html_options) %>>
+  <% if @heading %>
+    <h2 class="mb-4 text-lg font-medium text-slate-900"><%= @heading %></h2>
+  <% end %>
+  <%= content %>
+</section>

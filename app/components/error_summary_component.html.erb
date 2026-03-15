@@ -1,0 +1,7 @@
+<div class="rounded-md bg-amber-50 p-4 text-sm text-amber-800">
+  <ul class="list-disc pl-5">
+    <% @model.errors.full_messages.each do |msg| %>
+      <li><%= msg %></li>
+    <% end %>
+  </ul>
+</div>
