@@ -10,27 +10,43 @@
   </nav>
 
   <% if @view == "history" %>
-    <%= form_with url: trades_path, method: :get, local: true, class: "mb-4 flex flex-wrap items-end gap-3", data: { turbo: false } do |f| %>
+    <%= form_with url: trades_path, method: :get, local: true, class: "mb-4 flex flex-wrap items-end gap-4", data: { controller: "auto-submit-form", turbo: false } do |f| %>
       <%= f.hidden_field :view, value: "history" %>
-      <%= f.label :from_date, "From", class: "text-sm font-medium text-slate-700" %>
-      <%= f.date_field :from_date, value: @from_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
-      <%= f.label :to_date, "To", class: "text-sm font-medium text-slate-700" %>
-      <%= f.date_field :to_date, value: @to_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
-      <%= f.label :exchange_account_id, "Exchange", class: "text-sm font-medium text-slate-700" %>
-      <%= f.select :exchange_account_id, options_for_select([["All exchanges", nil]] + (@exchange_accounts || []).map { |a| [a.provider_type.to_s.capitalize, a.id] }, params[:exchange_account_id]), {}, { class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" } %>
-      <%= f.submit "Filter", class: "rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+      <div class="flex flex-col gap-1">
+        <%= f.label :from_date, "From", class: "text-sm font-medium text-slate-700" %>
+        <%= f.date_field :from_date, value: @from_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[10rem]", data: { auto_submit_form_target: "trigger" } %>
+      </div>
+      <div class="flex flex-col gap-1">
+        <%= f.label :to_date, "To", class: "text-sm font-medium text-slate-700" %>
+        <%= f.date_field :to_date, value: @to_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[10rem]", data: { auto_submit_form_target: "trigger" } %>
+      </div>
+      <div class="flex flex-col gap-1">
+        <%= f.label :exchange_account_id, "Exchange", class: "text-sm font-medium text-slate-700" %>
+        <%= f.select :exchange_account_id, options_for_select([["All exchanges", nil]] + (@exchange_accounts || []).map { |a| [a.provider_type.to_s.capitalize, a.id] }, params[:exchange_account_id]), {}, { class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[8rem]", data: { auto_submit_form_target: "trigger" } } %>
+      </div>
+      <div class="flex flex-col gap-1">
+        <span class="text-sm font-medium text-slate-700">&nbsp;</span>
+        <%= link_to "Clear filters", trades_path(view: "history"), class: "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+      </div>
     <% end %>
   <% end %>
 
   <% if @view == "exchange" %>
-    <%= form_with url: trades_path, method: :get, local: true, class: "mb-4 flex flex-wrap items-end gap-3", data: { turbo: false } do |f| %>
+    <%= form_with url: trades_path, method: :get, local: true, class: "mb-4 flex flex-wrap items-end gap-4", data: { controller: "auto-submit-form", turbo: false } do |f| %>
       <%= f.hidden_field :view, value: "exchange" %>
       <%= f.hidden_field :exchange_account_id, value: @exchange_account&.id %>
-      <%= f.label :from_date, "From", class: "text-sm font-medium text-slate-700" %>
-      <%= f.date_field :from_date, value: @from_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
-      <%= f.label :to_date, "To", class: "text-sm font-medium text-slate-700" %>
-      <%= f.date_field :to_date, value: @to_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
-      <%= f.submit "Filter", class: "rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+      <div class="flex flex-col gap-1">
+        <%= f.label :from_date, "From", class: "text-sm font-medium text-slate-700" %>
+        <%= f.date_field :from_date, value: @from_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[10rem]", data: { auto_submit_form_target: "trigger" } %>
+      </div>
+      <div class="flex flex-col gap-1">
+        <%= f.label :to_date, "To", class: "text-sm font-medium text-slate-700" %>
+        <%= f.date_field :to_date, value: @to_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[10rem]", data: { auto_submit_form_target: "trigger" } %>
+      </div>
+      <div class="flex flex-col gap-1">
+        <span class="text-sm font-medium text-slate-700">&nbsp;</span>
+        <%= link_to "Clear filters", trades_path(view: "exchange", exchange_account_id: @exchange_account&.id), class: "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+      </div>
     <% end %>
   <% end %>
 

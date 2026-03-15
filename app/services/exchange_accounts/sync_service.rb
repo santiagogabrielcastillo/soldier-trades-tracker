@@ -58,6 +58,31 @@ class ExchangeAccounts::SyncService
     end
 
     trade = @account.trades.find_or_initialize_by(exchange_reference_id: attrs[:exchange_reference_id])
+
+    # Same logical trade can come from different BingX endpoints (V1 vs V2 vs income) with different
+    # exchange_reference_ids. If we already have a trade with same content, update it instead of creating a duplicate.
+    if trade.new_record?
+      existing = @account.trades.find_by(
+        symbol: attrs[:symbol],
+        executed_at: attrs[:executed_at],
+        side: attrs[:side],
+        net_amount: attrs[:net_amount]
+      )
+      if existing
+        existing.assign_attributes(
+          symbol: attrs[:symbol],
+          side: attrs[:side],
+          fee: attrs[:fee],
+          net_amount: attrs[:net_amount],
+          executed_at: attrs[:executed_at],
+          raw_payload: attrs[:raw_payload] || {},
+          position_id: attrs[:position_id]
+        )
+        existing.save!
+        return
+      end
+    end
+
     trade.assign_attributes(
       symbol: attrs[:symbol],
       side: attrs[:side],

@@ -69,6 +69,31 @@ class SyncExchangeAccountJobTest < ActiveJob::TestCase
     assert @account.last_synced_at.present?
   end
 
+  test "perform deduplicates trades with same content but different exchange_reference_id (e.g. BingX V1 vs V2)" do
+    executed_at = 1.hour.ago
+    same_content = {
+      symbol: "BTC-USDT",
+      side: "sell",
+      fee: BigDecimal("-0.5"),
+      net_amount: BigDecimal("200.5"),
+      executed_at: executed_at,
+      raw_payload: {}
+    }
+    # Same logical trade, different ref IDs as from different BingX endpoints
+    client = build_fake_client([
+      same_content.merge(exchange_reference_id: "v1_order_123"),
+      same_content.merge(exchange_reference_id: "v2_fill_456")
+    ])
+    Exchanges::BingxClient.stub(:new, client) do
+      SyncExchangeAccountJob.perform_now(@account.id)
+    end
+    assert_equal 1, @account.trades.count, "should persist one trade when content matches"
+    trade = @account.trades.first!
+    assert_equal "BTC-USDT", trade.symbol
+    assert_equal BigDecimal("200.5"), trade.net_amount
+    assert ["v1_order_123", "v2_fill_456"].include?(trade.exchange_reference_id)
+  end
+
   private
 
   def build_fake_client(trades)
