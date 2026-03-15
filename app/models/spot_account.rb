@@ -21,6 +21,12 @@ class SpotAccount < ApplicationRecord
     user.spot_accounts.create!(name: "Default", default: true)
   end
 
+  def cash_balance
+    deposit_sum = spot_transactions.where(side: "deposit").sum(:amount)
+    withdraw_sum = spot_transactions.where(side: "withdraw").sum(:amount)
+    (deposit_sum.to_d - withdraw_sum.to_d)
+  end
+
   private
 
   def clear_other_defaults

@@ -16,6 +16,15 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Total return|Consistency|Win rate/i, response.body)
   end
 
+  test "show includes Spot section and View spot portfolio link" do
+    sign_in_as(@user)
+    get root_path
+    assert_response :success
+    assert_match(/Spot/i, response.body)
+    assert_match(/View spot portfolio/i, response.body)
+    assert_match(/Total value|Unrealized P&amp;L|Open positions/i, response.body)
+  end
+
   test "show redirects to login when not signed in" do
     get root_path
     assert_redirected_to login_path

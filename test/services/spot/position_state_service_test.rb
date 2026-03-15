@@ -138,5 +138,30 @@ module Spot
       assert_equal BigDecimal("75"), open_pos.net_usd_invested
       assert_equal BigDecimal("1.5"), open_pos.breakeven
     end
+
+    test "ignores deposit and withdraw transactions for positions" do
+      @spot_account.spot_transactions.create!(
+        executed_at: Time.utc(2026, 1, 14, 10, 0),
+        token: "BTC",
+        side: "buy",
+        price_usd: 50000,
+        amount: 0.01,
+        total_value_usd: 500,
+        row_signature: "sig1"
+      )
+      @spot_account.spot_transactions.create!(
+        executed_at: Time.utc(2026, 1, 14, 11, 0),
+        token: "USDT",
+        side: "deposit",
+        price_usd: 1,
+        amount: 1000,
+        total_value_usd: 1000,
+        row_signature: "cash|#{Time.utc(2026, 1, 14, 11, 0).to_i}|abc123"
+      )
+      result = PositionStateService.call(spot_account: @spot_account)
+      assert_equal 1, result.size, "Only BTC buy/sell should affect positions"
+      assert_equal "BTC", result.first.token
+      assert_equal BigDecimal("0.01"), result.first.balance
+    end
   end
 end

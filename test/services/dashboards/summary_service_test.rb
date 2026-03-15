@@ -58,6 +58,83 @@ class Dashboards::SummaryServiceTest < ActiveSupport::TestCase
     assert_equal 0, result[:summary_unrealized_pl].to_f, "No open positions => unrealized PnL is 0"
   end
 
+  test "result includes spot_value, spot_unrealized_pl, spot_cost_basis, spot_roi_pct, spot_position_count, spot_chart_series, spot_cash_balance, spot_cash_pct" do
+    result = Dashboards::SummaryService.call(@user)
+    assert result.key?(:spot_value)
+    assert result.key?(:spot_unrealized_pl)
+    assert result.key?(:spot_cost_basis)
+    assert result.key?(:spot_roi_pct)
+    assert result.key?(:spot_position_count)
+    assert result.key?(:spot_chart_series)
+    assert result.key?(:spot_cash_balance)
+    assert result.key?(:spot_cash_pct)
+    assert result[:spot_value].is_a?(BigDecimal)
+    assert result[:spot_unrealized_pl].is_a?(BigDecimal)
+    assert result[:spot_cost_basis].is_a?(BigDecimal)
+    assert result[:spot_chart_series].is_a?(Array)
+  end
+
+  test "spot_cash_balance and spot_cash_pct from deposit and withdraw" do
+    account = SpotAccount.find_or_create_default_for(@user)
+    account.spot_transactions.destroy_all
+    account.spot_transactions.create!(
+      executed_at: Time.current,
+      token: "USDT",
+      side: "deposit",
+      price_usd: 1,
+      amount: 600,
+      total_value_usd: 600,
+      row_signature: "cash|#{Time.current.to_i}|#{SecureRandom.hex(8)}"
+    )
+    account.spot_transactions.create!(
+      executed_at: 1.hour.from_now,
+      token: "USDT",
+      side: "withdraw",
+      price_usd: 1,
+      amount: 100,
+      total_value_usd: 100,
+      row_signature: "cash|#{1.hour.from_now.to_i}|#{SecureRandom.hex(8)}"
+    )
+    result = Dashboards::SummaryService.call(@user)
+    assert_equal 500, result[:spot_cash_balance].to_i
+    assert_equal 100.0, result[:spot_cash_pct], "Only cash => 100%"
+  end
+
+  test "spot_chart_series excludes deposit and withdraw" do
+    account = SpotAccount.find_or_create_default_for(@user)
+    account.spot_transactions.destroy_all
+    account.spot_transactions.create!(
+      executed_at: Time.utc(2026, 1, 1, 12, 0),
+      token: "BTC",
+      side: "buy",
+      price_usd: 50000,
+      amount: 0.01,
+      total_value_usd: 500,
+      row_signature: "sig1"
+    )
+    account.spot_transactions.create!(
+      executed_at: Time.utc(2026, 1, 2, 12, 0),
+      token: "USDT",
+      side: "deposit",
+      price_usd: 1,
+      amount: 1000,
+      total_value_usd: 1000,
+      row_signature: "cash|#{Time.utc(2026, 1, 2).to_i}|#{SecureRandom.hex(8)}"
+    )
+    result = Dashboards::SummaryService.call(@user)
+    series = result[:spot_chart_series]
+    assert_equal 1, series.size, "Cost basis series should have one point (buy only), not two"
+    assert_equal 500.0, series.first[:value]
+  end
+
+  test "spot_position_count is 0 when user has no spot positions" do
+    SpotAccount.find_or_create_default_for(@user).spot_transactions.destroy_all
+    result = Dashboards::SummaryService.call(@user)
+    assert_equal 0, result[:spot_position_count]
+    assert_equal 0, result[:spot_value].to_f
+    assert_equal 0, result[:spot_unrealized_pl].to_f
+  end
+
   test "no closed positions yields empty chart series and nil win rate" do
     portfolio = Portfolio.create!(user: @user, name: "Test", start_date: 2.weeks.ago, end_date: 1.day.from_now, initial_balance: 100, default: true)
     # Only open trade, no close
