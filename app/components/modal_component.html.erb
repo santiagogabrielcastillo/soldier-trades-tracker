@@ -1,5 +1,5 @@
 <div data-controller="dialog"<% if @open_on_connect %> data-dialog-open-on-connect-value="true"<% end %>>
-  <button type="button" data-action="click->dialog#open" class="<%= ButtonComponent::VARIANTS[:primary] %>">
+  <button type="button" data-action="click->dialog#open" aria-label="<%= @trigger_label %>" class="<%= ButtonComponent::VARIANTS[:primary] %>">
     <%= @trigger_label %>
   </button>
   <dialog data-dialog-target="dialog" class="rounded-lg border border-slate-200 bg-white p-6 shadow-xl backdrop:bg-slate-900/20">

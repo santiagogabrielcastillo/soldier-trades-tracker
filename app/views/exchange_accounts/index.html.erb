@@ -1,7 +1,7 @@
 <div>
   <div class="mb-6 flex items-center justify-between">
     <h1 class="text-2xl font-semibold text-slate-900">Exchange accounts</h1>
-    <%= link_to "Link account", new_exchange_account_path, class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+    <%= render ButtonComponent.new(label: "Link account", href: new_exchange_account_path) %>
   </div>
 
   <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -30,13 +30,13 @@
       </ul>
       <% if @pagy.last > 1 %>
         <div class="flex justify-center border-t border-slate-200 px-6 py-4">
-            <%== @pagy.series_nav %>
-          </div>
+          <%== @pagy.series_nav %>
+        </div>
       <% end %>
     <% else %>
       <div class="px-6 py-12 text-center text-slate-600">
         <p class="mb-4">No exchange accounts linked yet.</p>
-        <%= link_to "Link your first account", new_exchange_account_path, class: "inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+        <%= render ButtonComponent.new(label: "Link your first account", href: new_exchange_account_path, class: "inline-block") %>
       </div>
     <% end %>
   </section>

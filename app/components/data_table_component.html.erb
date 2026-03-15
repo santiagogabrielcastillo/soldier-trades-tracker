@@ -10,7 +10,7 @@
       </tr>
     </thead>
     <tbody class="divide-y divide-slate-200 bg-white">
-      <%= rows %>
+      <% rows.each do |row| %><%= row %><% end %>
     </tbody>
   </table>
 </div>
