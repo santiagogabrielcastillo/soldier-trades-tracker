@@ -1,0 +1,168 @@
+<div>
+  <h1 class="mb-4 text-2xl font-semibold text-slate-900">Stock portfolio</h1>
+
+  <nav class="mb-6 flex gap-1 border-b border-slate-200" aria-label="Tabs">
+    <%= link_to "Portfolio", stocks_path(stocks_index_filter_params.merge("view" => "portfolio")), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'portfolio' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}", **(@view == 'portfolio' ? { 'aria-current': 'page' } : {}) %>
+    <%= link_to "Transactions", stocks_path(stocks_index_filter_params.merge("view" => "transactions")), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'transactions' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}", **(@view == 'transactions' ? { 'aria-current': 'page' } : {}) %>
+  </nav>
+
+  <% if @view == "portfolio" %>
+  <div class="mb-6 flex flex-wrap items-center gap-3" data-controller="dialog" data-dialog-open-on-connect-value="<%= @open_new_trade_modal.present? %>">
+    <button type="button" data-action="click->dialog#open" aria-label="New trade" class="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500">
+      New trade
+    </button>
+    <dialog data-dialog-target="dialog" class="rounded-lg border border-slate-200 bg-white p-6 shadow-xl backdrop:bg-slate-900/20">
+      <h2 class="mb-4 text-lg font-semibold text-slate-900">New trade</h2>
+      <%= form_with url: stocks_trades_path, method: :post, local: true, data: { turbo: false } do |f| %>
+        <div class="space-y-4">
+          <div>
+            <%= f.label :side, "Side", class: "block text-sm font-medium text-slate-700" %>
+            <%= f.select :side, options_for_select([["Buy", "buy"], ["Sell", "sell"]], @stock_trade&.side), { include_blank: "Select" }, class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+            <% if @stock_trade&.errors&.key?(:side) %>
+              <p class="mt-1 text-sm text-red-600"><%= @stock_trade.errors[:side].first %></p>
+            <% end %>
+          </div>
+          <div>
+            <%= f.label :ticker, "Ticker", class: "block text-sm font-medium text-slate-700" %>
+            <%= f.text_field :ticker, value: @stock_trade&.ticker, placeholder: "e.g. AAPL", autocomplete: "off", class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm uppercase focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+            <% if @stock_trade&.errors&.key?(:ticker) %>
+              <p class="mt-1 text-sm text-red-600"><%= @stock_trade.errors[:ticker].first %></p>
+            <% end %>
+          </div>
+          <div>
+            <%= f.label :shares, "Shares", class: "block text-sm font-medium text-slate-700" %>
+            <%= f.number_field :shares, value: @stock_trade&.shares, step: :any, min: 0, placeholder: "0", class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+            <% if @stock_trade&.errors&.key?(:shares) %>
+              <p class="mt-1 text-sm text-red-600"><%= @stock_trade.errors[:shares].first %></p>
+            <% end %>
+          </div>
+          <div>
+            <%= f.label :price_usd, "Price (USD)", class: "block text-sm font-medium text-slate-700" %>
+            <%= f.number_field :price_usd, value: @stock_trade&.price_usd, step: :any, min: 0, placeholder: "0.00", class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+            <% if @stock_trade&.errors&.key?(:price_usd) %>
+              <p class="mt-1 text-sm text-red-600"><%= @stock_trade.errors[:price_usd].first %></p>
+            <% end %>
+          </div>
+          <div>
+            <%= f.label :executed_at, "Date & time", class: "block text-sm font-medium text-slate-700" %>
+            <%= f.datetime_local_field :executed_at, value: @stock_trade&.executed_at&.strftime("%Y-%m-%dT%H:%M"), class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+            <p class="mt-1 text-xs text-slate-500">Interpreted in <%= Time.zone.name %> and stored in UTC.</p>
+            <% if @stock_trade&.errors&.key?(:executed_at) %>
+              <p class="mt-1 text-sm text-red-600"><%= @stock_trade.errors[:executed_at].first %></p>
+            <% end %>
+          </div>
+        </div>
+        <div class="mt-6 flex gap-2">
+          <%= f.submit "Add trade", class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+          <button type="button" data-action="dialog#close" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Cancel</button>
+        </div>
+      <% end %>
+    </dialog>
+  </div>
+
+  <% if @positions.any? %>
+    <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+      <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Ticker</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Avg cost</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Shares</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Current price</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Market value</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Unrealized P&amp;L</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Unrealized ROI</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200 bg-white">
+          <% @positions.each do |pos| %>
+            <% current_price = @current_prices[pos.ticker] %>
+            <% unrealized = current_price && pos.breakeven ? (current_price.to_d - pos.breakeven.to_d) * pos.shares : nil %>
+            <% market_value = current_price ? current_price.to_d * pos.shares : nil %>
+            <% unrealized_roi = unrealized && pos.net_usd_invested.to_d.positive? ? (unrealized / pos.net_usd_invested.to_d * 100) : nil %>
+            <tr>
+              <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900"><%= pos.ticker %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= pos.breakeven ? format_money(pos.breakeven) : "—" %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_precision(pos.shares, precision: 6, strip_insignificant_zeros: true) %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_price ? format_money(current_price) : "—" %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= market_value ? format_money(market_value) : "—" %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized.nil? ? 'text-slate-500' : (unrealized >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized.nil? ? "—" : format_money(unrealized) %></td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized_roi.nil? ? 'text-slate-500' : (unrealized_roi >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized_roi.nil? ? "—" : number_to_percentage(unrealized_roi, precision: 2) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-3 text-sm text-slate-500">Prices via Finnhub. Set <code class="rounded bg-slate-100 px-1 text-xs">FINNHUB_API_KEY</code> to enable live quotes.</p>
+  <% else %>
+    <p class="text-slate-600">No open stock positions yet. Add a buy trade above to get started.</p>
+  <% end %>
+  <% end %>
+
+  <% if @view == "transactions" %>
+    <%= form_with url: stocks_path, method: :get, local: true, class: "mb-4 flex flex-wrap items-end gap-4", data: { controller: "auto-submit-form", turbo: false } do |f| %>
+      <%= f.hidden_field :view, value: "transactions" %>
+      <div class="flex flex-col gap-1">
+        <%= f.label :from_date, "From", class: "text-sm font-medium text-slate-700" %>
+        <%= f.date_field :from_date, value: @from_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[10rem]", data: { auto_submit_form_target: "trigger" } %>
+      </div>
+      <div class="flex flex-col gap-1">
+        <%= f.label :to_date, "To", class: "text-sm font-medium text-slate-700" %>
+        <%= f.date_field :to_date, value: @to_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[10rem]", data: { auto_submit_form_target: "trigger" } %>
+      </div>
+      <div class="flex flex-col gap-1">
+        <%= f.label :ticker, "Ticker", class: "text-sm font-medium text-slate-700" %>
+        <%= f.select :ticker, options_for_select([["All", ""]] + (@tickers_for_filter || []).map { |t| [t, t] }, @filter_ticker), {}, { class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[8rem]", data: { auto_submit_form_target: "trigger" } } %>
+      </div>
+      <div class="flex flex-col gap-1">
+        <%= f.label :side, "Side", class: "text-sm font-medium text-slate-700" %>
+        <%= f.select :side, options_for_select([["All", ""], ["Buy", "buy"], ["Sell", "sell"]], @filter_side), {}, { class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[6rem]", data: { auto_submit_form_target: "trigger" } } %>
+      </div>
+      <div class="flex flex-col gap-1">
+        <span class="text-sm font-medium text-slate-700">&nbsp;</span>
+        <div class="flex gap-2">
+          <%= f.submit "Filter", class: "rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+          <%= link_to "Clear filters", stocks_path(view: "transactions"), class: "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @trades.present? %>
+      <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+        <table class="min-w-full divide-y divide-slate-200">
+          <thead class="bg-slate-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Date</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Ticker</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Side</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Shares</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Price (USD)</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Total value (USD)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 bg-white">
+            <% @trades.each do |trade| %>
+              <tr class="<%= trade.side == 'buy' ? 'bg-emerald-50/50' : 'bg-red-50/50' %>">
+                <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-700"><%= trade.executed_at.strftime("%b %d, %Y") %></td>
+                <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900"><%= trade.ticker %></td>
+                <td class="whitespace-nowrap px-6 py-4 text-sm font-medium capitalize <%= trade.side == 'buy' ? 'text-emerald-700' : 'text-red-700' %>"><%= trade.side %></td>
+                <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_precision(trade.shares, precision: 6, strip_insignificant_zeros: true) %></td>
+                <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= format_money(trade.price_usd) %></td>
+                <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= format_money(trade.total_value_usd) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <% if @pagy.last > 1 %>
+        <div class="mt-4 flex justify-center">
+          <%== @pagy.series_nav %>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="rounded-lg border border-slate-200 bg-white p-12 text-center text-slate-600">
+        <p>No stock trades yet.</p>
+      </div>
+    <% end %>
+  <% end %>
+</div>

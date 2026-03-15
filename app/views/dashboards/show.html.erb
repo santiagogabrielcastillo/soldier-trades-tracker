@@ -116,6 +116,33 @@
     <%= link_to "View spot portfolio", spot_path, class: "inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
   <% end %>
 
+  <section class="mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <h2 class="mb-4 text-lg font-medium text-slate-900">Stocks</h2>
+    <div class="mb-4 flex flex-wrap items-baseline gap-6">
+      <div>
+        <span class="text-sm text-slate-500">Market value</span>
+        <p class="text-xl font-semibold text-slate-900"><%= format_money(@dashboard.stocks_value) %></p>
+      </div>
+      <div>
+        <span class="text-sm text-slate-500">Cost basis</span>
+        <p class="text-xl font-semibold text-slate-900"><%= format_money(@dashboard.stocks_cost_basis) %></p>
+      </div>
+      <div>
+        <span class="text-sm text-slate-500">Unrealized P&amp;L</span>
+        <p class="text-xl font-semibold <%= (@dashboard.stocks_unrealized_pl || 0).to_d >= 0 ? 'text-emerald-600' : 'text-red-600' %>"><%= format_money(@dashboard.stocks_unrealized_pl) %></p>
+      </div>
+      <div>
+        <span class="text-sm text-slate-500">Unrealized ROI</span>
+        <p class="text-xl font-semibold <%= @dashboard.stocks_roi_pct.nil? ? 'text-slate-900' : (@dashboard.stocks_roi_pct >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= @dashboard.stocks_roi_pct.nil? ? "—" : "#{number_with_precision(@dashboard.stocks_roi_pct, precision: 2)}%" %></p>
+      </div>
+      <div>
+        <span class="text-sm text-slate-500">Open positions</span>
+        <p class="text-xl font-semibold text-slate-900"><%= @dashboard.stocks_position_count || 0 %></p>
+      </div>
+    </div>
+    <%= link_to "View stock portfolio", stocks_path, class: "inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+  </section>
+
   <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
     <h2 class="mb-4 text-lg font-medium text-slate-900">Exchange accounts</h2>
     <% if @dashboard.exchange_accounts.any? %>

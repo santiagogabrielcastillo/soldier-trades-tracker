@@ -5,7 +5,8 @@ class ExchangeAccounts::SyncService
   BINANCE_LOOKBACK = 6.months
 
   # Fetches trades from the account's provider, applies FinancialCalculator for trade-style
-  # hashes, persists trades (rescues RecordNotUnique per row), creates SyncRun, updates last_synced_at.
+  # hashes, persists trades (rescues RecordNotUnique per row), rebuilds positions, then creates
+  # SyncRun and updates last_synced_at. So last_synced_at only advances when positions are consistent.
   # Raises Exchanges::ApiError on API failure so the job can retry.
   def self.call(account)
     new(account).call
@@ -24,9 +25,9 @@ class ExchangeAccounts::SyncService
 
     trades.each { |attrs| persist_trade(attrs) }
 
+    Positions::RebuildForAccountService.call(@account)
     SyncRun.create!(exchange_account_id: @account.id, ran_at: Time.current.utc)
     @account.update_column(:last_synced_at, Time.current.utc)
-    Positions::RebuildForAccountService.call(@account)
     :ok
   end
 

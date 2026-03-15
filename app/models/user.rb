@@ -10,6 +10,7 @@ class User < ApplicationRecord
   has_many :trades, through: :exchange_accounts
   has_many :portfolios, dependent: :destroy
   has_many :spot_accounts, dependent: :destroy
+  has_many :stock_portfolios, dependent: :destroy
   has_many :user_preferences, dependent: :destroy
 
   def default_portfolio

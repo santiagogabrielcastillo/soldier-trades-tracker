@@ -18,7 +18,7 @@ class Dashboards::SummaryService
     else
       all_time_summary
     end
-    base.merge(spot_summary)
+    base.merge(spot_summary).merge(stocks_summary)
   end
 
   private
@@ -183,6 +183,41 @@ class Dashboards::SummaryService
       spot_cash_balance: cash_balance,
       spot_cash_pct: spot_cash_pct,
       spot_chart_series: spot_cost_basis_series(spot_account)
+    }
+  end
+
+  def stocks_summary
+    stock_portfolio = StockPortfolio.find_or_create_default_for(@user)
+    positions = Stocks::PositionStateService.call(stock_portfolio: stock_portfolio)
+    open_positions = positions.select(&:open?)
+
+    if open_positions.empty?
+      return {
+        stocks_value: 0.to_d,
+        stocks_unrealized_pl: 0.to_d,
+        stocks_cost_basis: 0.to_d,
+        stocks_roi_pct: nil,
+        stocks_position_count: 0
+      }
+    end
+
+    open_tickers = open_positions.map(&:ticker).uniq
+    current_prices = Stocks::CurrentPriceFetcher.call(tickers: open_tickers)
+    stocks_value = open_positions.sum(BigDecimal("0")) { |pos| (current_prices[pos.ticker] || 0).to_d * pos.shares }
+    stocks_cost_basis = open_positions.sum(BigDecimal("0")) { |pos| pos.net_usd_invested.to_d }
+    stocks_unrealized_pl = open_positions.sum(BigDecimal("0")) do |pos|
+      price = current_prices[pos.ticker]
+      next 0.to_d unless price && pos.breakeven
+      (price.to_d - pos.breakeven.to_d) * pos.shares
+    end
+    stocks_roi_pct = stocks_cost_basis.positive? ? (stocks_unrealized_pl / stocks_cost_basis * 100).round(2) : nil
+
+    {
+      stocks_value: stocks_value,
+      stocks_unrealized_pl: stocks_unrealized_pl,
+      stocks_cost_basis: stocks_cost_basis,
+      stocks_roi_pct: stocks_roi_pct,
+      stocks_position_count: open_positions.size
     }
   end
 
