@@ -1,7 +1,7 @@
 ---
 title: Migrate UI to ViewComponent primitive-first hierarchy
 type: refactor
-status: active
+status: completed
 date: 2026-03-15
 origin: docs/brainstorms/2026-03-15-viewcomponent-migration-brainstorm.md
 ---
