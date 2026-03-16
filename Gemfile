@@ -37,7 +37,7 @@ gem "kamal", "~> 2.0"
 gem "pagy"
 
 # View components
-gem "view_component", "~> 3.22"
+gem "view_component", "~> 4.5"
 
 # CSV parsing (required explicitly from Ruby 3.4)
 gem "csv"
