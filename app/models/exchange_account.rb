@@ -48,7 +48,7 @@ class ExchangeAccount < ApplicationRecord
     raw = raw_stored_currencies
     return unless raw.is_a?(Array)
     return unless raw.all? { |el| el.is_a?(String) || el.is_a?(Symbol) }
-    self.allowed_quote_currencies = raw.map { _1.to_s.strip.upcase }.uniq
+    self.allowed_quote_currencies = raw.map { _1.to_s.strip.upcase }.reject(&:empty?).uniq
   end
 
   def allowed_quote_currencies_is_array
