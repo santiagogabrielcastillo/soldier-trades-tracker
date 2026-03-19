@@ -197,19 +197,42 @@ class Dashboards::SummaryService
         stocks_unrealized_pl: 0.to_d,
         stocks_cost_basis: 0.to_d,
         stocks_roi_pct: nil,
-        stocks_position_count: 0
+        stocks_position_count: 0,
+        stocks_currency: stock_portfolio.argentina? ? :ars : :usd
       }
     end
 
     open_tickers = open_positions.map(&:ticker).uniq
-    current_prices = Stocks::CurrentPriceFetcher.call(tickers: open_tickers)
-    stocks_value = open_positions.sum(BigDecimal("0")) { |pos| (current_prices[pos.ticker] || 0).to_d * pos.shares }
-    stocks_cost_basis = open_positions.sum(BigDecimal("0")) { |pos| pos.net_usd_invested.to_d }
-    stocks_unrealized_pl = open_positions.sum(BigDecimal("0")) do |pos|
+
+    # For Argentina-mode portfolios, prices and P&L are in ARS.
+    # We attempt to convert to USD via the MEP rate for dashboard display.
+    if stock_portfolio.argentina?
+      current_prices = Stocks::ArgentineCurrentPriceFetcher.call(tickers: open_tickers)
+      mep_rate = Stocks::MepRateFetcher.call
+    else
+      current_prices = Stocks::CurrentPriceFetcher.call(tickers: open_tickers)
+      mep_rate = nil
+    end
+
+    stocks_value_native = open_positions.sum(BigDecimal("0")) { |pos| (current_prices[pos.ticker] || 0).to_d * pos.shares }
+    stocks_cost_basis_native = open_positions.sum(BigDecimal("0")) { |pos| pos.net_usd_invested.to_d }
+    stocks_unrealized_pl_native = open_positions.sum(BigDecimal("0")) do |pos|
       price = current_prices[pos.ticker]
       next 0.to_d unless price && pos.breakeven
       (price.to_d - pos.breakeven.to_d) * pos.shares
     end
+
+    # Convert ARS → USD for dashboard when MEP rate is available; otherwise surface native values
+    if stock_portfolio.argentina? && mep_rate&.positive?
+      stocks_value = stocks_value_native / mep_rate
+      stocks_cost_basis = stocks_cost_basis_native / mep_rate
+      stocks_unrealized_pl = stocks_unrealized_pl_native / mep_rate
+    else
+      stocks_value = stocks_value_native
+      stocks_cost_basis = stocks_cost_basis_native
+      stocks_unrealized_pl = stocks_unrealized_pl_native
+    end
+
     stocks_roi_pct = stocks_cost_basis.positive? ? (stocks_unrealized_pl / stocks_cost_basis * 100).round(2) : nil
 
     {
@@ -217,7 +240,8 @@ class Dashboards::SummaryService
       stocks_unrealized_pl: stocks_unrealized_pl,
       stocks_cost_basis: stocks_cost_basis,
       stocks_roi_pct: stocks_roi_pct,
-      stocks_position_count: open_positions.size
+      stocks_position_count: open_positions.size,
+      stocks_currency: stock_portfolio.argentina? ? :ars : :usd
     }
   end
 

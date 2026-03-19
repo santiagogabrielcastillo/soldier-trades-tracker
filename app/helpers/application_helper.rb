@@ -5,6 +5,12 @@ module ApplicationHelper
     number_to_currency(amount.to_d, precision: 2, delimiter: ",", strip_insignificant_zeros: false)
   end
 
+  # Format as ARS X.XXX,XX (Argentine peso). Returns "—" for nil.
+  def format_ars(amount)
+    return "—" if amount.nil?
+    number_to_currency(amount.to_d, unit: "ARS\u00A0", separator: ",", delimiter: ".", precision: 2)
+  end
+
   # Returns a Tailwind text-color class for a signed numeric value (P&L, ROI).
   # Nil → text-slate-900 (stat/summary context). Zero treated as non-negative (green).
   def pl_color_class(value)
