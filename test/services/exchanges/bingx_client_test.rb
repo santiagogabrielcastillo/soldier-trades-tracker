@@ -46,6 +46,36 @@ module Exchanges
       end
     end
 
+    test "allows USDT and USDC trades by default (no kwarg)" do
+      client = BingxClient.new(api_key: "k", api_secret: "s")
+      assert client.send(:allowed_quote?, "BTC-USDT"), "USDT should be allowed by default"
+      assert client.send(:allowed_quote?, "ETH-USDC"), "USDC should be allowed by default"
+    end
+
+    test "filters out USDC when allowed_quote_currencies is USDT only" do
+      client = BingxClient.new(api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
+      assert client.send(:allowed_quote?, "BTC-USDT"), "USDT allowed"
+      assert_not client.send(:allowed_quote?, "BTC-USDC"), "USDC not allowed"
+    end
+
+    test "falls back to default when allowed_quote_currencies is nil" do
+      client = BingxClient.new(api_key: "k", api_secret: "s", allowed_quote_currencies: nil)
+      assert client.send(:allowed_quote?, "BTC-USDT"), "USDT allowed via default"
+      assert client.send(:allowed_quote?, "BTC-USDC"), "USDC allowed via default"
+      assert_not client.send(:allowed_quote?, "BTC-BNB"), "non-stablecoin not in default whitelist"
+    end
+
+    test "case-insensitive quote extraction in allowed_quote?" do
+      client = BingxClient.new(api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
+      assert client.send(:allowed_quote?, "BTC-usdt"), "lowercase quote should be normalized"
+    end
+
+    test "stablequote_pair? is an alias for allowed_quote?" do
+      client = BingxClient.new(api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
+      assert_equal client.send(:allowed_quote?, "BTC-USDT"), client.send(:stablequote_pair?, "BTC-USDT")
+      assert_equal client.send(:allowed_quote?, "BTC-USDC"), client.send(:stablequote_pair?, "BTC-USDC")
+    end
+
     test "signed_get does not raise ApiError for other 4xx" do
       stub_http_response(code: "400", body: '{"msg":"bad request"}') do
         err = assert_raises(StandardError) { @client.signed_get("/path", "limit" => 1) }

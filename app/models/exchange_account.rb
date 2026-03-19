@@ -1,5 +1,17 @@
 class ExchangeAccount < ApplicationRecord
   PROVIDER_TYPES = %w[binance bingx].freeze
+  SUPPORTED_QUOTE_CURRENCIES = Exchanges::QuoteCurrencies::SUPPORTED
+  DEFAULT_QUOTE_CURRENCIES = Exchanges::QuoteCurrencies::DEFAULT
+
+  store_accessor :settings, :allowed_quote_currencies
+
+  # Custom getter: returns the stored array or the default WITHOUT dirtying the record.
+  # Do NOT use after_initialize for this — writing self.x = ... in after_initialize marks
+  # `settings` as changed on every ExchangeAccount.find, causing unnecessary UPDATE statements.
+  def allowed_quote_currencies
+    stored = settings.is_a?(Hash) ? settings["allowed_quote_currencies"] : nil
+    stored.nil? ? DEFAULT_QUOTE_CURRENCIES.dup : stored
+  end
 
   belongs_to :user
   has_many :trades, dependent: :destroy
@@ -10,8 +22,14 @@ class ExchangeAccount < ApplicationRecord
   encrypts :api_key
   encrypts :api_secret
 
-  validate :read_only_api_key
+  before_validation :normalize_allowed_quote_currencies
 
+  validate :read_only_api_key
+  validate :allowed_quote_currencies_is_array
+  validates :allowed_quote_currencies,
+    length: { minimum: 1, message: "must contain at least one currency" },
+    if: -> { allowed_quote_currencies.is_a?(Array) }
+  validate :allowed_quote_currencies_are_valid
   validates :provider_type, inclusion: { in: PROVIDER_TYPES }
   validates :api_key, :api_secret, presence: true
 
@@ -25,6 +43,25 @@ class ExchangeAccount < ApplicationRecord
   end
 
   private
+
+  def normalize_allowed_quote_currencies
+    raw = settings.is_a?(Hash) ? settings["allowed_quote_currencies"] : nil
+    return unless raw.is_a?(Array)
+    self.allowed_quote_currencies = raw.map { _1.to_s.strip.upcase }.uniq
+  end
+
+  def allowed_quote_currencies_is_array
+    raw = settings.is_a?(Hash) ? settings["allowed_quote_currencies"] : nil
+    return if raw.nil? || raw.is_a?(Array)
+    errors.add(:allowed_quote_currencies, "must be an array")
+  end
+
+  def allowed_quote_currencies_are_valid
+    raw = settings.is_a?(Hash) ? settings["allowed_quote_currencies"] : nil
+    return unless raw.is_a?(Array)
+    invalid = raw - SUPPORTED_QUOTE_CURRENCIES
+    errors.add(:allowed_quote_currencies, "contains unknown currencies: #{invalid.join(', ')}") if invalid.any?
+  end
 
   # Binance and BingX are verified via ping; see ExchangeAccountKeyValidator. For either, any failed
   # verification (invalid key, network, or not read-only) uses the same message below.

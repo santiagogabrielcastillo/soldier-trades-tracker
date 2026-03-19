@@ -10,12 +10,13 @@ module Exchanges
     SWAP_V1_FULL_ORDER_PATH = "/openApi/swap/v1/trade/fullOrder"
     SWAP_USER_INCOME_PATH = "/openApi/swap/v2/user/income"
 
-    STABLEQUOTE_SYMBOLS = %w[USDT USDC].freeze
+    DEFAULT_QUOTE_CURRENCIES = Exchanges::QuoteCurrencies::DEFAULT
     SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
     V1_ORDER_LIMIT = 500
     FALLBACK_LOOKBACK_DAYS = 90
 
-    def initialize(api_key:, api_secret:, base_url: nil)
+    def initialize(api_key:, api_secret:, base_url: nil, allowed_quote_currencies: DEFAULT_QUOTE_CURRENCIES)
+      @allowed_quote_currencies = allowed_quote_currencies.presence || DEFAULT_QUOTE_CURRENCIES
       @http = Bingx::HttpClient.new(
         api_key: api_key,
         api_secret: api_secret,
@@ -44,7 +45,7 @@ module Exchanges
 
     def debug_fetch_full_order(since:, limit: 100)
       since_ms = since.to_i * 1000
-      end_ms = [since_ms + SEVEN_DAYS_MS - 1, (Time.now.to_f * 1000).to_i].min
+      end_ms = [ since_ms + SEVEN_DAYS_MS - 1, (Time.now.to_f * 1000).to_i ].min
       @http.get(SWAP_V1_FULL_ORDER_PATH, "startTime" => since_ms, "endTime" => end_ms, "limit" => limit)
     end
 
@@ -54,7 +55,7 @@ module Exchanges
 
     def debug_fetch_all_raw(since:)
       since_ms = since.to_i * 1000
-      end_ms = [since_ms + SEVEN_DAYS_MS - 1, (Time.now.to_f * 1000).to_i].min
+      end_ms = [ since_ms + SEVEN_DAYS_MS - 1, (Time.now.to_f * 1000).to_i ].min
       {
         v1_full_order: @http.get(SWAP_V1_FULL_ORDER_PATH, "startTime" => since_ms, "endTime" => end_ms, "limit" => 10),
         v2_fills: @http.get(SWAP_FILL_ORDERS_PATH, "startTime" => since_ms, "limit" => 10),
@@ -91,11 +92,16 @@ module Exchanges
       []
     end
 
-    def stablequote_pair?(symbol)
+    # Returns true when the symbol's quote currency is in the per-account whitelist.
+    # Symbol must be in app format (BASE-QUOTE, e.g. "BTC-USDC"). Blank whitelist allows all.
+    def allowed_quote?(symbol)
+      return true if @allowed_quote_currencies.blank?
       return false if symbol.blank?
       quote = symbol.to_s.split("-").last.to_s.upcase
-      STABLEQUOTE_SYMBOLS.include?(quote)
+      @allowed_quote_currencies.include?(quote)
     end
+
+    alias stablequote_pair? allowed_quote?
 
     def fetch_trades_from_v2_fills(since_ms, limit: 100)
       trades = []
@@ -124,7 +130,7 @@ module Exchanges
       start_time = since_ms
 
       while start_time < end_ms
-        window_end = [start_time + SEVEN_DAYS_MS - 1, end_ms].min
+        window_end = [ start_time + SEVEN_DAYS_MS - 1, end_ms ].min
         window_order_id = nil
 
         loop do
