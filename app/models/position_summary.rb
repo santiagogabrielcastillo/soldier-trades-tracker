@@ -101,7 +101,16 @@ class PositionSummary
       (raw["executedQty"] || raw["executed_qty"] || raw["origQty"] || raw["qty"] || 0).to_d
     end
 
-    closed_rows = closing.sort_by(&:executed_at).filter_map { |close_trade| build_one_leg(open_trades, close_trade, leverage) }
+    # BOTH-chain (Binance one-way mode): aggregate ALL closing fills into one row.
+    # Multiple fills of the same closing order all land at the same instant; showing one row per fill
+    # is noise — the user placed one order. For BingX hedge mode (from_both_chain: false) we keep
+    # one row per leg so intentional partial closes at different times stay visible.
+    if from_both_chain
+      closed_row = build_one_aggregate_closed(open_trades, closing, leverage, open_margin)
+      closed_rows = [ closed_row ].compact
+    else
+      closed_rows = closing.sort_by(&:executed_at).filter_map { |close_trade| build_one_leg(open_trades, close_trade, leverage) }
+    end
     rows = closed_rows
 
     if open_margin && open_qty.positive? && total_closed_qty < open_qty
