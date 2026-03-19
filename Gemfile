@@ -31,7 +31,7 @@ gem "bcrypt", "~> 3.1.7"
 gem "solid_queue"
 
 # Kamal for deployment
-gem "kamal", "~> 2.0"
+gem "kamal", "~> 2.11"
 
 # Pagination
 gem "pagy"
