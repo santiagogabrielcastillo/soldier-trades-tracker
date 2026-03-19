@@ -9,7 +9,7 @@ class ExchangeAccount < ApplicationRecord
   # Do NOT use after_initialize for this — writing self.x = ... in after_initialize marks
   # `settings` as changed on every ExchangeAccount.find, causing unnecessary UPDATE statements.
   def allowed_quote_currencies
-    stored = settings.is_a?(Hash) ? settings["allowed_quote_currencies"] : nil
+    stored = raw_stored_currencies
     stored.nil? ? DEFAULT_QUOTE_CURRENCIES.dup : stored
   end
 
@@ -45,22 +45,29 @@ class ExchangeAccount < ApplicationRecord
   private
 
   def normalize_allowed_quote_currencies
-    raw = settings.is_a?(Hash) ? settings["allowed_quote_currencies"] : nil
+    raw = raw_stored_currencies
     return unless raw.is_a?(Array)
+    return unless raw.all? { |el| el.is_a?(String) || el.is_a?(Symbol) }
     self.allowed_quote_currencies = raw.map { _1.to_s.strip.upcase }.uniq
   end
 
   def allowed_quote_currencies_is_array
-    raw = settings.is_a?(Hash) ? settings["allowed_quote_currencies"] : nil
+    raw = raw_stored_currencies
     return if raw.nil? || raw.is_a?(Array)
     errors.add(:allowed_quote_currencies, "must be an array")
   end
 
   def allowed_quote_currencies_are_valid
-    raw = settings.is_a?(Hash) ? settings["allowed_quote_currencies"] : nil
+    raw = raw_stored_currencies
     return unless raw.is_a?(Array)
     invalid = raw - SUPPORTED_QUOTE_CURRENCIES
     errors.add(:allowed_quote_currencies, "contains unknown currencies: #{invalid.join(', ')}") if invalid.any?
+  end
+
+  # Single point of access for the raw stored value. Returns nil when the key is absent
+  # or when settings is not a Hash (e.g. nil on a brand-new unsaved record).
+  def raw_stored_currencies
+    settings.is_a?(Hash) ? settings["allowed_quote_currencies"] : nil
   end
 
   # Binance and BingX are verified via ping; see ExchangeAccountKeyValidator. For either, any failed
