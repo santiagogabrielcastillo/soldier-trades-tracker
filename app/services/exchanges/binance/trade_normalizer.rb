@@ -44,8 +44,9 @@ module Exchanges
           return nil if symbol.blank?
           s = symbol.to_s.strip.upcase
           return nil if s.empty?
-          # Insert hyphen before common quote assets (USDT, USDC, BUSD, etc.)
-          %w[USDT USDC BUSD].each do |quote|
+          # Insert hyphen before recognized quote assets. List is shared with ExchangeAccount::SUPPORTED_QUOTE_CURRENCIES —
+          # adding a new stablecoin to Exchanges::SUPPORTED_QUOTE_CURRENCIES automatically enables formatting here.
+          Exchanges::QuoteCurrencies::SUPPORTED.each do |quote|
             next unless s.end_with?(quote)
             base = s[0...(s.length - quote.length)]
             return "#{base}-#{quote}" if base.present?

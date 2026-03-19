@@ -12,13 +12,16 @@ module Exchanges
     INCOME_PATH = "/fapi/v1/income"
     USER_TRADES_PATH = "/fapi/v1/userTrades"
 
+    DEFAULT_QUOTE_CURRENCIES = Exchanges::QuoteCurrencies::DEFAULT
+
     SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
     USER_TRADES_LIMIT = 1000
     INCOME_LIMIT = 1000
     # Binance userTrades only returns last 6 months; use same window for income-based symbol discovery.
     INCOME_LOOKBACK_MS = 6 * 31 * 24 * 60 * 60 * 1000
 
-    def initialize(api_key:, api_secret:, base_url: nil)
+    def initialize(api_key:, api_secret:, base_url: nil, allowed_quote_currencies: DEFAULT_QUOTE_CURRENCIES)
+      @allowed_quote_currencies = allowed_quote_currencies.presence || DEFAULT_QUOTE_CURRENCIES
       @http = Binance::HttpClient.new(
         api_key: api_key,
         api_secret: api_secret,
@@ -26,16 +29,22 @@ module Exchanges
       )
     end
 
-    # Fetches all userTrades from Binance: discovers symbols (positionRisk + income), requests
-    # 7-day windows per symbol (API limit), normalizes, dedupes by exchange_reference_id, sorts by executed_at.
+    # Fetches all userTrades from Binance: discovers symbols (positionRisk + income), filters by
+    # allowed_quote_currencies to avoid unnecessary API calls, requests 7-day windows per symbol
+    # (API limit), normalizes, dedupes by exchange_reference_id, sorts by executed_at.
+    # Note: discover_symbols (income pagination) is unfiltered — the whitelist only prevents
+    # userTrades API calls for excluded symbols, not the discovery calls themselves.
     def fetch_my_trades(since:)
       since_ms = time_to_ms(since)
       symbols = discover_symbols(since_ms)
       return [] if symbols.empty?
 
       all_trades = []
-      symbols.each do |symbol|
-        all_trades.concat(fetch_user_trades_for_symbol(symbol, since_ms))
+      symbols.each do |raw_symbol|
+        # Normalize to app format (e.g. BTCUSDC → BTC-USDC) to check quote currency before fetching.
+        normalized = Binance::TradeNormalizer.normalize_symbol(raw_symbol)
+        next unless allowed_quote?(normalized)
+        all_trades.concat(fetch_user_trades_for_symbol(raw_symbol, since_ms))
       end
 
       all_trades.uniq { |t| t[:exchange_reference_id] }.sort_by { |t| t[:executed_at] }
@@ -75,6 +84,15 @@ module Exchanges
     end
 
     private
+
+    # Returns true when the symbol's quote currency is in the per-account whitelist.
+    # Symbol must be in app format (BASE-QUOTE, e.g. "BTC-USDC"). Blank whitelist allows all.
+    def allowed_quote?(symbol)
+      return true if @allowed_quote_currencies.blank?
+      return false if symbol.blank?
+      quote = symbol.to_s.split("-").last.to_s.upcase
+      @allowed_quote_currencies.include?(quote)
+    end
 
     def discover_symbols(since_ms)
       from_positions = symbols_from_position_risk

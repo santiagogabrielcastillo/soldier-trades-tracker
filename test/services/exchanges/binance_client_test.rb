@@ -74,9 +74,9 @@ module Exchanges
       stub_signed_get = lambda do |path, params|
         call_count += 1
         if path == BinanceClient::POSITION_RISK_PATH
-          [{ "symbol" => "BTCUSDT", "positionAmt" => "0.1" }]
+          [ { "symbol" => "BTCUSDT", "positionAmt" => "0.1" } ]
         elsif path == BinanceClient::USER_TRADES_PATH && params["symbol"] == "BTCUSDT"
-          [raw_trade]
+          [ raw_trade ]
         else
           []
         end
@@ -91,6 +91,82 @@ module Exchanges
         assert_equal BigDecimal("0.01"), result[0][:quantity]
         assert_equal BigDecimal("0.05"), result[0][:fee_from_exchange]
       end
+    end
+
+    test "fetch_my_trades fetches USDC symbol when USDC is in whitelist" do
+      time_ms = (Time.now.to_i - 3600) * 1000
+      raw_usdc_trade = {
+        "id" => "usdc_trade_1",
+        "symbol" => "BTCUSDC",
+        "side" => "BUY",
+        "price" => "50000",
+        "qty" => "0.01",
+        "commission" => "-0.05",
+        "time" => time_ms,
+        "positionSide" => "LONG"
+      }
+      stub = lambda do |path, params|
+        if path == BinanceClient::INCOME_PATH
+          [ { "symbol" => "BTCUSDC", "incomeType" => "REALIZED_PNL" } ]
+        elsif path == BinanceClient::POSITION_RISK_PATH
+          []
+        elsif path == BinanceClient::USER_TRADES_PATH && params["symbol"] == "BTCUSDC"
+          [ raw_usdc_trade ]
+        else
+          []
+        end
+      end
+      @client.stub(:signed_get, stub) do
+        result = @client.fetch_my_trades(since: 1.day.ago)
+        assert_equal 1, result.size
+        assert_equal "BTC-USDC", result[0][:symbol]
+      end
+    end
+
+    test "fetch_my_trades skips userTrades fetch for symbols not in whitelist" do
+      client = BinanceClient.new(api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
+      fetch_calls = []
+      stub = lambda do |path, params|
+        fetch_calls << { path: path, params: params }
+        if path == BinanceClient::INCOME_PATH
+          [ { "symbol" => "BTCUSDC" }, { "symbol" => "BTCUSDT" } ]
+        elsif path == BinanceClient::POSITION_RISK_PATH
+          []
+        elsif path == BinanceClient::USER_TRADES_PATH
+          []
+        else
+          []
+        end
+      end
+      client.stub(:signed_get, stub) do
+        client.fetch_my_trades(since: 1.day.ago)
+      end
+      user_trade_calls = fetch_calls.select { |c| c[:path] == BinanceClient::USER_TRADES_PATH }
+      assert user_trade_calls.none? { |c| c[:params]["symbol"] == "BTCUSDC" },
+        "Should not fetch userTrades for USDC when not in whitelist"
+      assert user_trade_calls.any? { |c| c[:params]["symbol"] == "BTCUSDT" },
+        "Should still fetch userTrades for USDT"
+    end
+
+    test "fetch_my_trades uses default whitelist when allowed_quote_currencies is nil" do
+      client = BinanceClient.new(api_key: "k", api_secret: "s", allowed_quote_currencies: nil)
+      fetch_calls = []
+      stub = lambda do |path, params|
+        fetch_calls << { path: path, params: params }
+        if path == BinanceClient::INCOME_PATH
+          [ { "symbol" => "BTCUSDC" }, { "symbol" => "BTCUSDT" } ]
+        elsif path == BinanceClient::POSITION_RISK_PATH
+          []
+        else
+          []
+        end
+      end
+      client.stub(:signed_get, stub) do
+        client.fetch_my_trades(since: 1.day.ago)
+      end
+      user_trade_symbols = fetch_calls.select { |c| c[:path] == BinanceClient::USER_TRADES_PATH }.map { |c| c[:params]["symbol"] }
+      assert_includes user_trade_symbols, "BTCUSDC", "USDC in default whitelist"
+      assert_includes user_trade_symbols, "BTCUSDT", "USDT in default whitelist"
     end
 
     test "leverage_by_symbol returns app symbol => leverage from positionRisk" do

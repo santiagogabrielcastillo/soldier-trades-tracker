@@ -34,6 +34,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_19_185958) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "last_synced_at"
+    t.jsonb "settings", default: {}, null: false
     t.index ["user_id"], name: "index_exchange_accounts_on_user_id"
   end
 

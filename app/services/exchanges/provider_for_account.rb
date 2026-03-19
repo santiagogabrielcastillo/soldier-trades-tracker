@@ -22,7 +22,11 @@ module Exchanges
       return nil unless class_name
 
       klass = class_name.constantize
-      klass.new(api_key: @account.api_key, api_secret: @account.api_secret)
+      klass.new(
+        api_key: @account.api_key,
+        api_secret: @account.api_secret,
+        allowed_quote_currencies: @account.allowed_quote_currencies
+      )
     end
 
     # Lightweight check: registry + credentials only; does not instantiate the client.
