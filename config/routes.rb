@@ -15,7 +15,7 @@ Rails.application.routes.draw do
 
   resource :settings, only: %i[show update], controller: "settings"
 
-  resources :exchange_accounts, only: %i[index new create destroy] do
+  resources :exchange_accounts, only: %i[index new create destroy edit update] do
     member do
       post :sync
     end
