@@ -1,0 +1,11 @@
+aapl:
+  user: one
+  ticker: AAPL
+  ratio: 10.0
+  underlying_ticker: AAPL
+
+msft:
+  user: one
+  ticker: MSFT
+  ratio: 5.0
+  underlying_ticker: MSFT

@@ -1,10 +1,15 @@
 # frozen_string_literal: true
 
 class StockPortfolio < ApplicationRecord
+  MARKET_TYPES = %w[us argentina].freeze
+
   belongs_to :user
   has_many :stock_trades, dependent: :destroy
 
   validates :name, presence: true
+  validates :market, inclusion: { in: MARKET_TYPES }
+
+  validate :market_immutable_if_trades_exist, on: :update
 
   before_save :clear_other_defaults, if: :default?
 
@@ -17,9 +22,19 @@ class StockPortfolio < ApplicationRecord
     user.stock_portfolios.create!(name: "Default", default: true)
   end
 
+  def argentina?
+    market == "argentina"
+  end
+
   private
 
   def clear_other_defaults
     StockPortfolio.where(user_id: user_id).where.not(id: id).update_all(default: false)
+  end
+
+  def market_immutable_if_trades_exist
+    if market_changed? && stock_trades.exists?
+      errors.add(:market, "cannot be changed after trades have been recorded")
+    end
   end
 end

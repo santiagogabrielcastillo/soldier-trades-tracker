@@ -34,4 +34,12 @@ Rails.application.routes.draw do
 
   get "stocks", to: "stocks#index", as: :stocks
   post "stocks/trades", to: "stocks#create", as: :stocks_trades
+
+  resources :stock_portfolios, only: %i[index new create edit update]
+
+  resources :cedear_instruments, only: %i[index new create edit update destroy] do
+    collection do
+      get :lookup
+    end
+  end
 end

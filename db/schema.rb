@@ -10,9 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_15_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_19_185958) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "cedear_instruments", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "ticker", null: false
+    t.decimal "ratio", precision: 10, scale: 4, null: false
+    t.string "underlying_ticker"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "ticker"], name: "index_cedear_instruments_on_user_id_and_ticker", unique: true
+    t.index ["user_id"], name: "index_cedear_instruments_on_user_id"
+  end
 
   create_table "exchange_accounts", force: :cascade do |t|
     t.bigint "user_id", null: false
@@ -227,6 +238,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_15_120000) do
     t.boolean "default", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "market", default: "us", null: false
     t.index ["user_id", "default"], name: "index_stock_portfolios_on_user_id_and_default"
     t.index ["user_id"], name: "index_stock_portfolios_on_user_id"
   end
@@ -243,6 +255,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_15_120000) do
     t.string "row_signature", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "cedear_ratio", precision: 10, scale: 4
     t.index ["stock_portfolio_id", "executed_at"], name: "index_stock_trades_on_portfolio_id_and_executed_at"
     t.index ["stock_portfolio_id", "row_signature"], name: "index_stock_trades_on_portfolio_id_and_row_signature", unique: true
     t.index ["stock_portfolio_id"], name: "index_stock_trades_on_stock_portfolio_id"
@@ -294,6 +307,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_15_120000) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "cedear_instruments", "users"
   add_foreign_key "exchange_accounts", "users"
   add_foreign_key "portfolios", "exchange_accounts", on_delete: :nullify
   add_foreign_key "portfolios", "users"
