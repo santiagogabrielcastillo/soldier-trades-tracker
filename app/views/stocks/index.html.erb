@@ -7,7 +7,7 @@
           <%= label_tag :portfolio_id, "Portfolio:", class: "text-sm text-slate-600" %>
           <%= select_tag :portfolio_id,
                 options_for_select(@all_portfolios.map { |p| [p.name, p.id] }, @stock_portfolio.id),
-                onchange: "window.location.href='<%= stocks_path %>?portfolio_id=' + this.value",
+                onchange: "window.location.href='#{stocks_path}?portfolio_id=' + this.value",
                 class: "rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
         </div>
       <% end %>
