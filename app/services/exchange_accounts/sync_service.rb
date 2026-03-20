@@ -62,7 +62,9 @@ class ExchangeAccounts::SyncService
 
     # Same logical trade can come from different BingX endpoints (V1 vs V2 vs income) with different
     # exchange_reference_ids. If we already have a trade with same content, update it instead of creating a duplicate.
-    if trade.new_record?
+    # Binance fills always have unique exchange_reference_ids, so the content-match dedup is skipped for Binance
+    # to avoid incorrectly merging two legitimate fills that share the same qty/price at the same millisecond.
+    if trade.new_record? && @account.provider_type != "binance"
       existing = @account.trades.find_by(
         symbol: attrs[:symbol],
         executed_at: attrs[:executed_at],

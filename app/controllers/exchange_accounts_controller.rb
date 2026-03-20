@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ExchangeAccountsController < ApplicationController
-  before_action :set_exchange_account, only: %i[destroy sync]
+  before_action :set_exchange_account, only: %i[destroy sync edit update]
 
   def index
     @pagy, @exchange_accounts = pagy(:offset, current_user.exchange_accounts, limit: 25)
@@ -23,6 +23,17 @@ class ExchangeAccountsController < ApplicationController
       redirect_to exchange_accounts_path, notice: "Exchange account linked successfully."
     else
       render :new, status: :unprocessable_entity
+    end
+  end
+
+  def edit
+  end
+
+  def update
+    if @exchange_account.update(settings_params)
+      redirect_to exchange_accounts_path, notice: "Settings updated."
+    else
+      render :edit, status: :unprocessable_entity
     end
   end
 
@@ -52,5 +63,9 @@ class ExchangeAccountsController < ApplicationController
 
   def exchange_account_params
     params.require(:exchange_account).permit(:provider_type, :api_key, :api_secret)
+  end
+
+  def settings_params
+    params.require(:exchange_account).permit(allowed_quote_currencies: [])
   end
 end

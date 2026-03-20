@@ -93,9 +93,10 @@ module Exchanges
     end
 
     # Returns true when the symbol's quote currency is in the per-account whitelist.
-    # Symbol must be in app format (BASE-QUOTE, e.g. "BTC-USDC"). Blank whitelist allows all.
+    # Symbol must be in app format (BASE-QUOTE, e.g. "BTC-USDC"). Fails closed (returns false)
+    # on a blank whitelist as a safeguard; the constructor always ensures a non-blank value.
     def allowed_quote?(symbol)
-      return true if @allowed_quote_currencies.blank?
+      return false if @allowed_quote_currencies.blank?
       return false if symbol.blank?
       quote = symbol.to_s.split("-").last.to_s.upcase
       @allowed_quote_currencies.include?(quote)
@@ -125,7 +126,7 @@ module Exchanges
 
     def fetch_trades_from_v1_full_order(since_ms)
       trades = []
-      seen_ids = []
+      seen_ids = Set.new
       end_ms = (Time.now.to_f * 1000).to_i
       start_time = since_ms
 

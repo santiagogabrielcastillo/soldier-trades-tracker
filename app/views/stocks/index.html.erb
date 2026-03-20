@@ -7,7 +7,7 @@
           <%= label_tag :portfolio_id, "Portfolio:", class: "text-sm text-slate-600" %>
           <%= select_tag :portfolio_id,
                 options_for_select(@all_portfolios.map { |p| [p.name, p.id] }, @stock_portfolio.id),
-                onchange: "window.location.href='<%= stocks_path %>?portfolio_id=' + this.value",
+                onchange: "window.location.href='#{stocks_path}?portfolio_id=' + this.value",
                 class: "rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
         </div>
       <% end %>
@@ -38,7 +38,7 @@
   <% if @view == "portfolio" %>
   <div class="mb-6 flex flex-wrap items-center gap-3">
     <%= render ModalComponent.new(title: "New trade", trigger_label: "New trade", open_on_connect: @open_new_trade_modal.present?) do %>
-      <%= form_with url: stocks_trades_path, method: :post, local: true, data: { turbo: false, controller: @stock_portfolio.argentina? ? "cedear-ratio" : nil, "cedear-ratio-lookup-url-value": cedear_instruments_lookup_path } do |f| %>
+      <%= form_with url: stocks_trades_path, method: :post, local: true, data: { turbo: false, controller: @stock_portfolio.argentina? ? "cedear-ratio" : nil, "cedear-ratio-lookup-url-value": lookup_cedear_instruments_path } do |f| %>
         <%= hidden_field_tag :portfolio_id, @stock_portfolio.id %>
         <div class="space-y-4">
           <div>

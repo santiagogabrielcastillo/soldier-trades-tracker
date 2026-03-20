@@ -46,5 +46,23 @@ module Exchanges
     test "ping? returns true for unsupported provider (no ping required)" do
       assert ProviderForAccount.ping?(provider_type: "other", api_key: "k", api_secret: "s")
     end
+
+    test "client forwards allowed_quote_currencies to bingx client" do
+      account = OpenStruct.new(provider_type: "bingx", api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
+      client = ProviderForAccount.new(account).client
+      assert_equal [ "USDT" ], client.instance_variable_get(:@allowed_quote_currencies)
+    end
+
+    test "client forwards allowed_quote_currencies to binance client" do
+      account = OpenStruct.new(provider_type: "binance", api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
+      client = ProviderForAccount.new(account).client
+      assert_equal [ "USDT" ], client.instance_variable_get(:@allowed_quote_currencies)
+    end
+
+    test "client uses default whitelist when allowed_quote_currencies is nil" do
+      account = OpenStruct.new(provider_type: "bingx", api_key: "k", api_secret: "s", allowed_quote_currencies: nil)
+      client = ProviderForAccount.new(account).client
+      assert_equal Exchanges::QuoteCurrencies::DEFAULT, client.instance_variable_get(:@allowed_quote_currencies)
+    end
   end
 end

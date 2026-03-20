@@ -15,6 +15,12 @@
               <% if account.last_synced_at %>
                 <span class="ml-2 text-sm text-slate-400">· Last sync <%= time_ago_in_words(account.last_synced_at) %> ago</span>
               <% end %>
+              <div class="mt-1 flex items-center gap-1">
+                <span class="text-xs text-slate-400">Syncing:</span>
+                <% account.allowed_quote_currencies.each do |currency| %>
+                  <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"><%= currency %></span>
+                <% end %>
+              </div>
             </div>
             <div class="flex items-center gap-3">
               <% provider_supported = Exchanges::ProviderForAccount.new(account).supported? %>
@@ -23,6 +29,7 @@
               <% elsif provider_supported && !account.can_sync? %>
                 <span class="text-sm text-slate-400">Rate limit (2/day)</span>
               <% end %>
+              <%= link_to "Settings", edit_exchange_account_path(account), class: "text-sm text-slate-600 hover:text-slate-900" %>
               <%= button_to "Remove", exchange_account_path(account), method: :delete, data: { turbo_confirm: "Remove this exchange account?" }, class: "text-sm text-slate-600 hover:text-red-600" %>
             </div>
           </li>

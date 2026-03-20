@@ -86,9 +86,10 @@ module Exchanges
     private
 
     # Returns true when the symbol's quote currency is in the per-account whitelist.
-    # Symbol must be in app format (BASE-QUOTE, e.g. "BTC-USDC"). Blank whitelist allows all.
+    # Symbol must be in app format (BASE-QUOTE, e.g. "BTC-USDC"). Fails closed (returns false)
+    # on a blank whitelist as a safeguard; the constructor always ensures a non-blank value.
     def allowed_quote?(symbol)
-      return true if @allowed_quote_currencies.blank?
+      return false if @allowed_quote_currencies.blank?
       return false if symbol.blank?
       quote = symbol.to_s.split("-").last.to_s.upcase
       @allowed_quote_currencies.include?(quote)
