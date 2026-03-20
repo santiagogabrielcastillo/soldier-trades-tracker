@@ -37,7 +37,7 @@ module Exchanges
           return {}
         end
         data = JSON.parse(res.body)
-        data = [data] unless data.is_a?(Array)
+        data = [ data ] unless data.is_a?(Array)
         result = {}
         data.each do |item|
           symbol = item["symbol"].to_s

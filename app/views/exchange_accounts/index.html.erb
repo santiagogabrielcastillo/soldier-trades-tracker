@@ -10,11 +10,25 @@
         <% @exchange_accounts.each do |account| %>
           <li class="flex items-center justify-between px-6 py-4">
             <div>
-              <span class="font-medium capitalize text-slate-900"><%= account.provider_type %></span>
-              <span class="ml-2 text-sm text-slate-500">Linked <%= time_ago_in_words(account.linked_at || account.created_at) %> ago</span>
-              <% if account.last_synced_at %>
-                <span class="ml-2 text-sm text-slate-400">· Last sync <%= time_ago_in_words(account.last_synced_at) %> ago</span>
-              <% end %>
+              <div class="flex items-center gap-2">
+                <span class="font-medium capitalize text-slate-900"><%= account.provider_type %></span>
+                <% sync_failed = account.last_sync_failed_at.present? && (account.last_synced_at.nil? || account.last_sync_failed_at > account.last_synced_at) %>
+                <% if sync_failed %>
+                  <span class="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20" title="<%= account.last_sync_error %>">
+                    ⚠ Sync failed
+                  </span>
+                <% end %>
+              </div>
+              <div class="mt-0.5 flex items-center gap-2 text-sm text-slate-500">
+                <span>Linked <%= time_ago_in_words(account.linked_at || account.created_at) %> ago</span>
+                <% if account.last_synced_at %>
+                  <span class="text-slate-300">·</span>
+                  <span>Last synced <%= time_ago_in_words(account.last_synced_at) %> ago</span>
+                <% elsif account.created_at < 1.hour.ago %>
+                  <span class="text-slate-300">·</span>
+                  <span class="text-amber-600">Never synced</span>
+                <% end %>
+              </div>
               <div class="mt-1 flex items-center gap-1">
                 <span class="text-xs text-slate-400">Syncing:</span>
                 <% account.allowed_quote_currencies.each do |currency| %>

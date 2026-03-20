@@ -5,6 +5,11 @@ module Exchanges
   # and Binance::TradeNormalizer for userTrades payloads.
   # Symbol discovery: positionRisk (open positions) then income (REALIZED_PNL) fallback.
   # userTrades requires symbol; max 7-day window per request. Supports testnet via base_url.
+  #
+  # Note on USDC trade sync: BinanceClient correctly discovers and returns USDC symbols.
+  # Historical gap (fixed in PR #26): SyncService's content-match deduplication — designed for BingX —
+  # was incorrectly dropping Binance fills whose symbol/time/side/net_amount matched a previously saved
+  # trade. This was most visible with USDC trades. Fix: SyncService now skips content-match for Binance.
   class BinanceClient < BaseProvider
     BASE_URL = "https://fapi.binance.com"
     BASE_URL_TESTNET = "https://testnet.binancefuture.com"

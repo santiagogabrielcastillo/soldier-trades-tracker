@@ -35,13 +35,13 @@ module Spot
       by_token = transactions.group_by(&:token)
       summaries = by_token.flat_map { |token, txs| build_summaries_for_token(token, txs) }
       # Open first, then closed by closed_at desc
-      summaries.sort_by! { |s| [s.open? ? 0 : 1, -(s.closed_at || s.opened_at || Time.at(0)).to_i] }
+      summaries.sort_by! { |s| [ s.open? ? 0 : 1, -(s.closed_at || s.opened_at || Time.at(0)).to_i ] }
     end
 
     private
 
     def build_summaries_for_token(token, transactions)
-      txs = transactions.sort_by { |t| [t.executed_at, t.id] }
+      txs = transactions.sort_by { |t| [ t.executed_at, t.id ] }
       summaries = []
       balance = BigDecimal("0")
       net_usd = BigDecimal("0")
@@ -59,7 +59,7 @@ module Spot
           end
           balance += tx.amount
           net_usd += tx.total_value_usd.to_d
-          lots << [tx.amount.to_d, tx.price_usd.to_d]
+          lots << [ tx.amount.to_d, tx.price_usd.to_d ]
         else
           # sell
           remaining_sell = tx.amount.to_d
@@ -70,7 +70,7 @@ module Spot
               lots.shift
               consumed = qty
             else
-              lots[0] = [qty - remaining_sell, cost]
+              lots[0] = [ qty - remaining_sell, cost ]
               consumed = remaining_sell
             end
             remaining_sell -= consumed

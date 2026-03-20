@@ -10,7 +10,7 @@ class CreateStockPortfoliosAndStockTrades < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    add_index :stock_portfolios, [:user_id, :default], name: "index_stock_portfolios_on_user_id_and_default"
+    add_index :stock_portfolios, [ :user_id, :default ], name: "index_stock_portfolios_on_user_id_and_default"
 
     create_table :stock_trades do |t|
       t.references :stock_portfolio, null: false, foreign_key: true
@@ -26,10 +26,10 @@ class CreateStockPortfoliosAndStockTrades < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    add_index :stock_trades, [:stock_portfolio_id, :row_signature],
+    add_index :stock_trades, [ :stock_portfolio_id, :row_signature ],
               name: "index_stock_trades_on_portfolio_id_and_row_signature",
               unique: true
-    add_index :stock_trades, [:stock_portfolio_id, :executed_at],
+    add_index :stock_trades, [ :stock_portfolio_id, :executed_at ],
               name: "index_stock_trades_on_portfolio_id_and_executed_at"
   end
 end

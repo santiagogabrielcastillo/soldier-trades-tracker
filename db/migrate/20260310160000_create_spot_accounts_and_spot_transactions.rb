@@ -10,7 +10,7 @@ class CreateSpotAccountsAndSpotTransactions < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    add_index :spot_accounts, [:user_id, :default], name: "index_spot_accounts_on_user_id_and_default"
+    add_index :spot_accounts, [ :user_id, :default ], name: "index_spot_accounts_on_user_id_and_default"
 
     create_table :spot_transactions do |t|
       t.references :spot_account, null: false, foreign_key: true
@@ -26,10 +26,10 @@ class CreateSpotAccountsAndSpotTransactions < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    add_index :spot_transactions, [:spot_account_id, :row_signature],
+    add_index :spot_transactions, [ :spot_account_id, :row_signature ],
               name: "index_spot_transactions_on_spot_account_id_and_row_signature",
               unique: true
-    add_index :spot_transactions, [:spot_account_id, :executed_at],
+    add_index :spot_transactions, [ :spot_account_id, :executed_at ],
               name: "index_spot_transactions_on_spot_account_id_and_executed_at"
   end
 end

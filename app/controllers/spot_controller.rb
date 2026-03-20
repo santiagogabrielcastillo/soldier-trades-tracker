@@ -173,7 +173,7 @@ class SpotController < ApplicationController
     open_positions = all_positions.select(&:open?)
     open_tokens = open_positions.map(&:token).uniq
     @current_prices = Spot::CurrentPriceFetcher.call(user: current_user, tokens: open_tokens)
-    @positions = open_positions.sort_by { |pos| -( (@current_prices[pos.token] || 0).to_d * pos.balance) }
+    @positions = open_positions.sort_by { |pos| -((@current_prices[pos.token] || 0).to_d * pos.balance) }
     @tokens_for_select = tokens_for_select_for(@spot_account)
     @cash_balance = @spot_account.cash_balance
     @spot_value = open_positions.sum(BigDecimal("0")) { |pos| (@current_prices[pos.token] || 0).to_d * pos.balance }

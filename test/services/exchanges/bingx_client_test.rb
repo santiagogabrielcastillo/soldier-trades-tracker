@@ -76,6 +76,67 @@ module Exchanges
       assert_equal client.send(:allowed_quote?, "BTC-USDC"), client.send(:stablequote_pair?, "BTC-USDC")
     end
 
+    # --- fetch_my_trades whitelist filtering per path ---
+
+    test "fetch_my_trades via v1_full_order path filters out USDC when whitelist is USDT only" do
+      client = BingxClient.new(api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
+      now_ms = (Time.now.to_f * 1000).to_i
+      usdt_order = { "orderId" => "1", "status" => "FILLED", "symbol" => "BTC-USDT",
+                     "side" => "BUY", "avgPrice" => "50000", "executedQty" => "0.1",
+                     "commission" => "0", "updateTime" => now_ms }
+      usdc_order = usdt_order.merge("orderId" => "2", "symbol" => "BTC-USDC")
+      v1_resp = { "code" => 0, "data" => { "orders" => [ usdt_order, usdc_order ] } }
+      stub = ->(path, _params) { path == BingxClient::SWAP_V1_FULL_ORDER_PATH ? v1_resp : { "code" => 0 } }
+      client.stub(:signed_get, stub) do
+        result = client.fetch_my_trades(since: 1.day.ago)
+        assert_equal 1, result.size
+        assert_equal "BTC-USDT", result[0][:symbol]
+      end
+    end
+
+    test "fetch_my_trades via v2_fills path filters out USDC when whitelist is USDT only" do
+      client = BingxClient.new(api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
+      now_ms = (Time.now.to_f * 1000).to_i
+      usdt_fill = { "orderId" => "1", "symbol" => "ETH-USDT", "side" => "SELL",
+                    "price" => "3000", "fillQty" => "1", "commission" => "0", "time" => now_ms }
+      usdc_fill = usdt_fill.merge("orderId" => "2", "symbol" => "ETH-USDC")
+      v2_resp = { "code" => 0, "data" => { "fill_orders" => [ usdt_fill, usdc_fill ] } }
+      # v1 returns empty to fall through to v2_fills
+      stub = lambda do |path, _params|
+        if path == BingxClient::SWAP_FILL_ORDERS_PATH
+          v2_resp
+        else
+          { "code" => 0, "data" => { "orders" => [] } }
+        end
+      end
+      client.stub(:signed_get, stub) do
+        result = client.fetch_my_trades(since: 1.day.ago)
+        assert_equal 1, result.size
+        assert_equal "ETH-USDT", result[0][:symbol]
+      end
+    end
+
+    test "fetch_my_trades via income path filters out USDC when whitelist is USDT only" do
+      client = BingxClient.new(api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
+      now_ms = (Time.now.to_f * 1000).to_i
+      usdt_income = { "incomeType" => "REALIZED_PNL", "symbol" => "BTC-USDT", "income" => "100", "time" => now_ms }
+      usdc_income = usdt_income.merge("symbol" => "BTC-USDC", "income" => "50")
+      income_resp = { "code" => 0, "data" => { "income" => [ usdt_income, usdc_income ] } }
+      # v1 and v2 return empty to fall through to income
+      stub = lambda do |path, _params|
+        if path == BingxClient::SWAP_USER_INCOME_PATH
+          income_resp
+        else
+          { "code" => 0, "data" => { "orders" => [], "fill_orders" => [] } }
+        end
+      end
+      client.stub(:signed_get, stub) do
+        result = client.fetch_my_trades(since: 1.day.ago)
+        assert_equal 1, result.size
+        assert_equal "BTC-USDT", result[0][:symbol]
+      end
+    end
+
     test "signed_get does not raise ApiError for other 4xx" do
       stub_http_response(code: "400", body: '{"msg":"bad request"}') do
         err = assert_raises(StandardError) { @client.signed_get("/path", "limit" => 1) }

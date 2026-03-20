@@ -62,8 +62,14 @@ class ExchangeAccounts::SyncService
 
     # Same logical trade can come from different BingX endpoints (V1 vs V2 vs income) with different
     # exchange_reference_ids. If we already have a trade with same content, update it instead of creating a duplicate.
-    # Binance fills always have unique exchange_reference_ids, so the content-match dedup is skipped for Binance
-    # to avoid incorrectly merging two legitimate fills that share the same qty/price at the same millisecond.
+    #
+    # IMPORTANT — Binance skips this content-match dedup entirely:
+    # Binance always provides unique exchange_reference_ids per fill. The content-match below was designed
+    # for BingX (which can return the same fill via multiple endpoints with different IDs). When applied to
+    # Binance, the content-match would incorrectly treat two legitimate fills as duplicates when they
+    # coincidentally shared the same symbol/executed_at/side/net_amount — most commonly seen with USDC fills
+    # where an ETH-USDT and ETH-USDC close could yield the same net_amount at the same timestamp. This was
+    # the root cause of Binance USDC (and occasionally USDT) trades appearing to vanish after sync (PR #26).
     if trade.new_record? && @account.provider_type != "binance"
       existing = @account.trades.find_by(
         symbol: attrs[:symbol],

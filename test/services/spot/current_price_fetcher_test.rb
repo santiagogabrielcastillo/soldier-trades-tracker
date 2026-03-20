@@ -15,7 +15,7 @@ module Spot
 
     test "returns empty when user has no exchange account" do
       @user.exchange_accounts.destroy_all
-      result = CurrentPriceFetcher.call(user: @user, tokens: ["BTC"])
+      result = CurrentPriceFetcher.call(user: @user, tokens: [ "BTC" ])
       assert_equal({}, result)
     end
 

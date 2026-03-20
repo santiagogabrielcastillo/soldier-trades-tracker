@@ -69,7 +69,7 @@ module Spot
       side_s = side.to_s.strip.downcase
       price_s = bigdecimal_to_canonical(price_usd)
       amount_s = bigdecimal_to_canonical(amount)
-      canonical = [iso, token_s, side_s, price_s, amount_s].join("|")
+      canonical = [ iso, token_s, side_s, price_s, amount_s ].join("|")
       Digest::SHA256.hexdigest(canonical)
     end
 

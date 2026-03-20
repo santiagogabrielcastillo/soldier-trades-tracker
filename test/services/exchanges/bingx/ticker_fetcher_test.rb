@@ -15,7 +15,7 @@ module Exchanges
 
       test "fetch_prices returns price for successful response" do
         stub_ticker_response("BTC-USDT", { "data" => { "lastPrice" => "97500.5" } }) do
-          result = TickerFetcher.fetch_prices(symbols: ["BTC-USDT"])
+          result = TickerFetcher.fetch_prices(symbols: [ "BTC-USDT" ])
           assert_equal 1, result.size
           assert_equal BigDecimal("97500.5"), result["BTC-USDT"]
         end
@@ -23,7 +23,7 @@ module Exchanges
 
       test "fetch_prices accepts data at top level with lastPrice" do
         stub_ticker_response("ETH-USDT", { "lastPrice" => "3500.25" }) do
-          result = TickerFetcher.fetch_prices(symbols: ["ETH-USDT"])
+          result = TickerFetcher.fetch_prices(symbols: [ "ETH-USDT" ])
           assert_equal BigDecimal("3500.25"), result["ETH-USDT"]
         end
       end
@@ -35,7 +35,7 @@ module Exchanges
         ]
         http = build_http_with_responses(responses)
         Net::HTTP.stub(:new, http) do
-          result = TickerFetcher.fetch_prices(symbols: ["BTC-USDT", "ETH-USDT"])
+          result = TickerFetcher.fetch_prices(symbols: [ "BTC-USDT", "ETH-USDT" ])
           assert_equal 1, result.size
           assert_equal BigDecimal("3500"), result["ETH-USDT"]
         end
@@ -43,14 +43,14 @@ module Exchanges
 
       test "fetch_prices skips symbol on JSON parse error" do
         stub_ticker_response("BTC-USDT", nil, code: "200", body_raw: "not json") do
-          result = TickerFetcher.fetch_prices(symbols: ["BTC-USDT"])
+          result = TickerFetcher.fetch_prices(symbols: [ "BTC-USDT" ])
           assert_equal({}, result)
         end
       end
 
       test "fetch_prices deduplicates symbols" do
         stub_ticker_response("BTC-USDT", { "data" => { "lastPrice" => "100" } }) do
-          result = TickerFetcher.fetch_prices(symbols: ["BTC-USDT", "BTC-USDT"])
+          result = TickerFetcher.fetch_prices(symbols: [ "BTC-USDT", "BTC-USDT" ])
           assert_equal 1, result.size
           assert_equal BigDecimal("100"), result["BTC-USDT"]
         end
@@ -82,7 +82,7 @@ module Exchanges
       def stub_ticker_response(_symbol, body = nil, code: "200", body_raw: nil)
         response_body = body_raw || (body.is_a?(Hash) ? body.to_json : body.to_s)
         res = fake_response(code, response_body)
-        http = build_http_with_responses([res])
+        http = build_http_with_responses([ res ])
         Net::HTTP.stub(:new, http) { yield }
       end
     end
