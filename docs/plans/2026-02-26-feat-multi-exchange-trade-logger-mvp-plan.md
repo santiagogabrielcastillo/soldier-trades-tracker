@@ -1,7 +1,7 @@
 ---
 title: "feat: Multi-Exchange Automated Trade Logger (MVP)"
 type: feat
-status: active
+status: completed
 date: 2026-02-26
 sources:
   - docs/brainstorms/2026-02-26-multi-exchange-trade-logger-mvp-brainstorm.md

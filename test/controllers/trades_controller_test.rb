@@ -96,7 +96,7 @@ class TradesControllerTest < ActionDispatch::IntegrationTest
   test "index uses default columns when no preference" do
     Trade.where(exchange_account: @account).delete_all
     create_open_trade
-    @user.user_preferences.where(key: ["trades_index_visible_columns", "trades_index_visible_columns:history"]).destroy_all
+    @user.user_preferences.where(key: [ "trades_index_visible_columns", "trades_index_visible_columns:history" ]).destroy_all
     sign_in_as(@user)
     get trades_path(view: "history")
     assert_response :success

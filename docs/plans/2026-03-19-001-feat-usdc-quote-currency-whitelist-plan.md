@@ -1,7 +1,7 @@
 ---
 title: "feat: Add per-account quote currency whitelist with USDC support"
 type: feat
-status: active
+status: completed
 date: 2026-03-19
 deepened: 2026-03-19
 origin: docs/brainstorms/2026-03-19-usdc-pair-support-brainstorm.md
@@ -308,27 +308,27 @@ end
 
 ## Acceptance Criteria
 
-- [ ] `exchange_accounts` table has a `settings jsonb, null: false, default: {}` column
-- [ ] `ExchangeAccount#allowed_quote_currencies` returns `["USDT", "USDC"]` for existing accounts with `settings: {}` — without dirtying the record
-- [ ] `ExchangeAccount#allowed_quote_currencies` returns `["USDT", "USDC"]` for new accounts without triggering an extra `UPDATE`
-- [ ] `allowed_quote_currencies = []` fails validation with a clear message
-- [ ] `allowed_quote_currencies = ["usdt"]` is normalized to `["USDT"]` before save
-- [ ] `allowed_quote_currencies = ["BTC"]` fails validation (not in `SUPPORTED_QUOTE_CURRENCIES`)
-- [ ] `allowed_quote_currencies = "USDT"` (String, not Array) fails validation with "must be an array"
-- [ ] `Exchanges::SUPPORTED_QUOTE_CURRENCIES` module extracted; referenced from both `ExchangeAccount` and `Binance::TradeNormalizer`
-- [ ] BingX sync: USDC trades fetched when USDC in whitelist; filtered when not
-- [ ] BingX sync: `STABLEQUOTE_SYMBOLS` constant removed; no regression for USDT-only behavior
-- [ ] Binance sync: root cause of USDC trade discovery failure identified and documented in a code comment
-- [ ] Binance sync: USDC trades appear in `trades` table after sync when USDC is in whitelist
-- [ ] Binance sync: symbols not in `allowed_quote_currencies` do not trigger `fetch_user_trades_for_symbol` API calls
-- [ ] `allowed_quote?(symbol)` returns `true` when `@allowed_quote_currencies` is nil or empty (allow-all)
-- [ ] `ProviderForAccount#client` passes `allowed_quote_currencies` from account to both clients
-- [ ] `BinanceClient.new(api_key:, api_secret:)` works without `allowed_quote_currencies:` (uses local constant default)
-- [ ] `BingxClient.new(api_key:, api_secret:)` works without `allowed_quote_currencies:` (uses local constant default)
-- [ ] Tests: `ExchangeAccountTest` — default getter, normalization, validation (nil, empty, string, unknown currency, valid)
-- [ ] Tests: `BingxClientTest` — `stablequote_pair?` with custom whitelist, all three fetch paths filter correctly
-- [ ] Tests: `BinanceClientTest` — `fetch_my_trades` with USDC in whitelist, USDC symbols not triggering fetch when excluded
-- [ ] Tests: `ProviderForAccountTest` — kwarg threaded correctly with `allowed_quote_currencies`
+- [x] `exchange_accounts` table has a `settings jsonb, null: false, default: {}` column
+- [x] `ExchangeAccount#allowed_quote_currencies` returns `["USDT", "USDC"]` for existing accounts with `settings: {}` — without dirtying the record
+- [x] `ExchangeAccount#allowed_quote_currencies` returns `["USDT", "USDC"]` for new accounts without triggering an extra `UPDATE`
+- [x] `allowed_quote_currencies = []` fails validation with a clear message
+- [x] `allowed_quote_currencies = ["usdt"]` is normalized to `["USDT"]` before save
+- [x] `allowed_quote_currencies = ["BTC"]` fails validation (not in `SUPPORTED_QUOTE_CURRENCIES`)
+- [x] `allowed_quote_currencies = "USDT"` (String, not Array) fails validation with "must be an array"
+- [x] `Exchanges::SUPPORTED_QUOTE_CURRENCIES` module extracted; referenced from both `ExchangeAccount` and `Binance::TradeNormalizer`
+- [x] BingX sync: USDC trades fetched when USDC in whitelist; filtered when not
+- [x] BingX sync: `STABLEQUOTE_SYMBOLS` constant removed; no regression for USDT-only behavior
+- [x] Binance sync: root cause of USDC trade discovery failure identified and documented in a code comment
+- [x] Binance sync: USDC trades appear in `trades` table after sync when USDC is in whitelist
+- [x] Binance sync: symbols not in `allowed_quote_currencies` do not trigger `fetch_user_trades_for_symbol` API calls
+- [x] `allowed_quote?(symbol)` returns `true` when `@allowed_quote_currencies` is nil or empty (allow-all)
+- [x] `ProviderForAccount#client` passes `allowed_quote_currencies` from account to both clients
+- [x] `BinanceClient.new(api_key:, api_secret:)` works without `allowed_quote_currencies:` (uses local constant default)
+- [x] `BingxClient.new(api_key:, api_secret:)` works without `allowed_quote_currencies:` (uses local constant default)
+- [x] Tests: `ExchangeAccountTest` — default getter, normalization, validation (nil, empty, string, unknown currency, valid)
+- [x] Tests: `BingxClientTest` — `stablequote_pair?` with custom whitelist, all three fetch paths filter correctly
+- [x] Tests: `BinanceClientTest` — `fetch_my_trades` with USDC in whitelist, USDC symbols not triggering fetch when excluded
+- [x] Tests: `ProviderForAccountTest` — kwarg threaded correctly with `allowed_quote_currencies`
 
 ## Dependencies & Risks
 

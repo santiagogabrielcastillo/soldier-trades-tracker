@@ -27,7 +27,7 @@ class SyncExchangeAccountJobTest < ActiveJob::TestCase
       executed_at: 1.hour.ago,
       raw_payload: {}
     }
-    client = build_fake_client([trade_attrs])
+    client = build_fake_client([ trade_attrs ])
     Exchanges::BingxClient.stub(:new, client) do
       SyncExchangeAccountJob.perform_now(@account.id)
     end
@@ -49,7 +49,7 @@ class SyncExchangeAccountJobTest < ActiveJob::TestCase
       executed_at: 1.hour.ago,
       raw_payload: {}
     }
-    client = build_fake_client([income_attrs])
+    client = build_fake_client([ income_attrs ])
     Exchanges::BingxClient.stub(:new, client) do
       SyncExchangeAccountJob.perform_now(@account.id)
     end
@@ -91,7 +91,7 @@ class SyncExchangeAccountJobTest < ActiveJob::TestCase
     trade = @account.trades.first!
     assert_equal "BTC-USDT", trade.symbol
     assert_equal BigDecimal("200.5"), trade.net_amount
-    assert ["v1_order_123", "v2_fill_456"].include?(trade.exchange_reference_id)
+    assert [ "v1_order_123", "v2_fill_456" ].include?(trade.exchange_reference_id)
   end
 
   private

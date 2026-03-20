@@ -35,7 +35,7 @@ class SyncDispatcherJob < ApplicationJob
     when "daily"
       last_run.nil? || last_run <= now - 1.day
     when "twice_daily"
-      return false unless [8, 20].include?(now.hour)
+      return false unless [ 8, 20 ].include?(now.hour)
       # Run at 08:00 and 20:00 UTC; due if we haven't run in this slot today
       slot_start = now.beginning_of_day + (now.hour == 8 ? 8.hours : 20.hours)
       last_run.nil? || last_run < slot_start

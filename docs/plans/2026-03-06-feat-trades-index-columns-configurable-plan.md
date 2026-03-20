@@ -3,7 +3,7 @@
 ---
 title: Trades index configurable columns and entry/exit columns
 type: feat
-status: active
+status: completed
 date: 2026-03-06
 source_brainstorm: docs/brainstorms/2026-03-06-trades-index-columns-configurable-brainstorm.md
 ---
