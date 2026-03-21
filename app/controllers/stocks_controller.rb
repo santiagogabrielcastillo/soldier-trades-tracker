@@ -3,10 +3,11 @@
 class StocksController < ApplicationController
   def index
     @stock_portfolio = resolve_portfolio
-    @view = (params[:view].to_s == "transactions") ? "transactions" : "portfolio"
+    @view = params[:view].to_s.in?(%w[transactions performance valuations watchlist]) ? params[:view] : "portfolio"
     @all_portfolios = current_user.stock_portfolios.default_first
 
-    if @view == "transactions"
+    case @view
+    when "transactions"
       relation = load_stock_trades_filtered
       @pagy, @trades = pagy(:offset, relation, limit: 25)
       @from_date = params[:from_date].presence
@@ -14,9 +15,81 @@ class StocksController < ApplicationController
       @filter_ticker = params[:ticker].presence
       @filter_side = params[:side].presence if params[:side].to_s.in?(%w[buy sell])
       @tickers_for_filter = @stock_portfolio.stock_trades.distinct.pluck(:ticker).sort
+    when "performance"
+      @twr_series = Stocks::TwrCalculatorService.call(stock_portfolio: @stock_portfolio)
+      @snapshots = @stock_portfolio.stock_portfolio_snapshots.ordered.to_a.reverse
+    when "valuations"
+      all_positions = Stocks::PositionStateService.call(stock_portfolio: @stock_portfolio)
+      @positions    = all_positions.select(&:open?)
+      @fundamentals = StockFundamental.for_tickers(@positions.map(&:ticker))
+    when "watchlist"
+      @watchlist_tickers = current_user.watchlist_tickers.ordered
+      @fundamentals      = StockFundamental.for_tickers(@watchlist_tickers.pluck(:ticker))
     else
       load_portfolio_data
     end
+  end
+
+  def record_snapshot
+    @stock_portfolio = resolve_portfolio
+    amount = parse_decimal_param(params[:cash_flow_amount])
+    type   = params[:entry_type].to_s
+
+    cash_flow = case type
+    when "deposit"    then amount&.positive? ? amount : nil
+    when "withdrawal" then amount&.positive? ? -amount : nil
+    else BigDecimal("0")
+    end
+
+    if type.in?(%w[deposit withdrawal]) && cash_flow.nil?
+      redirect_to stocks_path(portfolio_id: @stock_portfolio.id, view: "performance"),
+                  alert: "Enter a positive amount." and return
+    end
+
+    Stocks::PortfolioSnapshotService.call(stock_portfolio: @stock_portfolio, cash_flow: cash_flow || 0)
+    redirect_to stocks_path(portfolio_id: @stock_portfolio.id, view: "performance"),
+                notice: type == "snapshot" ? "Snapshot recorded." : "Cash flow recorded."
+  rescue => e
+    Rails.logger.error("[StocksController#record_snapshot] #{e.message}")
+    redirect_to stocks_path(portfolio_id: @stock_portfolio.id, view: "performance"),
+                alert: "Could not fetch current prices. Try again later."
+  end
+
+  def sync_fundamentals
+    @stock_portfolio = resolve_portfolio
+    tickers = Stocks::PositionStateService.call(stock_portfolio: @stock_portfolio)
+                .select(&:open?).map(&:ticker).uniq
+    Stocks::SyncFundamentalsJob.perform_later(tickers)
+    redirect_to stocks_path(portfolio_id: @stock_portfolio.id, view: "valuations"),
+                notice: "Sync started — refresh in a moment to see updated data."
+  end
+
+  def sync_watchlist
+    tickers = current_user.watchlist_tickers.pluck(:ticker)
+    Stocks::SyncFundamentalsJob.perform_later(tickers)
+    redirect_to stocks_path(view: "watchlist"),
+                notice: "Sync started — refresh in a moment to see updated data."
+  end
+
+  def add_to_watchlist
+    ticker = params[:ticker].to_s.strip.upcase.presence
+    if ticker
+      current_user.watchlist_tickers.find_or_create_by(ticker: ticker)
+    end
+    redirect_to stocks_path(view: "watchlist")
+  end
+
+  def remove_from_watchlist
+    current_user.watchlist_tickers.find(params[:id]).destroy
+    redirect_to stocks_path(view: "watchlist")
+  end
+
+  def destroy_snapshot
+    @stock_portfolio = resolve_portfolio
+    snapshot = @stock_portfolio.stock_portfolio_snapshots.find(params[:id])
+    snapshot.destroy!
+    redirect_to stocks_path(portfolio_id: @stock_portfolio.id, view: "performance"),
+                notice: "Entry deleted."
   end
 
   def create
@@ -113,8 +186,10 @@ class StocksController < ApplicationController
     open_tickers = open_positions.map(&:ticker).uniq
 
     if @stock_portfolio.argentina?
-      @current_prices = Stocks::ArgentineCurrentPriceFetcher.call(tickers: open_tickers)
-      @mep_rate = Stocks::MepRateFetcher.call
+      prices_thread = Thread.new { Stocks::ArgentineCurrentPriceFetcher.call(tickers: open_tickers) }
+      mep_thread    = Thread.new { Stocks::MepRateFetcher.call }
+      @current_prices    = prices_thread.value
+      @mep_rate          = mep_thread.value
       @cedear_instruments = current_user.cedear_instruments.where(ticker: open_tickers).index_by(&:ticker)
     else
       @current_prices = Stocks::CurrentPriceFetcher.call(tickers: open_tickers)
@@ -123,7 +198,33 @@ class StocksController < ApplicationController
     end
 
     @positions = open_positions.sort_by { |pos| -((@current_prices[pos.ticker] || 0).to_d * pos.shares) }
-    @stocks_value = open_positions.sum(BigDecimal("0")) { |pos| (@current_prices[pos.ticker] || 0).to_d * pos.shares }
+    positions_market_value = open_positions.sum(BigDecimal("0")) { |pos| (@current_prices[pos.ticker] || 0).to_d * pos.shares }
+    @cash_balance = Stocks::CashBalanceService.call(stock_portfolio: @stock_portfolio)
+    @stocks_value = positions_market_value + @cash_balance
+    @stocks_chart_data = build_stocks_chart_data
+  end
+
+  def build_stocks_chart_data
+    return { pie: [], bar: [] } if @positions.empty? && !@cash_balance&.positive?
+
+    pie = @positions.filter_map do |pos|
+      value = (@current_prices[pos.ticker] || 0).to_d * pos.shares
+      next unless value.positive? && @stocks_value.positive?
+      { ticker: pos.ticker, pct: (value / @stocks_value * 100).round(1) }
+    end.sort_by { |d| -d[:pct] }
+
+    if @cash_balance&.positive? && @stocks_value.positive?
+      pie << { ticker: "CASH", pct: (@cash_balance / @stocks_value * 100).round(1) }
+    end
+
+    bar = @positions.filter_map do |pos|
+      price = @current_prices[pos.ticker]
+      next unless price && pos.breakeven&.positive?
+      pct = ((price.to_d - pos.breakeven.to_d) / pos.breakeven.to_d * 100).to_f.round(2)
+      { ticker: pos.ticker, pct: pct }
+    end.sort_by { |d| -d[:pct] }
+
+    { pie: pie, bar: bar }
   end
 
   def stock_trade_params

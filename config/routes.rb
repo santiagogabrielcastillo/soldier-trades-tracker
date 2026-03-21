@@ -34,6 +34,12 @@ Rails.application.routes.draw do
 
   get "stocks", to: "stocks#index", as: :stocks
   post "stocks/trades", to: "stocks#create", as: :stocks_trades
+  post "stocks/snapshots", to: "stocks#record_snapshot", as: :stocks_snapshots
+  delete "stocks/snapshots/:id", to: "stocks#destroy_snapshot", as: :stocks_snapshot
+  post "stocks/sync_fundamentals", to: "stocks#sync_fundamentals", as: :stocks_sync_fundamentals
+  post "stocks/watchlist/sync",    to: "stocks#sync_watchlist",    as: :stocks_watchlist_sync
+  post "stocks/watchlist",         to: "stocks#add_to_watchlist",  as: :stocks_watchlist
+  delete "stocks/watchlist/:id",   to: "stocks#remove_from_watchlist", as: :stocks_watchlist_item
 
   resources :stock_portfolios, only: %i[index new create edit update]
 

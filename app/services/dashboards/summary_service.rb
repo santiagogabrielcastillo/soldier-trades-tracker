@@ -214,7 +214,8 @@ class Dashboards::SummaryService
       mep_rate = nil
     end
 
-    stocks_value_native = open_positions.sum(BigDecimal("0")) { |pos| (current_prices[pos.ticker] || 0).to_d * pos.shares }
+    cash_balance = Stocks::CashBalanceService.call(stock_portfolio: stock_portfolio)
+    stocks_value_native = open_positions.sum(BigDecimal("0")) { |pos| (current_prices[pos.ticker] || 0).to_d * pos.shares } + cash_balance
     stocks_cost_basis_native = open_positions.sum(BigDecimal("0")) { |pos| pos.net_usd_invested.to_d }
     stocks_unrealized_pl_native = open_positions.sum(BigDecimal("0")) do |pos|
       price = current_prices[pos.ticker]
@@ -235,13 +236,28 @@ class Dashboards::SummaryService
 
     stocks_roi_pct = stocks_cost_basis.positive? ? (stocks_unrealized_pl / stocks_cost_basis * 100).round(2) : nil
 
+    # Per-ticker allocation percentages for pie chart (uses native values — ARS or USD)
+    position_values = open_positions.filter_map do |pos|
+      value = (current_prices[pos.ticker] || 0).to_d * pos.shares
+      { ticker: pos.ticker, value: value } if value.positive?
+    end
+    total_native = position_values.sum { |i| i[:value] }
+    stocks_pie_series = if total_native.positive?
+      position_values
+        .map { |i| { ticker: i[:ticker], pct: (i[:value] / total_native * 100).round(1) } }
+        .sort_by { |i| -i[:pct] }
+    else
+      []
+    end
+
     {
       stocks_value: stocks_value,
       stocks_unrealized_pl: stocks_unrealized_pl,
       stocks_cost_basis: stocks_cost_basis,
       stocks_roi_pct: stocks_roi_pct,
       stocks_position_count: open_positions.size,
-      stocks_currency: stock_portfolio.argentina? ? :ars : :usd
+      stocks_currency: (stock_portfolio.argentina? && !mep_rate&.positive?) ? :ars : :usd,
+      stocks_pie_series: stocks_pie_series
     }
   end
 

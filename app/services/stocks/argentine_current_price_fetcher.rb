@@ -1,12 +1,9 @@
 # frozen_string_literal: true
 
 module Stocks
-  # Fetches current CEDEAR prices in ARS from the configured Argentine market provider.
+  # Fetches current CEDEAR prices in ARS from InvertirOnline (IOL).
   # Mirrors the Stocks::CurrentPriceFetcher interface: returns Hash<ticker, BigDecimal>.
   # Missing tickers (price unavailable) are omitted from the result.
-  #
-  # Provider is TBD (IOL or BYMA). Once decided, implement the client and swap it in
-  # argentine_client below. Until then, returns {} gracefully.
   class ArgentineCurrentPriceFetcher
     def self.call(tickers:)
       new(tickers: tickers).call
@@ -16,22 +13,31 @@ module Stocks
       @tickers = tickers.to_a.map { |t| t.to_s.strip.upcase }.reject(&:blank?).uniq
     end
 
+    # Fetches all tickers in parallel threads and caches each price for 5 minutes.
+    # Cold load: ~1 HTTP round-trip (all tickers concurrently).
+    # Warm load: cache hit, no HTTP.
     def call
       return {} if @tickers.empty?
 
       client = self.class.argentine_client
-      @tickers.each_with_object({}) do |ticker, prices|
-        price = client.quote(ticker)
-        prices[ticker] = price if price
+      mutex  = Mutex.new
+      prices = {}
+
+      threads = @tickers.map do |ticker|
+        Thread.new do
+          price = Rails.cache.fetch("iol_price:#{ticker}", expires_in: 5.minutes, skip_nil: true) do
+            client.quote(ticker)
+          end
+          mutex.synchronize { prices[ticker] = price } if price
+        end
       end
-    rescue NotImplementedError
-      {}
+      threads.each(&:join)
+
+      prices
     end
 
     def self.argentine_client
-      # Swap this line when the Argentine market provider is decided:
-      #   Stocks::IolClient.new   or   Stocks::BymaClient.new
-      raise NotImplementedError, "Argentine market client not yet configured. Implement Stocks::IolClient or Stocks::BymaClient and set it here."
+      Stocks::IolClient.new
     end
   end
 end

@@ -1,0 +1,55 @@
+<%# locals: (tickers:, fundamentals:, sync_url:, watchlist_items: nil) %>
+<% last_synced = fundamentals.values.map(&:fetched_at).min %>
+<div class="mb-4 flex items-center justify-between">
+  <p class="text-xs text-slate-500">
+    <% if last_synced %>
+      Last synced <%= time_ago_in_words(last_synced) %> ago · "—" means no data available for that ticker
+    <% else %>
+      No data yet — click Sync to fetch fundamentals from Finviz
+    <% end %>
+  </p>
+  <%= button_to "Sync now", sync_url,
+        method: :post,
+        class: "rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+</div>
+
+<%= render DataTableComponent.new(columns: [
+  { label: "Ticker",     classes: "text-left" },
+  { label: "P/E",        classes: "text-right" },
+  { label: "Fwd P/E",   classes: "text-right" },
+  { label: "PEG",        classes: "text-right" },
+  { label: "P/S",        classes: "text-right" },
+  { label: "P/FCF",      classes: "text-right" },
+  { label: "Net Margin", classes: "text-right" },
+  { label: "ROE",        classes: "text-right" },
+  { label: "ROIC",       classes: "text-right" },
+  *(watchlist_items ? [{ label: "", classes: "text-right" }] : [])
+]) do |table| %>
+  <% tickers.each do |ticker| %>
+    <% f = fundamentals[ticker] %>
+    <% table.with_row do %>
+      <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900"><%= ticker %></td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.pe     ? number_with_precision(f.pe,     precision: 1) : "—" %></td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.fwd_pe ? number_with_precision(f.fwd_pe, precision: 1) : "—" %></td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.peg    ? number_with_precision(f.peg,    precision: 2) : "—" %></td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.ps     ? number_with_precision(f.ps,     precision: 1) : "—" %></td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.pfcf   ? number_with_precision(f.pfcf,   precision: 1) : "—" %></td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= f&.net_margin ? (f.net_margin >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-500' %>">
+        <%= f&.net_margin ? number_to_percentage(f.net_margin, precision: 1) : "—" %>
+      </td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= f&.roe ? (f.roe >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-500' %>">
+        <%= f&.roe ? number_to_percentage(f.roe, precision: 1) : "—" %>
+      </td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= f&.roic ? (f.roic >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-500' %>">
+        <%= f&.roic ? number_to_percentage(f.roic, precision: 1) : "—" %>
+      </td>
+      <% if watchlist_items %>
+        <td class="whitespace-nowrap px-6 py-4 text-right">
+          <%= button_to "Remove", stocks_watchlist_item_path(watchlist_items[ticker]),
+                method: :delete,
+                class: "text-xs font-medium text-red-500 hover:text-red-700" %>
+        </td>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>

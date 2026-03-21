@@ -31,8 +31,11 @@
   <% end %>
 
   <%= render TabNavComponent.new(tabs: [
-    { label: "Portfolio", url: stocks_path(stocks_index_filter_params.merge("view" => "portfolio", "portfolio_id" => @stock_portfolio.id)), active: @view == "portfolio" },
-    { label: "Transactions", url: stocks_path(stocks_index_filter_params.merge("view" => "transactions", "portfolio_id" => @stock_portfolio.id)), active: @view == "transactions" }
+    { label: "Portfolio",   url: stocks_path(stocks_index_filter_params.merge("view" => "portfolio",   "portfolio_id" => @stock_portfolio.id)), active: @view == "portfolio" },
+    { label: "Transactions", url: stocks_path(stocks_index_filter_params.merge("view" => "transactions", "portfolio_id" => @stock_portfolio.id)), active: @view == "transactions" },
+    { label: "Performance",  url: stocks_path(stocks_index_filter_params.merge("view" => "performance",  "portfolio_id" => @stock_portfolio.id)), active: @view == "performance" },
+    { label: "Valuations",   url: stocks_path(stocks_index_filter_params.merge("view" => "valuations",   "portfolio_id" => @stock_portfolio.id)), active: @view == "valuations" },
+    { label: "Watch List",   url: stocks_path(view: "watchlist"), active: @view == "watchlist" }
   ]) %>
 
   <% if @view == "portfolio" %>
@@ -49,7 +52,7 @@
             <% end %>
           </div>
           <div>
-            <%= f.label :ticker, @stock_portfolio.argentina? ? "CEDEAR ticker" : "Ticker", class: "block text-sm font-medium text-slate-700" %>
+            <%= f.label :ticker, @stock_portfolio.argentina? ? "Ticker (BCBA)" : "Ticker", class: "block text-sm font-medium text-slate-700" %>
             <%= f.text_field :ticker, value: @stock_trade&.ticker, placeholder: "e.g. AAPL", autocomplete: "off",
                   data: @stock_portfolio.argentina? ? { "cedear-ratio-target": "ticker", action: "blur->cedear-ratio#tickerChanged" } : {},
                   class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm uppercase focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
@@ -58,7 +61,7 @@
             <% end %>
           </div>
           <div>
-            <%= f.label :shares, @stock_portfolio.argentina? ? "CEDEAR units" : "Shares", class: "block text-sm font-medium text-slate-700" %>
+            <%= f.label :shares, @stock_portfolio.argentina? ? "Quantity" : "Shares", class: "block text-sm font-medium text-slate-700" %>
             <%= f.number_field :shares, value: @stock_trade&.shares, step: :any, min: 0, placeholder: "0", class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
             <% if @stock_trade&.errors&.key?(:shares) %>
               <p class="mt-1 text-sm text-red-600"><%= @stock_trade.errors[:shares].first %></p>
@@ -73,12 +76,12 @@
           </div>
           <% if @stock_portfolio.argentina? %>
           <div>
-            <label class="block text-sm font-medium text-slate-700">CEDEAR ratio <span class="font-normal text-slate-500">(auto-filled)</span></label>
+            <label class="block text-sm font-medium text-slate-700">CEDEAR ratio <span class="font-normal text-slate-500">(CEDEARs only, auto-filled)</span></label>
             <input type="number" step="any" min="0" placeholder="e.g. 10"
                    data-cedear-ratio-target="ratio"
                    class="w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
                    disabled>
-            <p class="mt-1 text-xs text-slate-500">Fetched from your CEDEAR instruments list. For reference only — stored at trade time.</p>
+            <p class="mt-1 text-xs text-slate-500">Auto-filled from your CEDEAR instruments list. Leave blank for regular Argentine stocks.</p>
           </div>
           <% end %>
           <div>
@@ -99,62 +102,127 @@
   </div>
 
   <% if @positions.any? %>
-    <% price_label = @stock_portfolio.argentina? ? "Price (ARS)" : "Current price" %>
-    <% cost_label = @stock_portfolio.argentina? ? "Avg cost (ARS)" : "Avg cost" %>
-    <% value_label = @stock_portfolio.argentina? ? "Market value (ARS)" : "Market value" %>
-    <% pl_label = @stock_portfolio.argentina? ? "Unrealized P&L (ARS)" : "Unrealized P&L" %>
-    <%= render DataTableComponent.new(columns: [
-      { label: "Ticker", classes: "text-left" },
-      { label: cost_label, classes: "text-right" },
-      { label: @stock_portfolio.argentina? ? "CEDEAR units" : "Shares", classes: "text-right" },
-      { label: price_label, classes: "text-right" },
-      { label: value_label, classes: "text-right" },
-      { label: pl_label, classes: "text-right" },
-      { label: "Unrealized ROI", classes: "text-right" }
-    ]) do |table| %>
-      <% @positions.each do |pos| %>
-        <% current_price = @current_prices[pos.ticker] %>
-        <% unrealized = current_price && pos.breakeven ? (current_price.to_d - pos.breakeven.to_d) * pos.shares : nil %>
-        <% market_value = current_price ? current_price.to_d * pos.shares : nil %>
-        <% unrealized_roi = unrealized && pos.net_usd_invested.to_d.positive? ? (unrealized / pos.net_usd_invested.to_d * 100) : nil %>
-        <% unrealized_usd = (@mep_rate && unrealized) ? (unrealized / @mep_rate) : nil %>
-        <% table.with_row do %>
-          <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900"><%= pos.ticker %></td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700">
-            <% if pos.breakeven %>
-              <%= @stock_portfolio.argentina? ? format_ars(pos.breakeven) : format_money(pos.breakeven) %>
-            <% else %>
-              —
-            <% end %>
-          </td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_precision(pos.shares, precision: 6, strip_insignificant_zeros: true) %></td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700">
-            <%= current_price ? (@stock_portfolio.argentina? ? format_ars(current_price) : format_money(current_price)) : "—" %>
-          </td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700">
-            <%= market_value ? (@stock_portfolio.argentina? ? format_ars(market_value) : format_money(market_value)) : "—" %>
-          </td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized.nil? ? 'text-slate-500' : (unrealized >= 0 ? 'text-emerald-600' : 'text-red-600') %>">
-            <% if unrealized.nil? %>
-              —
-            <% elsif @stock_portfolio.argentina? %>
-              <%= format_ars(unrealized) %>
-              <% if unrealized_usd %>
-                <br><span class="text-xs text-slate-400">≈ <%= format_money(unrealized_usd) %> USD</span>
-              <% end %>
-            <% else %>
-              <%= format_money(unrealized) %>
-            <% end %>
-          </td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized_roi.nil? ? 'text-slate-500' : (unrealized_roi >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized_roi.nil? ? "—" : number_to_percentage(unrealized_roi, precision: 2) %></td>
+    <% if @stock_portfolio.argentina? %>
+      <%# Argentina CEDEAR portfolio table %>
+      <% total_ars = @stocks_value %>
+      <%= render DataTableComponent.new(columns: [
+        { label: "Ticker", classes: "text-left" },
+        { label: "Ratio", classes: "text-right" },
+        { label: "Quantity", classes: "text-right" },
+        { label: "Avg buy price", classes: "text-right" },
+        { label: "Price (ARS)", classes: "text-right" },
+        { label: "Price (USD)", classes: "text-right" },
+        { label: "Total (ARS)", classes: "text-right" },
+        { label: "Total (USD)", classes: "text-right" },
+        { label: "% / Total", classes: "text-right" },
+        { label: "% PnL", classes: "text-right" }
+      ]) do |table| %>
+        <% @positions.each do |pos| %>
+          <% current_price_ars = @current_prices[pos.ticker] %>
+          <% current_price_usd = (@mep_rate && current_price_ars) ? (current_price_ars / @mep_rate) : nil %>
+          <% total_pos_ars = current_price_ars ? current_price_ars.to_d * pos.shares : nil %>
+          <% total_pos_usd = (@mep_rate && total_pos_ars) ? (total_pos_ars / @mep_rate) : nil %>
+          <% pct_total = (total_pos_ars && total_ars&.positive?) ? (total_pos_ars / total_ars * 100) : nil %>
+          <% pct_pnl = (current_price_ars && pos.breakeven&.positive?) ? ((current_price_ars.to_d - pos.breakeven.to_d) / pos.breakeven.to_d * 100) : nil %>
+          <% ratio = @cedear_instruments[pos.ticker]&.ratio %>
+          <% table.with_row do %>
+            <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900"><%= pos.ticker %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= ratio ? number_with_precision(ratio, precision: 4, strip_insignificant_zeros: true) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_precision(pos.shares, precision: 6, strip_insignificant_zeros: true) %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= pos.breakeven ? format_ars(pos.breakeven) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_price_ars ? format_ars(current_price_ars) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_price_usd ? format_money(current_price_usd) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= total_pos_ars ? format_ars(total_pos_ars) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= total_pos_usd ? format_money(total_pos_usd) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-500"><%= pct_total ? number_to_percentage(pct_total, precision: 1) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= pct_pnl.nil? ? 'text-slate-500' : (pct_pnl >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= pct_pnl ? number_to_percentage(pct_pnl, precision: 2) : "—" %></td>
+          <% end %>
+        <% end %>
+        <% if @cash_balance.nonzero? %>
+          <% cash_usd = (@mep_rate && @cash_balance) ? (@cash_balance / @mep_rate) : nil %>
+          <% cash_pct_total = @stocks_value.positive? ? (@cash_balance / @stocks_value * 100) : nil %>
+          <% table.with_row do %>
+            <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900">CASH</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= @cash_balance.negative? ? 'text-red-600' : 'text-slate-700' %>"><%= format_ars(@cash_balance) %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= cash_usd ? format_money(cash_usd) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-500"><%= cash_pct_total ? number_to_percentage(cash_pct_total, precision: 1) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+          <% end %>
         <% end %>
       <% end %>
-    <% end %>
-    <% if @stock_portfolio.argentina? %>
-      <p class="mt-3 text-sm text-slate-500">Prices via Argentine market provider. Set your API key to enable live quotes.</p>
+      <% unless Stocks::IolClient.credentials %>
+        <p class="mt-3 text-sm text-slate-500">Set <code class="rounded bg-slate-100 px-1 text-xs">IOL_USERNAME</code> and <code class="rounded bg-slate-100 px-1 text-xs">IOL_PASSWORD</code> to enable live quotes.</p>
+      <% end %>
     <% else %>
+      <%# US stock portfolio table %>
+      <%= render DataTableComponent.new(columns: [
+        { label: "Ticker", classes: "text-left" },
+        { label: "Avg cost", classes: "text-right" },
+        { label: "Shares", classes: "text-right" },
+        { label: "Current price", classes: "text-right" },
+        { label: "Market value", classes: "text-right" },
+        { label: "% / Total", classes: "text-right" },
+        { label: "Unrealized P&L", classes: "text-right" },
+        { label: "Unrealized ROI", classes: "text-right" }
+      ]) do |table| %>
+        <% @positions.each do |pos| %>
+          <% current_price = @current_prices[pos.ticker] %>
+          <% unrealized = current_price && pos.breakeven ? (current_price.to_d - pos.breakeven.to_d) * pos.shares : nil %>
+          <% market_value = current_price ? current_price.to_d * pos.shares : nil %>
+          <% pct_total = (market_value && @stocks_value.positive?) ? (market_value / @stocks_value * 100) : nil %>
+          <% unrealized_roi = unrealized && pos.net_usd_invested.to_d.positive? ? (unrealized / pos.net_usd_invested.to_d * 100) : nil %>
+          <% table.with_row do %>
+            <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900"><%= pos.ticker %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= pos.breakeven ? format_money(pos.breakeven) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_precision(pos.shares, precision: 6, strip_insignificant_zeros: true) %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_price ? format_money(current_price) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= market_value ? format_money(market_value) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-500"><%= pct_total ? number_to_percentage(pct_total, precision: 1) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized.nil? ? 'text-slate-500' : (unrealized >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized ? format_money(unrealized) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized_roi.nil? ? 'text-slate-500' : (unrealized_roi >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized_roi ? number_to_percentage(unrealized_roi, precision: 2) : "—" %></td>
+          <% end %>
+        <% end %>
+        <% if @cash_balance.nonzero? %>
+          <% cash_pct_total = @stocks_value.positive? ? (@cash_balance / @stocks_value * 100) : nil %>
+          <% table.with_row do %>
+            <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900">CASH</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= @cash_balance.negative? ? 'text-red-600' : 'text-slate-700' %>"><%= format_money(@cash_balance) %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-500"><%= cash_pct_total ? number_to_percentage(cash_pct_total, precision: 1) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+          <% end %>
+        <% end %>
+      <% end %>
       <p class="mt-3 text-sm text-slate-500">Prices via Finnhub. Set <code class="rounded bg-slate-100 px-1 text-xs">FINNHUB_API_KEY</code> to enable live quotes.</p>
     <% end %>
+  <% if @stocks_chart_data[:pie].any? || @stocks_chart_data[:bar].any? %>
+    <%= content_tag :div,
+          class: "mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2",
+          data: { controller: "stocks-charts", "stocks-charts-data-value": @stocks_chart_data.to_json } do %>
+      <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="mb-3 text-sm font-medium text-slate-700">Portfolio allocation</p>
+        <div class="h-52">
+          <canvas data-stocks-charts-target="pieCanvas"></canvas>
+          <p class="hidden text-sm text-slate-500" data-stocks-charts-target="pieEmpty">No price data available.</p>
+        </div>
+      </div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="mb-3 text-sm font-medium text-slate-700">Unrealized P&L by ticker</p>
+        <div class="h-52">
+          <canvas data-stocks-charts-target="barCanvas"></canvas>
+          <p class="hidden text-sm text-slate-500" data-stocks-charts-target="barEmpty">No price data available.</p>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
   <% else %>
     <%= render EmptyStateComponent.new(message: "No open stock positions yet. Add a buy trade above to get started.") %>
   <% end %>
@@ -196,7 +264,7 @@
         { label: "Date", classes: "text-left" },
         { label: "Ticker", classes: "text-left" },
         { label: "Side", classes: "text-left" },
-        { label: @stock_portfolio.argentina? ? "CEDEAR units" : "Shares", classes: "text-right" },
+        { label: @stock_portfolio.argentina? ? "Quantity" : "Shares", classes: "text-right" },
         { label: price_col, classes: "text-right" },
         { label: total_col, classes: "text-right" }
       ]) do |table| %>
@@ -222,6 +290,139 @@
       <% end %>
     <% else %>
       <%= render EmptyStateComponent.new(message: "No stock trades yet.") %>
+    <% end %>
+  <% end %>
+
+  <% if @view == "performance" %>
+    <div class="mb-6 flex flex-wrap items-center gap-3">
+      <%= render ModalComponent.new(title: "Record entry", trigger_label: "Record entry") do %>
+        <%= form_with url: stocks_snapshots_path, method: :post, local: true, data: { turbo: false, controller: "performance-entry" } do |f| %>
+          <%= hidden_field_tag :portfolio_id, @stock_portfolio.id %>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Type</label>
+              <div class="mt-1 flex gap-4">
+                <label class="flex items-center gap-2 text-sm">
+                  <%= radio_button_tag :entry_type, "snapshot", true, data: { action: "change->performance-entry#typeChanged", "performance-entry-target": "type" }, class: "text-slate-800" %>
+                  Snapshot only
+                </label>
+                <label class="flex items-center gap-2 text-sm">
+                  <%= radio_button_tag :entry_type, "deposit", false, data: { action: "change->performance-entry#typeChanged", "performance-entry-target": "type" }, class: "text-slate-800" %>
+                  Deposit
+                </label>
+                <label class="flex items-center gap-2 text-sm">
+                  <%= radio_button_tag :entry_type, "withdrawal", false, data: { action: "change->performance-entry#typeChanged", "performance-entry-target": "type" }, class: "text-slate-800" %>
+                  Withdrawal
+                </label>
+              </div>
+            </div>
+            <div data-performance-entry-target="amountField" class="hidden">
+              <label class="block text-sm font-medium text-slate-700">
+                Amount (<%= @stock_portfolio.argentina? ? "ARS" : "USD" %>)
+              </label>
+              <input type="number" name="cash_flow_amount" step="any" min="0" placeholder="0"
+                     class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500">
+              <p class="mt-1 text-xs text-slate-500">Enter a positive amount — direction is set by the type above.</p>
+            </div>
+            <p class="text-xs text-slate-500">Current portfolio value will be fetched automatically from live prices.</p>
+          </div>
+          <div class="mt-6 flex gap-2">
+            <button type="submit" class="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500">Save</button>
+            <button type="button" data-action="dialog#close" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Cancel</button>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+
+    <% twr_data = { twr: @twr_series.map { |p| { date: p.date, twr_pct: p.twr_pct } } } %>
+    <%= content_tag :div,
+          data: { controller: "stocks-charts", "stocks-charts-data-value": twr_data.to_json } do %>
+      <div class="mb-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="mb-3 text-sm font-medium text-slate-700">Time-Weighted Return (%)</p>
+        <div class="h-56">
+          <canvas data-stocks-charts-target="twrCanvas"></canvas>
+          <p class="hidden text-sm text-slate-500" data-stocks-charts-target="twrEmpty">No snapshots yet. Record at least two entries to see the chart.</p>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @snapshots.any? %>
+      <%= render DataTableComponent.new(columns: [
+        { label: "Date", classes: "text-left" },
+        { label: "Type", classes: "text-left" },
+        { label: "Cash flow", classes: "text-right" },
+        { label: "Portfolio value", classes: "text-right" },
+        { label: "Source", classes: "text-left" },
+        { label: "", classes: "text-right" }
+      ]) do |table| %>
+        <% @snapshots.each do |snap| %>
+          <% table.with_row do %>
+            <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-700"><%= snap.recorded_at.strftime("%b %d, %Y %H:%M") %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-700">
+              <% if snap.deposit? %>
+                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Deposit</span>
+              <% elsif snap.withdrawal? %>
+                <span class="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">Withdrawal</span>
+              <% else %>
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">Snapshot</span>
+              <% end %>
+            </td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= snap.snapshot_only? ? 'text-slate-400' : (snap.deposit? ? 'text-emerald-600' : 'text-red-600') %>">
+              <% if snap.snapshot_only? %>
+                —
+              <% elsif @stock_portfolio.argentina? %>
+                <%= snap.deposit? ? "+" : "−" %><%= format_ars(snap.cash_flow.abs) %>
+              <% else %>
+                <%= snap.deposit? ? "+" : "−" %><%= format_money(snap.cash_flow.abs) %>
+              <% end %>
+            </td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700">
+              <%= @stock_portfolio.argentina? ? format_ars(snap.total_value) : format_money(snap.total_value) %>
+            </td>
+            <td class="whitespace-nowrap px-6 py-4 text-sm capitalize text-slate-500"><%= snap.source %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
+              <%= button_to "Delete", stocks_snapshot_path(id: snap.id, portfolio_id: @stock_portfolio.id),
+                    method: :delete,
+                    data: { turbo_confirm: "Delete this entry?" },
+                    class: "text-slate-400 hover:text-red-600 text-xs" %>
+            </td>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% else %>
+      <%= render EmptyStateComponent.new(message: "No entries yet. Record a snapshot or cash flow to start tracking TWR.") %>
+    <% end %>
+  <% end %>
+
+  <% if @view == "valuations" %>
+    <% if @positions.empty? %>
+      <%= render EmptyStateComponent.new(message: "No open positions to show valuations for.") %>
+    <% else %>
+      <%= render "stocks/fundamentals_table",
+            tickers:       @positions.map(&:ticker),
+            fundamentals:  @fundamentals,
+            sync_url:      stocks_sync_fundamentals_path(portfolio_id: @stock_portfolio.id) %>
+    <% end %>
+  <% end %>
+
+  <% if @view == "watchlist" %>
+    <%= form_with url: stocks_watchlist_path, method: :post, class: "mb-4 flex gap-2" do |f| %>
+      <%= f.text_field :ticker,
+            placeholder: "e.g. NVDA",
+            class: "rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 uppercase",
+            autocomplete: "off",
+            required: true %>
+      <%= f.submit "Add",
+            class: "rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 cursor-pointer" %>
+    <% end %>
+    <% if @watchlist_tickers.empty? %>
+      <%= render EmptyStateComponent.new(message: "No tickers yet — add one above.") %>
+    <% else %>
+      <%= render "stocks/fundamentals_table",
+            tickers:        @watchlist_tickers.map(&:ticker),
+            fundamentals:   @fundamentals,
+            sync_url:       stocks_watchlist_sync_path,
+            watchlist_items: @watchlist_tickers.index_by(&:ticker) %>
     <% end %>
   <% end %>
 </div>

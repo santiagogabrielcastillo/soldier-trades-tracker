@@ -9,10 +9,14 @@ module Stocks
       assert_equal({}, result)
     end
 
-    test "returns empty hash when provider raises NotImplementedError" do
-      # Default behaviour before a provider is configured
-      result = ArgentineCurrentPriceFetcher.call(tickers: %w[AAPL MSFT])
-      assert_equal({}, result)
+    test "returns empty hash when IOL credentials are missing" do
+      stub_client = Object.new
+      def stub_client.quote(_ticker) = nil
+
+      ArgentineCurrentPriceFetcher.stub(:argentine_client, stub_client) do
+        result = ArgentineCurrentPriceFetcher.call(tickers: %w[AAPL MSFT])
+        assert_equal({}, result)
+      end
     end
 
     test "returns prices from the client when provider is configured" do

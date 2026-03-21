@@ -5,6 +5,7 @@ class StockPortfolio < ApplicationRecord
 
   belongs_to :user
   has_many :stock_trades, dependent: :destroy
+  has_many :stock_portfolio_snapshots, dependent: :destroy
 
   validates :name, presence: true
   validates :market, inclusion: { in: MARKET_TYPES }

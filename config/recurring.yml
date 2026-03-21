@@ -14,6 +14,14 @@ default: &default
     class: SyncDispatcherJob
     schedule: every 15 minutes
 
+  stocks_weekly_snapshot:
+    class: Stocks::WeeklySnapshotJob
+    schedule: "0 8 * * 1"
+
+  stocks_monthly_snapshot:
+    class: Stocks::MonthlySnapshotJob
+    schedule: "0 8 1 * *"
+
 development:
   <<: *default
 

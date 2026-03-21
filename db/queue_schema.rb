@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_20_115039) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_21_150001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -235,6 +235,34 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_20_115039) do
     t.index ["spot_account_id"], name: "index_spot_transactions_on_spot_account_id"
   end
 
+  create_table "stock_fundamentals", force: :cascade do |t|
+    t.string "ticker", null: false
+    t.decimal "pe", precision: 12, scale: 4
+    t.decimal "peg", precision: 12, scale: 4
+    t.decimal "ps", precision: 12, scale: 4
+    t.decimal "pfcf", precision: 12, scale: 4
+    t.decimal "net_margin", precision: 12, scale: 4
+    t.decimal "roe", precision: 12, scale: 4
+    t.decimal "roic", precision: 12, scale: 4
+    t.datetime "fetched_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "fwd_pe", precision: 12, scale: 4
+    t.index ["ticker"], name: "index_stock_fundamentals_on_ticker", unique: true
+  end
+
+  create_table "stock_portfolio_snapshots", force: :cascade do |t|
+    t.bigint "stock_portfolio_id", null: false
+    t.decimal "total_value", precision: 16, scale: 2, null: false
+    t.decimal "cash_flow", precision: 16, scale: 2, default: "0.0", null: false
+    t.datetime "recorded_at", null: false
+    t.string "source", default: "manual", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stock_portfolio_id", "recorded_at"], name: "idx_on_stock_portfolio_id_recorded_at_3fff6867ab"
+    t.index ["stock_portfolio_id"], name: "index_stock_portfolio_snapshots_on_stock_portfolio_id"
+  end
+
   create_table "stock_portfolios", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "name", null: false
@@ -310,6 +338,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_20_115039) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  create_table "watchlist_tickers", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "ticker", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "ticker"], name: "index_watchlist_tickers_on_user_id_and_ticker", unique: true
+    t.index ["user_id"], name: "index_watchlist_tickers_on_user_id"
+  end
+
   add_foreign_key "cedear_instruments", "users"
   add_foreign_key "exchange_accounts", "users"
   add_foreign_key "portfolios", "exchange_accounts", on_delete: :nullify
@@ -325,9 +362,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_20_115039) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "spot_accounts", "users"
   add_foreign_key "spot_transactions", "spot_accounts"
+  add_foreign_key "stock_portfolio_snapshots", "stock_portfolios"
   add_foreign_key "stock_portfolios", "users"
   add_foreign_key "stock_trades", "stock_portfolios"
   add_foreign_key "sync_runs", "exchange_accounts"
   add_foreign_key "trades", "exchange_accounts"
   add_foreign_key "user_preferences", "users"
+  add_foreign_key "watchlist_tickers", "users"
 end
