@@ -16,43 +16,28 @@ Rails.application.configure do
   config.consider_all_requests_local = false
   config.action_controller.perform_caching = true
 
-  # Ensures that a master key has been made available in ENV["RAILS_MASTER_KEY"], config/master.key, or an environment
-  # key such as config/credentials/production.key. This key is used to decrypt credentials (and other encrypted files).
-  # config.require_master_key = true
+  # Ensures that a master key has been made available in ENV["RAILS_MASTER_KEY"],
+  # config/master.key, or an environment key such as config/credentials/production.key.
+  config.require_master_key = true
 
-  # Disable serving static files from `public/`, relying on NGINX/Apache to do so instead.
-  # config.public_file_server.enabled = false
-
-  # Compress CSS using a preprocessor.
-  # config.assets.css_compressor = :sass
+  # Serve static files directly from Rails (Kamal proxy does not serve static files).
+  config.public_file_server.enabled = true
 
   # Do not fall back to assets pipeline if a precompiled asset is missed.
   config.assets.compile = false
 
-  # Enable serving of images, stylesheets, and JavaScripts from an asset server.
-  # config.asset_host = "http://assets.example.com"
-
-  # Specifies the header that your server uses for sending files.
-  # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for Apache
-  # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
-
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Mount Action Cable outside main process or domain.
-  # config.action_cable.mount_path = nil
-  # config.action_cable.url = "wss://example.com/cable"
-  # config.action_cable.allowed_request_origins = [ "http://example.com", /http:\/\/example.*/ ]
-
-  # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # Can be used together with config.force_ssl for Strict-Transport-Security and secure cookies.
-  # config.assume_ssl = true
+  # Assume all access to the app is happening through an SSL-terminating reverse proxy
+  # (kamal-proxy). Required together with force_ssl so redirect URLs and secure cookies work.
+  config.assume_ssl = true
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   config.force_ssl = true
 
-  # Skip http-to-https redirect for the default health check endpoint.
-  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+  # Skip http-to-https redirect for the health check endpoint so Kamal can probe it.
+  config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
   # Log to STDOUT by default
   config.logger = ActiveSupport::Logger.new(STDOUT)
@@ -62,29 +47,16 @@ Rails.application.configure do
   # Prepend all log lines with the following tags.
   config.log_tags = [ :request_id ]
 
-  # "info" includes generic and useful information about system operation, but avoids logging too much
-  # information to avoid inadvertent exposure of personally identifiable information (PII). If you
-  # want to log everything, set the level to "debug".
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
-  # Use a different cache store in production.
-  # config.cache_store = :mem_cache_store
-
-  # Use a real queuing backend for Active Job (and separate queues per environment).
+  # Use a real queuing backend for Active Job.
   config.active_job.queue_adapter = :solid_queue
   config.solid_queue.connects_to = { database: { writing: :queue } }
-  # config.active_job.queue_name_prefix = "soldier_trades_tracker_production"
 
-  # Disable caching for Action Mailer templates even if Action Controller
-  # caching is enabled.
+  # Disable caching for Action Mailer templates even if Action Controller caching is enabled.
   config.action_mailer.perform_caching = false
 
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
-
-  # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
-  # the I18n.default_locale when a translation cannot be found).
+  # Enable locale fallbacks for I18n.
   config.i18n.fallbacks = true
 
   # Don't log any deprecations.
@@ -96,11 +68,14 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # Active Record encryption keys — set via environment variables.
+  # Generate with: bin/rails db:encryption:init
+  config.active_record.encryption.primary_key         = ENV.fetch("ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY")
+  config.active_record.encryption.deterministic_key   = ENV.fetch("ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY")
+  config.active_record.encryption.key_derivation_salt = ENV.fetch("ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT")
+
+  # DNS rebinding protection — restrict to your domain.
+  # Set APP_HOST in your environment (e.g. "trades.example.com").
+  config.hosts = [ ENV.fetch("APP_HOST") ]
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end

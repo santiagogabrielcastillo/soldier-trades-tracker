@@ -16,8 +16,6 @@ gem "turbo-rails"
 gem "stimulus-rails"
 # Use Tailwind CSS [https://github.com/rails/tailwindcss-rails]
 gem "tailwindcss-rails"
-# Build JSON APIs with ease [https://github.com/rails/jbuilder]
-gem "jbuilder"
 # Use Redis adapter to run Action Cable in production
 # gem "redis", ">= 4.0.1"
 
@@ -29,9 +27,6 @@ gem "bcrypt", "~> 3.1.7"
 
 # Solid Queue for background jobs (no Redis)
 gem "solid_queue"
-
-# Kamal for deployment
-gem "kamal", "~> 2.0"
 
 # Pagination
 gem "pagy"
@@ -65,6 +60,8 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+  # Kamal deployment CLI — only needed on the developer machine, not in the container
+  gem "kamal", "~> 2.0"
 end
 
 group :test do

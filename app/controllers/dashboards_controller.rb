@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ostruct"
+
 class DashboardsController < ApplicationController
   def show
     result = Dashboards::SummaryService.call(current_user)

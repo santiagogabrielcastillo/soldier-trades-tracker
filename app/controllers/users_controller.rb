@@ -8,6 +8,8 @@ class UsersController < ApplicationController
   end
 
   def create
+    raise ActionController::RoutingError, "Not Found" unless registration_open?
+
     @user = User.new(user_params)
     if @user.save
       session[:user_id] = @user.id
@@ -18,6 +20,10 @@ class UsersController < ApplicationController
   end
 
   private
+
+  def registration_open?
+    ENV["REGISTRATION_OPEN"] == "true"
+  end
 
   def user_params
     params.require(:user).permit(:email, :password, :password_confirmation, :sync_interval)
