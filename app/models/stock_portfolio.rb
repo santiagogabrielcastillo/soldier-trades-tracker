@@ -4,6 +4,7 @@ class StockPortfolio < ApplicationRecord
   MARKET_TYPES = %w[us argentina].freeze
 
   belongs_to :user
+  belongs_to :allocation_bucket, optional: true
   has_many :stock_trades, dependent: :destroy
   has_many :stock_portfolio_snapshots, dependent: :destroy
 

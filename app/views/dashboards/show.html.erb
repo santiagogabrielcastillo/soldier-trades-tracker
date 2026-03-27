@@ -95,6 +95,34 @@
     <%= link_to "View stock portfolio", stocks_path, class: "inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
   <% end %>
 
+  <% if @allocation_summary.buckets.any? %>
+    <section class="card-accent mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-lg font-medium text-slate-900">Allocation</h2>
+        <%= link_to "Manage", allocation_path, class: "text-sm text-indigo-600 hover:text-indigo-700 hover:underline" %>
+      </div>
+      <div class="mb-4 flex flex-wrap items-baseline gap-6">
+        <%= render StatCardComponent.new(label: "Net worth", value: format_money(@allocation_summary.total_usd)) %>
+        <%= render StatCardComponent.new(label: "Buckets", value: @allocation_summary.buckets.size) %>
+        <% biggest_drift = @allocation_summary.buckets.select { |b| b.drift_pct }.max_by { |b| b.drift_pct.abs } %>
+        <% if biggest_drift %>
+          <%= render StatCardComponent.new(label: "Biggest drift", value: "#{biggest_drift.name}: #{biggest_drift.drift_pct >= 0 ? '+' : ''}#{number_with_precision(biggest_drift.drift_pct, precision: 1)}%", signed: true, color_value: biggest_drift.drift_pct) %>
+        <% end %>
+      </div>
+      <% if @allocation_summary.buckets.any? %>
+        <div class="flex flex-wrap gap-3">
+          <% @allocation_summary.buckets.each do |b| %>
+            <div class="flex items-center gap-2">
+              <span class="h-2.5 w-2.5 rounded-full" style="background: <%= b.color %>"></span>
+              <span class="text-sm text-slate-700"><%= b.name %></span>
+              <span class="font-numeric text-sm font-medium text-slate-900"><%= number_to_percentage(b.actual_pct, precision: 1) %></span>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+
   <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
     <h2 class="mb-4 text-lg font-medium text-slate-900">Exchange accounts</h2>
     <% if @dashboard.exchange_accounts.any? %>

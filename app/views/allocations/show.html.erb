@@ -1,0 +1,259 @@
+<div>
+  <div class="mb-6 flex items-start justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-slate-900">Asset Allocation</h1>
+      <p class="mt-1 text-sm text-slate-500">Track and rebalance your net worth across asset classes.</p>
+    </div>
+  </div>
+
+  <%# ── Top stat cards ── %>
+  <div class="mb-6 flex flex-wrap items-baseline gap-6">
+    <%= render StatCardComponent.new(label: "Total tracked", value: format_money(@summary.total_usd)) %>
+    <%= render StatCardComponent.new(label: "Buckets", value: @summary.buckets.size) %>
+    <% buckets_with_targets = @summary.buckets.count { |b| b.target_pct } %>
+    <%= render StatCardComponent.new(label: "Targets set", value: "#{buckets_with_targets} / #{@summary.buckets.size}") %>
+  </div>
+
+  <% if @summary.buckets.any? %>
+    <%# ── Overview section ── %>
+    <% chart_data = { buckets: @summary.buckets.map { |b| { name: b.name, color: b.color, actual_usd: b.actual_usd.to_f, actual_pct: b.actual_pct.to_f, target_pct: b.target_pct&.to_f } } } %>
+    <%= content_tag :section,
+          class: "card-accent mb-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm",
+          data: { controller: "allocation-charts", "allocation-charts-data-value": chart_data.to_json } do %>
+      <h2 class="mb-5 text-base font-semibold text-slate-900">Overview</h2>
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div>
+          <p class="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Allocation</p>
+          <div class="h-52">
+            <canvas data-allocation-charts-target="pie"></canvas>
+          </div>
+        </div>
+        <% if @summary.buckets.any? { |b| b.target_pct } %>
+          <div>
+            <p class="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Actual vs Target</p>
+            <div class="h-52">
+              <canvas data-allocation-charts-target="bar"></canvas>
+            </div>
+          </div>
+        <% else %>
+          <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 p-8 text-center">
+            <p class="text-sm text-slate-500">Set target percentages on your buckets to see the actual vs target comparison.</p>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# ── Rebalancing section (only if targets exist) ── %>
+    <% if @summary.buckets.any? { |b| b.target_pct } %>
+      <section class="card-accent mb-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 class="mb-4 text-base font-semibold text-slate-900">Rebalancing guide</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-100">
+                <th class="pb-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Bucket</th>
+                <th class="pb-2 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Target</th>
+                <th class="pb-2 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Actual</th>
+                <th class="pb-2 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Drift</th>
+                <th class="pb-2 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              <% @summary.buckets.select { |b| b.target_pct }.each do |b| %>
+                <% target_usd = (@summary.total_usd * b.target_pct / 100).round(2) %>
+                <% diff_usd = target_usd - b.actual_usd %>
+                <tr class="hover:bg-slate-50 transition-colors duration-100">
+                  <td class="py-3">
+                    <div class="flex items-center gap-2">
+                      <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background: <%= b.color %>"></span>
+                      <span class="font-medium text-slate-800"><%= b.name %></span>
+                    </div>
+                  </td>
+                  <td class="py-3 text-right font-numeric text-slate-700"><%= number_to_percentage(b.target_pct, precision: 1) %></td>
+                  <td class="py-3 text-right font-numeric text-slate-700"><%= number_to_percentage(b.actual_pct, precision: 1) %></td>
+                  <td class="py-3 text-right font-numeric <%= b.drift_pct.zero? ? 'text-slate-400' : (b.drift_pct > 0 ? 'text-emerald-600' : 'text-red-500') %>">
+                    <%= b.drift_pct >= 0 ? "+" : "" %><%= number_to_percentage(b.drift_pct, precision: 1) %>
+                  </td>
+                  <td class="py-3 text-right">
+                    <% if diff_usd.abs < 1 %>
+                      <span class="text-xs text-slate-400">On target</span>
+                    <% elsif diff_usd > 0 %>
+                      <span class="text-xs font-medium text-emerald-700">Add <%= format_money(diff_usd) %></span>
+                    <% else %>
+                      <span class="text-xs font-medium text-red-600">Reduce <%= format_money(diff_usd.abs) %></span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% end %>
+  <% end %>
+
+  <%# ── Buckets / Manage section ── %>
+  <section class="card-accent mb-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <h2 class="mb-5 text-base font-semibold text-slate-900">Buckets</h2>
+
+    <% if @summary.buckets.any? %>
+      <div class="mb-6 space-y-4">
+        <% @summary.buckets.each do |b| %>
+          <% bucket_record = @buckets.find { |r| r.id == b.id } %>
+          <div class="rounded-lg border border-slate-200 overflow-hidden">
+            <%# Color bar + header %>
+            <div class="flex items-center justify-between gap-4 px-4 py-3" style="border-left: 4px solid <%= b.color %>">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="h-3 w-3 shrink-0 rounded-full" style="background: <%= b.color %>"></span>
+                <span class="font-semibold text-slate-900 truncate"><%= b.name %></span>
+                <% if b.target_pct %>
+                  <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">target <%= number_to_percentage(b.target_pct, precision: 1) %></span>
+                <% end %>
+              </div>
+              <div class="flex shrink-0 items-baseline gap-4">
+                <span class="font-numeric text-lg font-semibold text-slate-900"><%= format_money(b.actual_usd) %></span>
+                <span class="font-numeric text-sm text-slate-500"><%= number_to_percentage(b.actual_pct, precision: 1) %></span>
+              </div>
+            </div>
+
+            <%# Sources list %>
+            <% if b.sources.any? %>
+              <div class="divide-y divide-slate-50 border-t border-slate-100 px-4">
+                <% b.sources.each do |source| %>
+                  <div class="flex items-center justify-between py-2 text-sm">
+                    <div class="flex items-center gap-2 text-slate-600">
+                      <% icon = source.source_type == :manual ? "●" : (source.source_type == :stock_portfolio ? "◆" : "◉") %>
+                      <span class="text-xs text-slate-300"><%= icon %></span>
+                      <span><%= source.label %></span>
+                      <span class="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-400 capitalize"><%= source.source_type.to_s.gsub("_", " ") %></span>
+                    </div>
+                    <span class="font-numeric text-slate-700"><%= format_money(source.amount_usd) %></span>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+
+            <%# Add manual entry form for this bucket %>
+            <div class="border-t border-slate-100 bg-slate-50 px-4 py-3">
+              <%= form_with model: AllocationManualEntry.new, url: allocation_manual_entries_path, method: :post, class: "flex flex-wrap items-end gap-2" do |f| %>
+                <%= f.hidden_field :allocation_bucket_id, value: b.id %>
+                <div>
+                  <label class="block text-xs text-slate-500 mb-1">Label</label>
+                  <%= f.text_field :label, placeholder: "e.g. BingX Futures", class: "rounded border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-44" %>
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-500 mb-1">Amount (USD)</label>
+                  <%= f.number_field :amount_usd, placeholder: "0.00", step: "0.01", min: 0, class: "rounded border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-28" %>
+                </div>
+                <%= f.submit "Add entry", class: "rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 cursor-pointer" %>
+              <% end %>
+            </div>
+
+            <%# Manual entries for deletion — listed below add form %>
+            <% manual_sources = b.sources.select { |s| s.source_type == :manual } %>
+            <% if manual_sources.any? %>
+              <% entries_for_bucket = current_user.allocation_manual_entries.where(allocation_bucket_id: b.id) %>
+              <div class="border-t border-slate-100 divide-y divide-slate-50 px-4">
+                <% entries_for_bucket.each do |entry| %>
+                  <div class="flex items-center justify-between py-2 text-sm">
+                    <span class="text-slate-700"><%= entry.label %> — <span class="font-numeric"><%= format_money(entry.amount_usd) %></span></span>
+                    <%= button_to "Remove", allocation_manual_entry_path(entry), method: :delete, class: "text-xs font-medium text-red-500 hover:text-red-700", form: { "data-turbo": "false" } %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+
+            <%# Edit bucket form in disclosure %>
+            <div class="border-t border-slate-100 px-4 py-3 flex items-center gap-4">
+              <%= form_with model: bucket_record, url: allocation_bucket_path(bucket_record), method: :patch, class: "flex flex-wrap items-end gap-2" do |f| %>
+                <div>
+                  <label class="block text-xs text-slate-500 mb-1">Name</label>
+                  <%= f.text_field :name, class: "rounded border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-32" %>
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-500 mb-1">Color</label>
+                  <%= f.color_field :color, class: "h-8 w-10 cursor-pointer rounded border border-slate-300 p-0.5" %>
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-500 mb-1">Target %</label>
+                  <%= f.number_field :target_pct, step: "0.1", min: 0, max: 100, placeholder: "—", class: "rounded border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-20" %>
+                </div>
+                <%= f.submit "Save", class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer" %>
+              <% end %>
+              <%= button_to "Delete bucket", allocation_bucket_path(bucket_record), method: :delete,
+                    class: "ml-auto text-xs font-medium text-red-500 hover:text-red-700",
+                    form: { data: { turbo_confirm: "Delete '#{bucket_record.name}' and all its manual entries?" } } %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="mb-6 text-sm text-slate-500">No buckets yet. Add one below to start tracking your allocation.</p>
+    <% end %>
+
+    <%# Add new bucket form %>
+    <div class="rounded-lg border border-dashed border-slate-300 p-4">
+      <p class="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">Add bucket</p>
+      <%= form_with model: @new_bucket, url: allocation_buckets_path, method: :post, class: "flex flex-wrap items-end gap-3" do |f| %>
+        <div>
+          <label class="block text-xs text-slate-500 mb-1">Name</label>
+          <%= f.text_field :name, placeholder: "e.g. Stocks, Crypto, Real Estate", class: "rounded border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-52" %>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-500 mb-1">Color</label>
+          <%= f.color_field :color, value: AllocationBucket::COLORS.first, class: "h-8 w-10 cursor-pointer rounded border border-slate-300 p-0.5" %>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-500 mb-1">Target % <span class="text-slate-400">(optional)</span></label>
+          <%= f.number_field :target_pct, step: "0.1", min: 0, max: 100, placeholder: "—", class: "rounded border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-24" %>
+        </div>
+        <%= f.submit "Add bucket", class: "rounded-md bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 cursor-pointer" %>
+      <% end %>
+    </div>
+  </section>
+
+  <%# ── Assign tracked assets section ── %>
+  <% if @stock_portfolios.any? || @spot_accounts.any? %>
+    <section class="card-accent rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 class="mb-1 text-base font-semibold text-slate-900">Link tracked assets</h2>
+      <p class="mb-5 text-sm text-slate-500">Assign your tracked portfolios and spot accounts to buckets so their values are auto-included.</p>
+
+      <% if @stock_portfolios.any? %>
+        <div class="mb-5">
+          <p class="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">Stock portfolios</p>
+          <div class="space-y-2">
+            <% @stock_portfolios.each do |portfolio| %>
+              <%= form_with url: allocation_assign_stock_portfolio_path(portfolio), method: :patch, class: "flex items-center gap-3" do |f| %>
+                <span class="w-40 truncate text-sm font-medium text-slate-700"><%= portfolio.name %></span>
+                <span class="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500"><%= portfolio.market %></span>
+                <%= f.select :allocation_bucket_id,
+                      options_for_select([["— Unassigned —", ""]] + @buckets.map { |b| [b.name, b.id] }, portfolio.allocation_bucket_id),
+                      {},
+                      class: "rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500",
+                      onchange: "this.form.requestSubmit()" %>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @spot_accounts.any? %>
+        <div>
+          <p class="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">Spot accounts</p>
+          <div class="space-y-2">
+            <% @spot_accounts.each do |spot| %>
+              <%= form_with url: allocation_assign_spot_account_path(spot), method: :patch, class: "flex items-center gap-3" do |f| %>
+                <span class="w-40 truncate text-sm font-medium text-slate-700"><%= spot.name %></span>
+                <%= f.select :allocation_bucket_id,
+                      options_for_select([["— Unassigned —", ""]] + @buckets.map { |b| [b.name, b.id] }, spot.allocation_bucket_id),
+                      {},
+                      class: "rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500",
+                      onchange: "this.form.requestSubmit()" %>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+</div>

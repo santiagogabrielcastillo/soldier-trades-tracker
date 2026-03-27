@@ -48,4 +48,10 @@ Rails.application.routes.draw do
       get :lookup
     end
   end
+
+  resource :allocation, only: [:show]
+  patch "allocation/assign_stock_portfolio/:id", to: "allocations#assign_stock_portfolio", as: :allocation_assign_stock_portfolio
+  patch "allocation/assign_spot_account/:id",   to: "allocations#assign_spot_account",    as: :allocation_assign_spot_account
+  resources :allocation_buckets,        only: %i[create update destroy]
+  resources :allocation_manual_entries, only: %i[create update destroy]
 end

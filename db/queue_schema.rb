@@ -10,9 +10,31 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_21_150001) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_27_111757) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "allocation_buckets", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "name", null: false
+    t.string "color", null: false
+    t.decimal "target_pct", precision: 5, scale: 2
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_allocation_buckets_on_user_id"
+  end
+
+  create_table "allocation_manual_entries", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "allocation_bucket_id", null: false
+    t.string "label", null: false
+    t.decimal "amount_usd", precision: 20, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["allocation_bucket_id"], name: "index_allocation_manual_entries_on_allocation_bucket_id"
+    t.index ["user_id"], name: "index_allocation_manual_entries_on_user_id"
+  end
 
   create_table "cedear_instruments", force: :cascade do |t|
     t.bigint "user_id", null: false
@@ -214,6 +236,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_21_150001) do
     t.boolean "default", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "allocation_bucket_id"
+    t.index ["allocation_bucket_id"], name: "index_spot_accounts_on_allocation_bucket_id"
     t.index ["user_id", "default"], name: "index_spot_accounts_on_user_id_and_default"
     t.index ["user_id"], name: "index_spot_accounts_on_user_id"
   end
@@ -248,6 +272,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_21_150001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.decimal "fwd_pe", precision: 12, scale: 4
+    t.decimal "debt_eq", precision: 12, scale: 4
+    t.decimal "sales_5y", precision: 12, scale: 4
+    t.decimal "sales_qq", precision: 12, scale: 4
     t.index ["ticker"], name: "index_stock_fundamentals_on_ticker", unique: true
   end
 
@@ -270,6 +297,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_21_150001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "market", default: "us", null: false
+    t.bigint "allocation_bucket_id"
+    t.index ["allocation_bucket_id"], name: "index_stock_portfolios_on_allocation_bucket_id"
     t.index ["user_id", "default"], name: "index_stock_portfolios_on_user_id_and_default"
     t.index ["user_id"], name: "index_stock_portfolios_on_user_id"
   end
@@ -347,6 +376,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_21_150001) do
     t.index ["user_id"], name: "index_watchlist_tickers_on_user_id"
   end
 
+  add_foreign_key "allocation_buckets", "users"
+  add_foreign_key "allocation_manual_entries", "allocation_buckets"
+  add_foreign_key "allocation_manual_entries", "users"
   add_foreign_key "cedear_instruments", "users"
   add_foreign_key "exchange_accounts", "users"
   add_foreign_key "portfolios", "exchange_accounts", on_delete: :nullify
@@ -360,9 +392,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_21_150001) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "spot_accounts", "allocation_buckets", on_delete: :nullify
   add_foreign_key "spot_accounts", "users"
   add_foreign_key "spot_transactions", "spot_accounts"
   add_foreign_key "stock_portfolio_snapshots", "stock_portfolios"
+  add_foreign_key "stock_portfolios", "allocation_buckets", on_delete: :nullify
   add_foreign_key "stock_portfolios", "users"
   add_foreign_key "stock_trades", "stock_portfolios"
   add_foreign_key "sync_runs", "exchange_accounts"

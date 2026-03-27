@@ -2,6 +2,7 @@
 
 class SpotAccount < ApplicationRecord
   belongs_to :user
+  belongs_to :allocation_bucket, optional: true
   has_many :spot_transactions, dependent: :destroy
 
   validates :name, presence: true
