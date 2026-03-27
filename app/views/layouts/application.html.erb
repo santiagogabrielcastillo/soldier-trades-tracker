@@ -9,6 +9,9 @@
 
     <%= yield :head %>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -19,35 +22,93 @@
   </head>
 
   <body class="min-h-screen bg-slate-50 text-slate-900">
-    <header class="border-b border-slate-200 bg-white">
-      <nav class="container mx-auto flex h-14 items-center justify-between px-4">
-        <%= link_to "Soldier Trades", root_path, class: "text-lg font-semibold text-slate-800" %>
-        <div class="flex items-center gap-4">
-          <% if current_user %>
-            <%= link_to "Dashboard", root_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
-            <%= link_to "Exchange accounts", exchange_accounts_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
-            <%= link_to "Trades", trades_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
-            <%= link_to "Spot", spot_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
-            <%= link_to "Stocks", stocks_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
-            <%= link_to "Allocation", allocation_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
-            <%= link_to "Portfolios", portfolios_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
-            <%= link_to "Settings", settings_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
-            <%= button_to "Sign out", logout_path, method: :delete, class: "text-sm text-slate-600 hover:text-slate-900" %>
-          <% else %>
-            <%= link_to "Sign in", login_path, class: "text-sm text-slate-600 hover:text-slate-900" %>
-            <%= link_to "Sign up", new_user_path, class: "rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
-          <% end %>
+
+    <% if current_user %>
+      <%# ── Mobile header (visible below lg) ─────────────────────────────── %>
+      <header class="sticky top-0 z-40 flex h-12 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
+        <%= link_to root_path, class: "flex items-center gap-1.5" do %>
+          <svg class="h-3.5 w-3.5 text-indigo-600" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><polygon points="8,1 15,14 1,14"/></svg>
+          <span class="text-[14px] font-bold tracking-tight text-slate-900">Soldier<span class="text-indigo-600">Trades</span></span>
+        <% end %>
+        <span class="text-xs text-slate-400">Menu below ↓</span>
+      </header>
+
+      <%# ── Sidebar (visible lg+) ──────────────────────────────────────────── %>
+      <aside class="fixed inset-y-0 left-0 z-50 hidden w-56 flex-col bg-slate-900 lg:flex">
+        <%# Brand %>
+        <%= link_to root_path, class: "flex h-14 shrink-0 items-center gap-2 border-b border-slate-800 px-5 transition-opacity duration-150 hover:opacity-80" do %>
+          <svg class="h-3.5 w-3.5 text-indigo-400" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><polygon points="8,1 15,14 1,14"/></svg>
+          <span class="text-[14px] font-bold tracking-tight text-white">Soldier<span class="text-indigo-400">Trades</span></span>
+        <% end %>
+
+        <%# Main nav %>
+        <nav class="flex flex-1 flex-col overflow-y-auto" aria-label="Main navigation">
+          <div class="flex-1 space-y-0.5 px-3 py-4">
+            <% [
+              ["Dashboard",         root_path,             root_path],
+              ["Exchange accounts", exchange_accounts_path, "/exchange_accounts"],
+              ["Trades",            trades_path,            "/trades"],
+              ["Spot",              spot_path,              "/spot"],
+              ["Stocks",            stocks_path,            "/stocks"],
+              ["Allocation",        allocation_path,        "/allocation"],
+              ["Portfolios",        portfolios_path,        "/portfolios"],
+            ].each do |label, path, match| %>
+              <% active = match == root_path ? current_page?(root_path) : request.path.start_with?(match) %>
+              <%= link_to label, path,
+                    class: "flex items-center rounded-md px-3 py-2 text-sm transition-colors duration-150 #{active ? 'bg-slate-700 font-medium text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}" %>
+            <% end %>
+          </div>
+
+          <%# Bottom: settings + sign out %>
+          <div class="space-y-0.5 border-t border-slate-800 px-3 py-4">
+            <% active_settings = request.path.start_with?("/settings") %>
+            <%= link_to "Settings", settings_path,
+                  class: "flex items-center rounded-md px-3 py-2 text-sm transition-colors duration-150 #{active_settings ? 'bg-slate-700 font-medium text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}" %>
+            <%= button_to "Sign out", logout_path, method: :delete,
+                  class: "flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-400 transition-colors duration-150 hover:bg-slate-800 hover:text-slate-100" %>
+          </div>
+        </nav>
+      </aside>
+
+      <%# ── Content area ────────────────────────────────────────────────────── %>
+      <div class="flex min-h-screen flex-col lg:ml-56">
+        <% if flash[:notice] %>
+          <div class="border-b border-emerald-200 bg-emerald-50">
+            <p class="px-6 py-2.5 text-sm font-medium text-emerald-700"><%= flash[:notice] %></p>
+          </div>
+        <% end %>
+        <% if flash[:alert] %>
+          <div class="border-b border-amber-200 bg-amber-50">
+            <p class="px-6 py-2.5 text-sm font-medium text-amber-700"><%= flash[:alert] %></p>
+          </div>
+        <% end %>
+        <main class="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
+          <%= yield %>
+        </main>
+      </div>
+
+    <% else %>
+      <%# ── Auth layout ─────────────────────────────────────────────────────── %>
+      <% if flash[:notice] %>
+        <div class="border-b border-emerald-200 bg-emerald-50">
+          <p class="px-6 py-2.5 text-center text-sm font-medium text-emerald-700"><%= flash[:notice] %></p>
         </div>
-      </nav>
-    </header>
-    <% if flash[:notice] %>
-      <p class="container mx-auto mt-4 px-4 text-sm text-emerald-600"><%= flash[:notice] %></p>
+      <% end %>
+      <% if flash[:alert] %>
+        <div class="border-b border-amber-200 bg-amber-50">
+          <p class="px-6 py-2.5 text-center text-sm font-medium text-amber-700"><%= flash[:alert] %></p>
+        </div>
+      <% end %>
+      <main class="flex min-h-screen flex-col items-center justify-center px-4 py-16">
+        <div class="mb-10 flex items-center gap-2">
+          <svg class="h-5 w-5 text-indigo-600" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><polygon points="8,1 15,14 1,14"/></svg>
+          <span class="text-xl font-bold tracking-tight text-slate-900">Soldier<span class="text-indigo-600">Trades</span></span>
+        </div>
+        <div class="w-full max-w-sm">
+          <%= yield %>
+        </div>
+      </main>
     <% end %>
-    <% if flash[:alert] %>
-      <p class="container mx-auto mt-4 px-4 text-sm text-amber-600"><%= flash[:alert] %></p>
-    <% end %>
-    <main class="container mx-auto max-w-6xl px-4 py-8">
-      <%= yield %>
-    </main>
+
   </body>
 </html>
