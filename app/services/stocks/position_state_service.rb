@@ -56,9 +56,10 @@ module Stocks
           net_usd += tx.total_value_usd.to_d
           lots << [ tx.shares.to_d, tx.price_usd.to_d ]
         else
-          # sell
+          # sell — reduce net_usd by the FIFO cost of the shares sold, not the proceeds
           remaining_sell = tx.shares.to_d
           sell_price = tx.price_usd.to_d
+          cost_of_sold = BigDecimal("0")
           while remaining_sell > 0 && lots.any?
             qty, cost = lots.first
             if remaining_sell >= qty
@@ -70,9 +71,10 @@ module Stocks
             end
             remaining_sell -= consumed
             realized_pnl += consumed * (sell_price - cost)
+            cost_of_sold  += consumed * cost
           end
-          net_usd -= tx.shares.to_d * sell_price
-          shares -= tx.shares.to_d
+          net_usd -= cost_of_sold
+          shares  -= tx.shares.to_d
           if shares <= 0
             summaries << PositionSummary.new(
               ticker: ticker,

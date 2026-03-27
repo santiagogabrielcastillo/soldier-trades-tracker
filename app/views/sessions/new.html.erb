@@ -1,17 +1,18 @@
-<div class="mx-auto max-w-sm">
-  <h1 class="mb-6 text-2xl font-semibold text-slate-900">Sign in</h1>
+<div class="w-full rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+  <h1 class="mb-1 text-xl font-semibold text-slate-900">Welcome back</h1>
+  <p class="mb-6 text-sm text-slate-500">Sign in to your account to continue.</p>
   <%= form_with url: login_path, local: true, class: "space-y-4" do |f| %>
     <div>
-      <%= label_tag :email, "Email", class: "block text-sm font-medium text-slate-700" %>
-      <%= email_field_tag :email, @user.email, autofocus: true, autocomplete: "email", class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+      <%= label_tag :email, "Email", class: "block text-xs font-medium uppercase tracking-wide text-slate-500" %>
+      <%= email_field_tag :email, @user.email, autofocus: true, autocomplete: "email", class: "mt-1.5 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
     </div>
     <div>
-      <%= label_tag :password, "Password", class: "block text-sm font-medium text-slate-700" %>
-      <%= password_field_tag :password, nil, autocomplete: "current-password", class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+      <%= label_tag :password, "Password", class: "block text-xs font-medium uppercase tracking-wide text-slate-500" %>
+      <%= password_field_tag :password, nil, autocomplete: "current-password", class: "mt-1.5 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
     </div>
-    <%= submit_tag "Sign in", class: "w-full rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
+    <%= submit_tag "Sign in", class: "mt-2 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
   <% end %>
-  <p class="mt-4 text-center text-sm text-slate-600">
-    Don't have an account? <%= link_to "Sign up", new_user_path, class: "font-medium text-slate-800 hover:underline" %>
+  <p class="mt-5 text-center text-sm text-slate-500">
+    Don't have an account? <%= link_to "Sign up", new_user_path, class: "font-medium text-indigo-600 hover:text-indigo-700 hover:underline" %>
   </p>
 </div>

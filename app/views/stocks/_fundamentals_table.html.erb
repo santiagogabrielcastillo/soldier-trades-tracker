@@ -23,6 +23,9 @@
   { label: "Net Margin", classes: "text-right" },
   { label: "ROE",        classes: "text-right" },
   { label: "ROIC",       classes: "text-right" },
+  { label: "Debt/Eq",    classes: "text-right" },
+  { label: "Sales Y/Y",  classes: "text-right" },
+  { label: "Sales Q/Q",  classes: "text-right" },
   *(watchlist_items ? [{ label: "", classes: "text-right" }] : [])
 ]) do |table| %>
   <% tickers.each do |ticker| %>
@@ -42,6 +45,13 @@
       </td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= f&.roic ? (f.roic >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-500' %>">
         <%= f&.roic ? number_to_percentage(f.roic, precision: 1) : "—" %>
+      </td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.debt_eq  ? number_with_precision(f.debt_eq,  precision: 2) : "—" %></td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= f&.sales_5y ? (f.sales_5y >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-500' %>">
+        <%= f&.sales_5y ? number_to_percentage(f.sales_5y, precision: 1) : "—" %>
+      </td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= f&.sales_qq ? (f.sales_qq >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-500' %>">
+        <%= f&.sales_qq ? number_to_percentage(f.sales_qq, precision: 1) : "—" %>
       </td>
       <% if watchlist_items %>
         <td class="whitespace-nowrap px-6 py-4 text-right">

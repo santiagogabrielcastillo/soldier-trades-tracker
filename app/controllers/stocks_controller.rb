@@ -201,6 +201,11 @@ class StocksController < ApplicationController
     positions_market_value = open_positions.sum(BigDecimal("0")) { |pos| (@current_prices[pos.ticker] || 0).to_d * pos.shares }
     @cash_balance = Stocks::CashBalanceService.call(stock_portfolio: @stock_portfolio)
     @stocks_value = positions_market_value + @cash_balance
+    @total_unrealized_pnl = open_positions.sum(BigDecimal("0")) do |pos|
+      price = @current_prices[pos.ticker]
+      next BigDecimal("0") unless price && pos.breakeven&.positive?
+      (price.to_d - pos.breakeven.to_d) * pos.shares
+    end
     @stocks_chart_data = build_stocks_chart_data
   end
 

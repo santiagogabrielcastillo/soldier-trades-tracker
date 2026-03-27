@@ -11,7 +11,9 @@ module Stocks
       results.each do |ticker, f|
         StockFundamental.upsert(
           { ticker: ticker, pe: f.pe, fwd_pe: f.fwd_pe, peg: f.peg, ps: f.ps, pfcf: f.pfcf,
-            net_margin: f.net_margin, roe: f.roe, roic: f.roic, fetched_at: now },
+            net_margin: f.net_margin, roe: f.roe, roic: f.roic,
+            debt_eq: f.debt_eq, sales_5y: f.sales_5y, sales_qq: f.sales_qq,
+            fetched_at: now },
           unique_by: :ticker
         )
       end

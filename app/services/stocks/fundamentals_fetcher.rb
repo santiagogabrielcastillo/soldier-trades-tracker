@@ -15,6 +15,7 @@ module Stocks
 
     FundamentalsData = Struct.new(
       :pe, :fwd_pe, :peg, :ps, :pfcf, :net_margin, :roe, :roic,
+      :debt_eq, :sales_5y, :sales_qq,
       keyword_init: true
     )
 
@@ -81,7 +82,7 @@ module Stocks
 
       return nil if metrics.empty?
 
-      Rails.logger.info("[Stocks::FundamentalsFetcher] #{ticker} metrics: #{metrics.slice('P/E','Fwd P/E','PEG','P/S','P/FCF','Profit Margin','ROE','ROIC')}")
+      Rails.logger.info("[Stocks::FundamentalsFetcher] #{ticker} metrics: #{metrics.slice('P/E','Fwd P/E','PEG','P/S','P/FCF','Profit Margin','ROE','ROIC','Debt/Eq','Sales Y/Y TTM','Sales Q/Q')}")
 
       FundamentalsData.new(
         pe:         decimal(metrics["P/E"]),
@@ -91,7 +92,10 @@ module Stocks
         pfcf:       decimal(metrics["P/FCF"]),
         net_margin: pct(metrics["Profit Margin"]),
         roe:        pct(metrics["ROE"]),
-        roic:       pct(metrics["ROIC"])
+        roic:       pct(metrics["ROIC"]),
+        debt_eq:    decimal(metrics["Debt/Eq"]),
+        sales_5y:   pct(metrics["Sales Y/Y TTM"]),
+        sales_qq:   pct(metrics["Sales Q/Q"])
       )
     end
 

@@ -1,4 +1,4 @@
-<div>
-  <span class="text-sm text-slate-500"><%= @label %></span>
-  <p class="<%= value_css %>"><%= display_value %></p>
+<div class="min-w-[7rem]">
+  <span class="block text-xs font-medium uppercase tracking-wide text-slate-400"><%= @label %></span>
+  <%= tag.p(display_value, class: "mt-0.5 font-numeric #{value_css}", **@value_html) %>
 </div>

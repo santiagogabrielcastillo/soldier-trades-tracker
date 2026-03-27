@@ -2,13 +2,13 @@ module ApplicationHelper
   # Format as $X,XXX.XX (two decimals, comma thousands separator). Returns "—" for nil.
   def format_money(amount)
     return "—" if amount.nil?
-    number_to_currency(amount.to_d, precision: 2, delimiter: ",", strip_insignificant_zeros: false)
+    content_tag(:span, number_to_currency(amount.to_d, precision: 2, delimiter: ",", strip_insignificant_zeros: false), class: "font-numeric")
   end
 
   # Format as ARS X.XXX (Argentine peso, no decimals). Returns "—" for nil.
   def format_ars(amount)
     return "—" if amount.nil?
-    number_to_currency(amount.to_d, unit: "ARS\u00A0", separator: ",", delimiter: ".", precision: 0)
+    content_tag(:span, number_to_currency(amount.to_d, unit: "ARS\u00A0", separator: ",", delimiter: ".", precision: 0), class: "font-numeric")
   end
 
   # Returns a Tailwind text-color class for a signed numeric value (P&L, ROI).

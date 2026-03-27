@@ -3,9 +3,9 @@
     <thead class="bg-slate-50">
       <tr>
         <% @columns.each do |col| %>
-          <th scope="col" class="px-6 py-3 text-xs font-medium uppercase tracking-wider text-slate-600 <%= col[:classes] %>">
+          <%= tag.th(scope: "col", class: "px-6 py-3 text-xs font-medium uppercase tracking-wider text-slate-600 #{col[:classes]}", **(col[:html] || {})) do %>
             <%= col[:label] %>
-          </th>
+          <% end %>
         <% end %>
       </tr>
     </thead>

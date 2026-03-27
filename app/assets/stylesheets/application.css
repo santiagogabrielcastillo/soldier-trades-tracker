@@ -14,6 +14,43 @@
  *= require_self
  */
 
+/* ── Typography ─────────────────────────────────────────────────────────── */
+body {
+  font-family: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* Financial numbers rendered in mono with tabular spacing */
+.font-numeric {
+  font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-size: 0.9375em; /* optical compensation — mono reads slightly larger */
+}
+
+/* ── Global micro-transitions ───────────────────────────────────────────── */
+a, button, [role="button"], input, select, textarea {
+  transition-property: color, background-color, border-color, opacity, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* ── Card accent ─────────────────────────────────────────────────────────── */
+/* Add class="card-accent" to section cards for a 3px indigo top border accent */
+.card-accent {
+  position: relative;
+  overflow: hidden;
+}
+.card-accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #4f46e5; /* indigo-600 */
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
 /* Pagy 43 nav (series_nav outputs nav.pagy) – from pagy.css, tuned for slate */
 .pagy {
   --B: 1;

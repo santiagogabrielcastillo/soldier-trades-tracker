@@ -9,19 +9,20 @@ module Stocks
       Rails.cache.delete("mep_rate")
     end
 
-    test "returns BigDecimal from primary source" do
-      mock_primary = mock_success('{"venta":1245.50}')
+    # Sources: dolarhoy.com (scrape) → dolarapi.com (JSON) → argentinadatos.com (JSON)
 
-      Net::HTTP.stub(:get_response, mock_primary) do
-        assert_equal BigDecimal("1245.5"), MepRateFetcher.call
+    test "returns average of compra/venta from dolarhoy when scrape succeeds" do
+      html = '<a href="/cotizaciondolarbolsa"><div class="compra">1200,00</div><div class="venta">1300,00</div></a>'
+      Net::HTTP.stub(:get_response, mock_html_success(html)) do
+        assert_equal BigDecimal("1250.0"), MepRateFetcher.call
       end
     end
 
-    test "falls back to secondary source when primary fails" do
+    test "falls back to JSON source when dolarhoy scrape returns no data" do
       call_count = 0
       responses = [
-        mock_failure,
-        mock_success('{"venta":1300.0}')
+        mock_html_success("<html></html>"),   # dolarhoy — no MEP link
+        mock_success('{"venta":1300.0}')      # dolarapi.com
       ]
 
       Net::HTTP.stub(:get_response, ->(_) { responses[call_count].tap { call_count += 1 } }) do
@@ -31,7 +32,21 @@ module Stocks
       end
     end
 
-    test "returns nil when both sources fail" do
+    test "falls back to third source when dolarhoy and first JSON fail" do
+      call_count = 0
+      responses = [
+        mock_failure,                         # dolarhoy
+        mock_failure,                         # dolarapi.com
+        mock_success('{"venta":1400.0}')      # argentinadatos.com
+      ]
+
+      Net::HTTP.stub(:get_response, ->(_) { responses[call_count].tap { call_count += 1 } }) do
+        result = MepRateFetcher.call
+        assert_equal BigDecimal("1400.0"), result
+      end
+    end
+
+    test "returns nil when all sources fail" do
       Net::HTTP.stub(:get_response, ->(_) { mock_failure }) do
         assert_nil MepRateFetcher.call
       end
@@ -49,16 +64,17 @@ module Stocks
       end
     end
 
-    test "caches successful result for subsequent calls" do
+    test "caches successful result — second call makes no HTTP requests" do
       call_count = 0
+      html = '<a href="/cotizaciondolarbolsa"><div class="compra">1245,50</div><div class="venta">1245,50</div></a>'
       with_memory_cache do
-        Net::HTTP.stub(:get_response, ->(_) { call_count += 1; mock_success('{"venta":1245.5}') }) do
+        Net::HTTP.stub(:get_response, ->(_) { call_count += 1; mock_html_success(html) }) do
           MepRateFetcher.call
+          count_after_first = call_count
           MepRateFetcher.call
+          assert_equal count_after_first, call_count, "Second call should use cache, not HTTP"
         end
       end
-
-      assert_equal 1, call_count, "HTTP should only be called once due to caching"
     end
 
     test "does not cache nil result" do
@@ -80,6 +96,10 @@ module Stocks
       obj.define_singleton_method(:is_a?) { |klass| klass == Net::HTTPSuccess }
       obj.define_singleton_method(:body) { body }
       obj
+    end
+
+    def mock_html_success(html)
+      mock_success(html)
     end
 
     def mock_failure
