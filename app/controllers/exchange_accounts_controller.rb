@@ -20,7 +20,12 @@ class ExchangeAccountsController < ApplicationController
     end
     @exchange_account.linked_at = Time.current
     if @exchange_account.save
-      redirect_to exchange_accounts_path, notice: "Exchange account linked successfully."
+      if current_user.exchange_accounts.count == 1
+        flash[:info] = "Account linked! Contact an admin to request a historic data sync for your older trades."
+        redirect_to exchange_accounts_path
+      else
+        redirect_to exchange_accounts_path, notice: "Exchange account linked successfully."
+      end
     else
       render :new, status: :unprocessable_entity
     end

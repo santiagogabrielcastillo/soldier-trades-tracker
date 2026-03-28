@@ -54,6 +54,32 @@ class ExchangeAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
+  test "create shows info flash when user links their first account" do
+    sign_in_as(@user)
+    # ensure this user has no accounts yet
+    @user.exchange_accounts.destroy_all
+    post exchange_accounts_path, params: {
+      exchange_account: { provider_type: "bingx", api_key: "k", api_secret: "s" }
+    }
+    assert_redirected_to exchange_accounts_path
+    follow_redirect!
+    assert_match(/admin/i, response.body)
+    assert_match(/historic/i, response.body)
+  end
+
+  test "create shows standard notice flash when user already has accounts" do
+    sign_in_as(@user)
+    # ensure clean slate then create a pre-existing account (avoids fixture encryption issues)
+    @user.exchange_accounts.destroy_all
+    @user.exchange_accounts.create!(provider_type: "bingx", api_key: "existing", api_secret: "existing", linked_at: 1.day.ago)
+    post exchange_accounts_path, params: {
+      exchange_account: { provider_type: "binance", api_key: "k2", api_secret: "s2" }
+    }
+    assert_redirected_to exchange_accounts_path
+    follow_redirect!
+    assert_match(/linked successfully/i, response.body)
+  end
+
   private
 
   def sign_in_as(user)
