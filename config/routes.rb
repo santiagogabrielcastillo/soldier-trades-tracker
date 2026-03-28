@@ -18,8 +18,8 @@ Rails.application.routes.draw do
   resources :exchange_accounts, only: %i[index new create destroy edit update] do
     member do
       post :sync
-      resources :manual_trades, only: %i[new create edit update destroy]
     end
+    resources :manual_trades, only: %i[new create edit update destroy]
   end
   resources :trades, only: :index
   patch "user_preferences/trades_index_columns", to: "user_preferences#update_trades_index_columns", as: :user_preferences_trades_index_columns
