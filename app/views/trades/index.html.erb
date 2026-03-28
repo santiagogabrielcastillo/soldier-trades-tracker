@@ -99,6 +99,7 @@
             <% visible_ids.each do |col_id| %>
               <th scope="col" class="<%= col_id.in?(%w[margin_used roi commission net_pl balance entry_price exit_price]) ? 'text-right' : 'text-left' %> px-6 py-3 text-xs font-medium uppercase tracking-wider text-slate-600"><%= TradesIndexColumns::LABELS[col_id] %></th>
             <% end %>
+            <th scope="col" class="px-4 py-3"></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-200 bg-white">
@@ -113,6 +114,18 @@
                   <%= trades_index_cell_content(pos, col_id, roi_val: roi_val, pnl_val: pnl_val, memoized: memoized) %>
                 </td>
               <% end %>
+              <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
+                <% pos.trades.select(&:manual?).each do |t| %>
+                  <%= link_to "Edit",
+                      edit_exchange_account_manual_trade_path(t.exchange_account, t),
+                      class: "mr-2 text-slate-500 hover:text-slate-800 text-xs" %>
+                  <%= button_to "Delete",
+                      exchange_account_manual_trade_path(t.exchange_account, t),
+                      method: :delete,
+                      data: { turbo_confirm: "Delete this manual trade and rebuild positions?" },
+                      class: "text-red-500 hover:text-red-700 text-xs bg-transparent border-0 p-0 cursor-pointer" %>
+                <% end %>
+              </td>
             </tr>
           <% end %>
         </tbody>

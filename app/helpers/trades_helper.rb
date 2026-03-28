@@ -3,6 +3,10 @@
 module TradesHelper
   TRADES_INDEX_PARAMS = %w[view from_date to_date exchange_account_id portfolio_id].freeze
 
+  def position_has_manual_trade?(position_summary)
+    position_summary.trades.any?(&:manual?)
+  end
+
   # Returns a stable key for the current trades index tab for use in preference keys.
   # Used by TradesController (lookup) and UserPreferencesController (save).
   def trades_index_tab_key(view, exchange_account_id = nil, portfolio_id = nil)
@@ -49,7 +53,14 @@ module TradesHelper
     when "exchange"
       pos.exchange_account.provider_type&.capitalize
     when "symbol"
-      pos.symbol
+      if position_has_manual_trade?(pos)
+        safe_join([
+          pos.symbol,
+          content_tag(:span, "manual", class: "ml-1.5 inline-flex items-center rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700")
+        ])
+      else
+        pos.symbol
+      end
     when "side"
       position_side&.capitalize || "—"
     when "leverage"
