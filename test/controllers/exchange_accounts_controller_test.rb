@@ -17,22 +17,41 @@ class ExchangeAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Binance|BingX/, response.body)
   end
 
-  test "create with binance provider succeeds when ping returns true" do
+  test "create with binance provider succeeds without requiring read-only ping" do
     sign_in_as(@user)
-    Exchanges::ProviderForAccount.stub(:ping?, true) do
-      post exchange_accounts_path, params: {
-        exchange_account: {
-          provider_type: "binance",
-          api_key: "binance_key",
-          api_secret: "binance_secret"
-        }
+    post exchange_accounts_path, params: {
+      exchange_account: {
+        provider_type: "binance",
+        api_key: "binance_key",
+        api_secret: "binance_secret"
       }
-    end
+    }
     assert_redirected_to exchange_accounts_path
-    assert_equal "Exchange account linked successfully.", flash[:notice]
     account = @user.exchange_accounts.find_by(provider_type: "binance")
     assert account
     assert account.api_key.present?
+  end
+
+  test "create with bingx provider succeeds without requiring read-only ping" do
+    sign_in_as(@user)
+    post exchange_accounts_path, params: {
+      exchange_account: {
+        provider_type: "bingx",
+        api_key: "bingx_key",
+        api_secret: "bingx_secret"
+      }
+    }
+    assert_redirected_to exchange_accounts_path
+    account = @user.exchange_accounts.find_by(provider_type: "bingx")
+    assert account
+  end
+
+  test "create fails when api_key is blank" do
+    sign_in_as(@user)
+    post exchange_accounts_path, params: {
+      exchange_account: { provider_type: "bingx", api_key: "", api_secret: "secret" }
+    }
+    assert_response :unprocessable_entity
   end
 
   private

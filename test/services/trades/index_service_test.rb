@@ -21,9 +21,7 @@ class Trades::IndexServiceTest < ActiveSupport::TestCase
   test "history with exchange_account_id filters to that account's trades" do
     Trade.where(exchange_account: @account).delete_all
     Trade.create!(exchange_account: @account, exchange_reference_id: "h1", symbol: "BTC-USDT", side: "buy", fee: 0, net_amount: -100, executed_at: Time.current, raw_payload: MINIMAL_RAW_PAYLOAD.dup)
-    other = ExchangeAccountKeyValidator.stub(:read_only?, true) do
-      @user.exchange_accounts.create!(provider_type: "binance", api_key: "k", api_secret: "s")
-    end
+    other = @user.exchange_accounts.create!(provider_type: "binance", api_key: "k", api_secret: "s")
     Trade.create!(exchange_account: other, exchange_reference_id: "h2", symbol: "ETH-USDT", side: "buy", fee: 0, net_amount: -50, executed_at: Time.current, raw_payload: MINIMAL_RAW_PAYLOAD.dup)
     result = Trades::IndexService.call(user: @user, view: "history", exchange_account_id: @account.id)
     assert_equal 1, result[:positions].size
