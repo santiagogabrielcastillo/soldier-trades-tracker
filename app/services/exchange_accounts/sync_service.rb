@@ -3,17 +3,20 @@
 class ExchangeAccounts::SyncService
   # Binance userTrades only returns last 6 months; use that for first sync so we get history.
   BINANCE_LOOKBACK = 6.months
+  # Historic sync fetches from the earliest date either exchange has data for.
+  HISTORIC_SINCE = Time.new(2018, 1, 1).utc.freeze
 
   # Fetches trades from the account's provider, applies FinancialCalculator for trade-style
   # hashes, persists trades (rescues RecordNotUnique per row), rebuilds positions, then creates
   # SyncRun and updates last_synced_at. So last_synced_at only advances when positions are consistent.
   # Raises Exchanges::ApiError on API failure so the job can retry.
-  def self.call(account)
-    new(account).call
+  def self.call(account, historic: false)
+    new(account, historic: historic).call
   end
 
-  def initialize(account)
+  def initialize(account, historic: false)
     @account = account
+    @historic = historic
   end
 
   def call
@@ -33,13 +36,16 @@ class ExchangeAccounts::SyncService
 
   private
 
-  # Binance: use 6-month lookback when we have no trades yet or no previous sync (first run).
-  # Otherwise use last_synced_at for incremental sync; non-Binance uses anchor.
+  # Historic mode: fetch from 2018-01-01 regardless of account state.
+  # Binance first sync: use 6-month lookback (API limit) when no trades exist.
+  # Incremental: use last_synced_at; non-Binance first sync uses linked_at.
   def since_for_fetch(client)
+    return HISTORIC_SINCE if @historic
+
     anchor = @account.linked_at || @account.created_at
     use_binance_lookback = client.is_a?(Exchanges::BinanceClient) && (@account.trades.empty? || @account.last_synced_at.blank?)
     if use_binance_lookback
-      [ anchor, BINANCE_LOOKBACK.ago ].min
+      [ anchor, BINANCE_LOOKBACK.ago ].max
     elsif @account.last_synced_at.present?
       @account.last_synced_at
     else
