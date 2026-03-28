@@ -24,7 +24,6 @@ class ExchangeAccount < ApplicationRecord
 
   before_validation :normalize_allowed_quote_currencies
 
-  validate :read_only_api_key
   validate :allowed_quote_currencies_is_array
   validates :allowed_quote_currencies,
     length: { minimum: 1, message: "must contain at least one currency" },
@@ -70,13 +69,4 @@ class ExchangeAccount < ApplicationRecord
     settings.is_a?(Hash) ? settings["allowed_quote_currencies"] : nil
   end
 
-  # Binance and BingX are verified via ping; see ExchangeAccountKeyValidator. For either, any failed
-  # verification (invalid key, network, or not read-only) uses the same message below.
-  def read_only_api_key
-    return if api_key.blank? || api_secret.blank?
-
-    return if ExchangeAccountKeyValidator.read_only?(provider_type, api_key, api_secret)
-
-    errors.add(:base, "API key must be read-only. Keys with Trade or Withdraw permissions are not allowed.")
-  end
 end

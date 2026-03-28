@@ -21,9 +21,7 @@ module Spot
 
     test "calls Binance SpotTickerFetcher when user has Binance account" do
       @user.exchange_accounts.destroy_all
-      ExchangeAccountKeyValidator.stub(:read_only?, true) do
-        @user.exchange_accounts.create!(provider_type: "binance", api_key: "k", api_secret: "s")
-      end
+      @user.exchange_accounts.create!(provider_type: "binance", api_key: "k", api_secret: "s")
       stub_fetch = { "BTC" => BigDecimal("50000"), "ETH" => BigDecimal("3000") }
       Exchanges::Binance::SpotTickerFetcher.stub(:fetch_prices, stub_fetch) do
         result = CurrentPriceFetcher.call(user: @user, tokens: %w[BTC ETH])

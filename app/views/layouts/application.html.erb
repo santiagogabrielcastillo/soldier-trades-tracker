@@ -82,6 +82,11 @@
             <p class="px-6 py-2.5 text-sm font-medium text-amber-700"><%= flash[:alert] %></p>
           </div>
         <% end %>
+        <% if flash[:info] %>
+          <div class="border-b border-indigo-200 bg-indigo-50">
+            <p class="px-6 py-2.5 text-sm font-medium text-indigo-700"><%= flash[:info] %></p>
+          </div>
+        <% end %>
         <main class="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
           <%= yield %>
         </main>
@@ -97,6 +102,11 @@
       <% if flash[:alert] %>
         <div class="border-b border-amber-200 bg-amber-50">
           <p class="px-6 py-2.5 text-center text-sm font-medium text-amber-700"><%= flash[:alert] %></p>
+        </div>
+      <% end %>
+      <% if flash[:info] %>
+        <div class="border-b border-indigo-200 bg-indigo-50">
+          <p class="px-6 py-2.5 text-center text-sm font-medium text-indigo-700"><%= flash[:info] %></p>
         </div>
       <% end %>
       <main class="flex min-h-screen flex-col items-center justify-center px-4 py-16">

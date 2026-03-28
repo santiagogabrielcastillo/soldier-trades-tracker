@@ -5,15 +5,13 @@ require "test_helper"
 class SyncExchangeAccountJobTest < ActiveJob::TestCase
   setup do
     # Create account via model so api_key/api_secret are encrypted in-process (avoids Decryption in job).
-    ExchangeAccountKeyValidator.stub(:read_only?, true) do
-      @account = ExchangeAccount.create!(
-        user: users(:one),
-        provider_type: "bingx",
-        api_key: "test_key",
-        api_secret: "test_secret",
-        linked_at: 1.day.ago
-      )
-    end
+    @account = ExchangeAccount.create!(
+      user: users(:one),
+      provider_type: "bingx",
+      api_key: "test_key",
+      api_secret: "test_secret",
+      linked_at: 1.day.ago
+    )
   end
 
   test "perform uses FinancialCalculator for trade-style hashes and persists fee and net_amount" do

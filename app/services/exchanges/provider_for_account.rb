@@ -36,7 +36,7 @@ module Exchanges
     end
 
     # Validates credentials via provider ping. Returns true if valid/read-only, false otherwise.
-    # Used by ExchangeAccountKeyValidator. Call with provider_type + credentials (e.g. before save).
+    # Call with provider_type + credentials (e.g. before save).
     def self.ping?(provider_type:, api_key:, api_secret:)
       return true if api_key.blank? || api_secret.blank?
 
