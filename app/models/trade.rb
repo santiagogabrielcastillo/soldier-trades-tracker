@@ -4,6 +4,11 @@ class Trade < ApplicationRecord
   has_many :positions, through: :position_trades
 
   validates :exchange_reference_id, uniqueness: { scope: :exchange_account_id }
+  validates :symbol, :side, :net_amount, :executed_at, presence: true
+
+  def manual?
+    exchange_reference_id.to_s.start_with?("manual_")
+  end
 
   # Parses raw_payload["leverage"] (e.g. "10X") to a number. Returns nil if missing or unparseable.
   def leverage_from_raw
