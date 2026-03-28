@@ -62,11 +62,7 @@ test:
 production:
   primary:
     <<: *default
-    database: soldier_trades_tracker_production
-    username: soldier_trades_tracker
-    password: <%= ENV["SOLDIER_TRADES_TRACKER_DATABASE_PASSWORD"] %>
+    url: <%= ENV["DATABASE_URL"] %>
   queue:
     <<: *default
-    database: soldier_trades_tracker_queue_production
-    username: soldier_trades_tracker
-    password: <%= ENV["SOLDIER_TRADES_TRACKER_DATABASE_PASSWORD"] %>
+    url: <%= ENV["DATABASE_URL"] %>

@@ -199,6 +199,20 @@
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
           <% end %>
         <% end %>
+        <%# ── Totals row ── %>
+        <% total_usd = @mep_rate&.positive? ? (@stocks_value / @mep_rate).round(2) : nil %>
+        <% table.with_row(classes: "border-t-2 border-slate-200 bg-slate-50") do %>
+          <td class="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900">TOTAL</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-slate-900" data-stocks-table-target="moneyCell"><%= format_ars(@stocks_value) %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-slate-900" data-stocks-table-target="moneyCell"><%= total_usd ? format_money(total_usd) : "—" %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+        <% end %>
       <% end %>
       <% unless Stocks::IolClient.credentials %>
         <p class="mt-3 text-sm text-slate-500">Set <code class="rounded bg-slate-100 px-1 text-xs">IOL_USERNAME</code> and <code class="rounded bg-slate-100 px-1 text-xs">IOL_PASSWORD</code> to enable live quotes.</p>
@@ -244,6 +258,17 @@
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
           <% end %>
+        <% end %>
+        <%# ── Totals row ── %>
+        <% table.with_row(classes: "border-t-2 border-slate-200 bg-slate-50") do %>
+          <td class="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900">TOTAL</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-slate-900" data-stocks-table-target="moneyCell"><%= format_money(@stocks_value) %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
         <% end %>
       <% end %>
       <p class="mt-3 text-sm text-slate-500">Prices via Finnhub. Set <code class="rounded bg-slate-100 px-1 text-xs">FINNHUB_API_KEY</code> to enable live quotes.</p>

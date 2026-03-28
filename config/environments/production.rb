@@ -70,12 +70,12 @@ Rails.application.configure do
 
   # Active Record encryption keys — set via environment variables.
   # Generate with: bin/rails db:encryption:init
-  config.active_record.encryption.primary_key         = ENV.fetch("ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY")
-  config.active_record.encryption.deterministic_key   = ENV.fetch("ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY")
-  config.active_record.encryption.key_derivation_salt = ENV.fetch("ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT")
+  config.active_record.encryption.primary_key         = ENV["ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY"]
+  config.active_record.encryption.deterministic_key   = ENV["ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY"]
+  config.active_record.encryption.key_derivation_salt = ENV["ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT"]
 
   # DNS rebinding protection — restrict to your domain.
   # Set APP_HOST in your environment (e.g. "trades.example.com").
-  config.hosts = [ ENV.fetch("APP_HOST") ]
+  config.hosts << ENV["APP_HOST"] if ENV["APP_HOST"]
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end
