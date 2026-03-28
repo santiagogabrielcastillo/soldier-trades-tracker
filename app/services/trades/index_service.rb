@@ -60,7 +60,7 @@ class Trades::IndexService
 
   def load_positions_with_fallback(portfolio, initial_balance)
     positions_relation = load_positions(portfolio)
-    positions = positions_relation.ordered_for_display.includes(:exchange_account).to_a
+    positions = positions_relation.ordered_for_display.includes(:exchange_account, trades: :exchange_account).to_a
     if positions.any?
       Position.assign_balance!(positions, initial_balance: initial_balance)
       return positions
