@@ -5,11 +5,11 @@ export default class extends Controller {
   connect() { this.updateNetAmount() }
 
   updateNetAmount() {
+    if (!this.hasNetAmountPreviewTarget) return
+
     const qty   = parseFloat(this.quantityTarget?.value) || 0
     const price = parseFloat(this.priceTarget?.value)   || 0
     const side  = this.element.querySelector('select[name$="[side]"]')?.value || "buy"
-
-    if (!this.hasNetAmountPreviewTarget) return
 
     if (qty <= 0 || price <= 0) {
       this.netAmountPreviewTarget.textContent = "—"
