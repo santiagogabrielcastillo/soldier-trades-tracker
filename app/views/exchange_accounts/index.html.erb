@@ -43,6 +43,7 @@
               <% elsif provider_supported && !account.can_sync? %>
                 <span class="text-sm text-slate-400">Rate limit (2/day)</span>
               <% end %>
+              <%= link_to "Add trade", new_exchange_account_manual_trade_path(account), class: "text-sm text-slate-600 hover:text-slate-900" %>
               <%= link_to "Settings", edit_exchange_account_path(account), class: "text-sm text-slate-600 hover:text-slate-900" %>
               <%= button_to "Remove", exchange_account_path(account), method: :delete, data: { turbo_confirm: "Remove this exchange account?" }, class: "text-sm text-slate-600 hover:text-red-600" %>
             </div>
