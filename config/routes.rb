@@ -18,6 +18,7 @@ Rails.application.routes.draw do
   resources :exchange_accounts, only: %i[index new create destroy edit update] do
     member do
       post :sync
+      resources :manual_trades, only: %i[new create edit update destroy]
     end
   end
   resources :trades, only: :index
