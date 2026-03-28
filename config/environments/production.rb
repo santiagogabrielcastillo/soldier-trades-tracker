@@ -18,7 +18,7 @@ Rails.application.configure do
 
   # Ensures that a master key has been made available in ENV["RAILS_MASTER_KEY"],
   # config/master.key, or an environment key such as config/credentials/production.key.
-  config.require_master_key = true
+  config.require_master_key = ENV["SECRET_KEY_BASE_DUMMY"].nil?
 
   # Serve static files directly from Rails (Kamal proxy does not serve static files).
   config.public_file_server.enabled = true
