@@ -130,8 +130,11 @@ class PositionSummary
       remainder.remaining_quantity = remaining_qty
       remainder.remaining_margin_used = remainder_margin
       rows << remainder
-    elsif total_closed_qty > open_qty
-      # Over-close: excess closed qty opened a new position in the opposite direction. Emit one open row for it.
+    elsif from_both_chain && total_closed_qty > open_qty
+      # Over-close in Binance BOTH-chain mode: excess closed qty opened a new position in the opposite direction.
+      # Only applicable to BOTH-chain (Binance one-way mode) where a single fill can close and flip direction.
+      # For hedge-mode positions (from_both_chain: false, e.g. BingX reduceOnly trades), an over-close means
+      # missing open trades in the data — do NOT emit a phantom open row.
       excess_qty = (total_closed_qty - open_qty).round(8)
       first_close = closing.first
       entry = entry_price_from_trade(first_close)
