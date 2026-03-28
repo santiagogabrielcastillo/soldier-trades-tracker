@@ -67,6 +67,59 @@ class ManualTradesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  # --- GET edit ---
+
+  test "GET edit scopes to current user's accounts (404 on another user's account)" do
+    sign_in_as(@user)
+    other_account = exchange_accounts(:two)
+    ts_ms = (Time.current.to_f * 1000).to_i
+    other_trade = other_account.trades.create!(
+      exchange_reference_id: "manual_#{ts_ms}_other001",
+      symbol: "BTC-USDT",
+      side: "buy",
+      net_amount: -25000,
+      executed_at: 1.day.ago,
+      raw_payload: { "side" => "BUY", "executedQty" => "0.5", "avgPrice" => "50000.0",
+                     "positionSide" => "LONG", "reduceOnly" => false, "profit" => "0" }
+    )
+    get edit_exchange_account_manual_trade_path(other_account, other_trade)
+    assert_response :not_found
+  end
+
+  test "PATCH update scopes to current user's accounts (404 on another user's account)" do
+    sign_in_as(@user)
+    other_account = exchange_accounts(:two)
+    ts_ms = (Time.current.to_f * 1000).to_i
+    other_trade = other_account.trades.create!(
+      exchange_reference_id: "manual_#{ts_ms}_other002",
+      symbol: "BTC-USDT",
+      side: "buy",
+      net_amount: -25000,
+      executed_at: 1.day.ago,
+      raw_payload: { "side" => "BUY", "executedQty" => "0.5", "avgPrice" => "50000.0",
+                     "positionSide" => "LONG", "reduceOnly" => false, "profit" => "0" }
+    )
+    patch exchange_account_manual_trade_path(other_account, other_trade), params: { manual_trade: valid_params }
+    assert_response :not_found
+  end
+
+  test "DELETE destroy scopes to current user's accounts (404 on another user's account)" do
+    sign_in_as(@user)
+    other_account = exchange_accounts(:two)
+    ts_ms = (Time.current.to_f * 1000).to_i
+    other_trade = other_account.trades.create!(
+      exchange_reference_id: "manual_#{ts_ms}_other003",
+      symbol: "BTC-USDT",
+      side: "buy",
+      net_amount: -25000,
+      executed_at: 1.day.ago,
+      raw_payload: { "side" => "BUY", "executedQty" => "0.5", "avgPrice" => "50000.0",
+                     "positionSide" => "LONG", "reduceOnly" => false, "profit" => "0" }
+    )
+    delete exchange_account_manual_trade_path(other_account, other_trade)
+    assert_response :not_found
+  end
+
   # --- DELETE destroy ---
 
   test "DELETE destroy deletes trade and rebuilds positions" do
