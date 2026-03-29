@@ -5,7 +5,7 @@ class StockPortfolioSnapshot < ApplicationRecord
 
   SOURCES = %w[weekly monthly manual].freeze
 
-  validates :total_value, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :total_value, presence: true, numericality: true
   validates :cash_flow, presence: true, numericality: true
   validates :recorded_at, presence: true
   validates :source, inclusion: { in: SOURCES }

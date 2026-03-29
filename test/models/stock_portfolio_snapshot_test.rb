@@ -21,9 +21,9 @@ class StockPortfolioSnapshotTest < ActiveSupport::TestCase
     assert_includes snapshot.errors[:total_value], "can't be blank"
   end
 
-  test "invalid when total_value is negative" do
+  test "valid when total_value is negative" do
     snapshot = build_snapshot(total_value: "-1", cash_flow: "0")
-    assert_not snapshot.valid?
+    assert snapshot.valid?
   end
 
   test "valid when total_value is zero" do
