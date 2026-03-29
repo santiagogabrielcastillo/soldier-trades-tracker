@@ -4,16 +4,15 @@ require "net/http"
 
 module Exchanges
   module Binance
-    # Fetches current price for Spot symbols via Binance public API (no authentication).
-    # Uses batch endpoint: GET /api/v3/ticker/price?symbols=["LDOUSDT","AVAXUSDT"] (weight 4).
-    # Used for spot portfolio unrealized PnL.
+    # Fetches current price for Spot tokens via Binance public Futures API (no authentication).
+    # Uses /fapi/v1/ticker/price?symbol=XXXUSDT — one request per token.
+    # fapi.binance.com is used because api.binance.com (Spot domain) is geo-blocked on some
+    # cloud providers (e.g. Railway/AWS). The Futures ticker price is equivalent for major tokens.
+    # Note: fapi does NOT support the `symbols` batch parameter (Spot API feature); individual
+    # requests per token are used instead.
     class SpotTickerFetcher
-      # Uses fapi.binance.com (futures domain) because api.binance.com is geo-blocked
-      # on some cloud providers (e.g. Railway/AWS). The /fapi/v2/ticker/price endpoint
-      # returns the latest price for USDT-margined futures symbols and is unauthenticated.
-      # Price accuracy for spot-portfolio display is identical for all major tokens.
       BASE_URL = "https://fapi.binance.com"
-      TICKER_PRICE_PATH = "/fapi/v2/ticker/price"
+      TICKER_PRICE_PATH = "/fapi/v1/ticker/price"
       OPEN_TIMEOUT = 5
       READ_TIMEOUT = 10
 
@@ -27,9 +26,21 @@ module Exchanges
         return {} if tokens.blank?
         tokens = tokens.uniq.map { |t| t.to_s.strip.upcase }.reject(&:blank?)
         return {} if tokens.empty?
-        symbols = tokens.map { |t| "#{t}USDT" }
+
+        result = {}
+        tokens.each do |token|
+          price = fetch_one(token)
+          result[token] = price if price.present?
+        end
+        result
+      end
+
+      private
+
+      def fetch_one(token)
+        symbol = "#{token}USDT"
         uri = URI("#{BASE_URL}#{TICKER_PRICE_PATH}")
-        uri.query = URI.encode_www_form("symbols" => symbols.to_json)
+        uri.query = URI.encode_www_form("symbol" => symbol)
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true
         http.open_timeout = OPEN_TIMEOUT
@@ -37,31 +48,21 @@ module Exchanges
         req = Net::HTTP::Get.new(uri)
         res = http.request(req)
         unless res.code.to_s == "200"
-          Rails.logger.warn("[Binance::SpotTickerFetcher] HTTP #{res.code}: #{res.body.to_s[0..200]}")
-          return {}
+          Rails.logger.warn("[Binance::SpotTickerFetcher] HTTP #{res.code} for #{token}: #{res.body.to_s[0..200]}")
+          return nil
         end
         data = JSON.parse(res.body)
-        data = [ data ] unless data.is_a?(Array)
-        result = {}
-        data.each do |item|
-          symbol = item["symbol"].to_s
-          token = symbol.sub(/\A(.+)USDT\z/i, "\\1")
-          price = extract_price(item)
-          result[token] = price if token.present? && price.present?
-        end
-        result
+        extract_price(data)
       rescue Net::OpenTimeout, Net::ReadTimeout, Timeout::Error => e
-        Rails.logger.warn("[Binance::SpotTickerFetcher] Timeout: #{e.message}")
-        {}
+        Rails.logger.warn("[Binance::SpotTickerFetcher] Timeout for #{token}: #{e.message}")
+        nil
       rescue JSON::ParserError => e
-        Rails.logger.warn("[Binance::SpotTickerFetcher] Parse error: #{e.message}")
-        {}
+        Rails.logger.warn("[Binance::SpotTickerFetcher] Parse error for #{token}: #{e.message}")
+        nil
       rescue StandardError => e
-        Rails.logger.warn("[Binance::SpotTickerFetcher] Error: #{e.class} #{e.message}")
-        {}
+        Rails.logger.warn("[Binance::SpotTickerFetcher] Error for #{token}: #{e.class} #{e.message}")
+        nil
       end
-
-      private
 
       def extract_price(item)
         return nil if item.blank?

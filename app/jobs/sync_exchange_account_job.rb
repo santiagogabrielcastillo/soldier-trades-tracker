@@ -6,11 +6,11 @@ class SyncExchangeAccountJob < ApplicationJob
   retry_on Exchanges::ApiError, wait: :polynomially_longer, attempts: 5
 
   # Rate limit: caller (dispatcher) must ensure this account has fewer than 2 sync runs today (UTC).
-  def perform(exchange_account_id, historic: false)
+  def perform(exchange_account_id, historic: false, extra_symbols: [])
     account = ExchangeAccount.find_by(id: exchange_account_id)
     return unless account
 
-    ExchangeAccounts::SyncService.call(account, historic: historic)
+    ExchangeAccounts::SyncService.call(account, historic: historic, extra_symbols: extra_symbols)
     account.update_columns(last_sync_failed_at: nil, last_sync_error: nil)
   rescue ArgumentError => e
     Rails.logger.error("[SyncExchangeAccountJob] account_id=#{exchange_account_id} #{e.message}")

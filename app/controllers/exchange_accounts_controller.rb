@@ -69,7 +69,8 @@ class ExchangeAccountsController < ApplicationController
       redirect_to exchange_accounts_path, alert: "This exchange is not supported for sync."
       return
     end
-    SyncExchangeAccountJob.perform_later(@exchange_account.id, historic: true)
+    extra_symbols = params[:extra_symbols].to_s.split(/[\s,]+/).map(&:strip).map(&:upcase).reject(&:blank?)
+    SyncExchangeAccountJob.perform_later(@exchange_account.id, historic: true, extra_symbols: extra_symbols)
     redirect_to exchange_accounts_path, notice: "Historic sync started. This may take a few minutes."
   end
 
