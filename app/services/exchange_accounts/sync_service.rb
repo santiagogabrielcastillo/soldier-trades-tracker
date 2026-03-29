@@ -24,7 +24,12 @@ class ExchangeAccounts::SyncService
     raise ArgumentError, "Unsupported provider or missing credentials" unless client
 
     since = since_for_fetch(client)
-    trades = client.fetch_my_trades(since: since)
+    extra_symbols = historic_extra_symbols(client)
+    trades = if extra_symbols.any?
+      client.fetch_my_trades(since: since, extra_symbols: extra_symbols)
+    else
+      client.fetch_my_trades(since: since)
+    end
 
     trades.each { |attrs| persist_trade(attrs) }
 
@@ -51,6 +56,17 @@ class ExchangeAccounts::SyncService
     else
       anchor
     end
+  end
+
+  # For historic syncs on Binance: supplement API-discovered symbols with symbols
+  # already in the DB so we don't miss trades for symbols with no recent income data.
+  def historic_extra_symbols(client)
+    return [] unless @historic && client.is_a?(Exchanges::BinanceClient)
+    @account.trades
+            .where.not(symbol: [nil, ""])
+            .distinct
+            .pluck(:symbol)
+            .filter_map { |s| s.gsub("-", "") }  # "BTC-USDT" → "BTCUSDT"
   end
 
   def persist_trade(attrs)

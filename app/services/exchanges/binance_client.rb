@@ -39,9 +39,9 @@ module Exchanges
     # (API limit), normalizes, dedupes by exchange_reference_id, sorts by executed_at.
     # Note: discover_symbols (income pagination) is unfiltered — the whitelist only prevents
     # userTrades API calls for excluded symbols, not the discovery calls themselves.
-    def fetch_my_trades(since:)
+    def fetch_my_trades(since:, extra_symbols: [])
       since_ms = time_to_ms(since)
-      symbols = discover_symbols(since_ms)
+      symbols = (discover_symbols(since_ms) + Array(extra_symbols)).uniq
       return [] if symbols.empty?
 
       all_trades = []
@@ -121,7 +121,10 @@ module Exchanges
     # Paginate income (max 1000 per call) so we don't miss symbols when there are many REALIZED_PNL records.
     def symbols_from_income(since_ms)
       end_ms = (Time.now.to_f * 1000).to_i
-      start_ms = [ since_ms, end_ms - INCOME_LOOKBACK_MS ].min
+      # Income API only holds ~6 months of data. Always cap the start time to the
+      # lookback window so a historic since_ms (e.g. 2018-01-01) doesn't produce an
+      # empty first page that causes the loop to exit with zero symbols.
+      start_ms = [ since_ms, end_ms - INCOME_LOOKBACK_MS ].max
       symbols = []
       loop do
         resp = signed_get(INCOME_PATH, "incomeType" => "REALIZED_PNL", "startTime" => start_ms, "endTime" => end_ms, "limit" => INCOME_LIMIT)

@@ -8,8 +8,12 @@ module Exchanges
     # Uses batch endpoint: GET /api/v3/ticker/price?symbols=["LDOUSDT","AVAXUSDT"] (weight 4).
     # Used for spot portfolio unrealized PnL.
     class SpotTickerFetcher
-      BASE_URL = "https://api.binance.com"
-      TICKER_PRICE_PATH = "/api/v3/ticker/price"
+      # Uses fapi.binance.com (futures domain) because api.binance.com is geo-blocked
+      # on some cloud providers (e.g. Railway/AWS). The /fapi/v2/ticker/price endpoint
+      # returns the latest price for USDT-margined futures symbols and is unauthenticated.
+      # Price accuracy for spot-portfolio display is identical for all major tokens.
+      BASE_URL = "https://fapi.binance.com"
+      TICKER_PRICE_PATH = "/fapi/v2/ticker/price"
       OPEN_TIMEOUT = 5
       READ_TIMEOUT = 10
 
