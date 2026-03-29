@@ -43,6 +43,9 @@
               <% elsif provider_supported && !account.can_sync? %>
                 <span class="text-sm text-slate-400">Rate limit (2/day)</span>
               <% end %>
+              <% if provider_supported && current_user.admin? %>
+                <%= button_to "Historic sync", historic_sync_exchange_account_path(account), method: :post, data: { turbo_confirm: "Fetch all trades from 2018 onwards? This may take a few minutes." }, class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50" %>
+              <% end %>
               <%= link_to "Add trade", new_exchange_account_manual_trade_path(account), class: "text-sm text-slate-600 hover:text-slate-900" %>
               <%= link_to "Settings", edit_exchange_account_path(account), class: "text-sm text-slate-600 hover:text-slate-900" %>
               <%= button_to "Remove", exchange_account_path(account), method: :delete, data: { turbo_confirm: "Remove this exchange account?" }, class: "text-sm text-slate-600 hover:text-red-600" %>

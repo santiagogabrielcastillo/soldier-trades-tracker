@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ExchangeAccountsController < ApplicationController
-  before_action :set_exchange_account, only: %i[destroy sync edit update]
+  before_action :set_exchange_account, only: %i[destroy sync historic_sync edit update]
 
   def index
     @pagy, @exchange_accounts = pagy(:offset, current_user.exchange_accounts, limit: 25)
@@ -58,6 +58,19 @@ class ExchangeAccountsController < ApplicationController
     end
     SyncExchangeAccountJob.perform_later(@exchange_account.id)
     redirect_to exchange_accounts_path, notice: "Sync started. Trades will appear shortly."
+  end
+
+  def historic_sync
+    unless current_user.admin?
+      redirect_to exchange_accounts_path, alert: "Not authorized."
+      return
+    end
+    unless Exchanges::ProviderForAccount.new(@exchange_account).supported?
+      redirect_to exchange_accounts_path, alert: "This exchange is not supported for sync."
+      return
+    end
+    SyncExchangeAccountJob.perform_later(@exchange_account.id, historic: true)
+    redirect_to exchange_accounts_path, notice: "Historic sync started. This may take a few minutes."
   end
 
   private
