@@ -80,8 +80,16 @@ module Allocations
     end
 
     def spot_account_usd(spot)
-      # net capital deposited into the spot account (deposits - withdrawals)
-      spot.cash_balance.to_d
+      positions = Spot::PositionStateService.call(spot_account: spot)
+      open_positions = positions.select(&:open?)
+      crypto_value = if open_positions.any?
+        tokens = open_positions.map(&:token).uniq
+        prices = Spot::CurrentPriceFetcher.call(tokens: tokens)
+        open_positions.sum(BigDecimal("0")) { |pos| (prices[pos.token] || 0).to_d * pos.balance }
+      else
+        BigDecimal("0")
+      end
+      crypto_value + spot.cash_balance.to_d
     end
 
     def unassigned_sources

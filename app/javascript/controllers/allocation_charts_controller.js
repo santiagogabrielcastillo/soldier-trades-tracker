@@ -4,6 +4,9 @@ export default class extends Controller {
   static values = { data: Object }
   static targets = ["pie", "bar"]
 
+  #pieChart
+  #barChart
+
   connect() {
     if (this.hasPieTarget) this.#buildPie()
     if (this.hasBarTarget) this.#buildBar()
