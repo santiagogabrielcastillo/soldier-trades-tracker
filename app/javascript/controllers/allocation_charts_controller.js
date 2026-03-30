@@ -1,4 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
+import { Chart, registerables } from "chart.js"
+
+Chart.register(...registerables)
 
 export default class extends Controller {
   static values = { data: Object }
@@ -18,8 +21,6 @@ export default class extends Controller {
   }
 
   #buildPie() {
-    const { Chart } = window
-    if (!Chart) return
     const { buckets } = this.dataValue
     if (!buckets?.length) return
 
@@ -37,8 +38,6 @@ export default class extends Controller {
   }
 
   #buildBar() {
-    const { Chart } = window
-    if (!Chart) return
     const { buckets } = this.dataValue
     const withTargets = (buckets || []).filter(b => b.target_pct != null)
     if (!withTargets.length) return
