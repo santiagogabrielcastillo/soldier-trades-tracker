@@ -59,24 +59,31 @@ class Exchanges::Binance::CsvParserTest < ActiveSupport::TestCase
   end
 
   test "skips rows where Trade ID is blank" do
-    csv = VALID_CSV.lines.first +
+    csv = VALID_CSV +
           "862706699,26-03-17 09:34:12,BTCUSDT,BUY,100,1,100,0.1 USDT,0,true,false,,123\n"
     trades = Exchanges::Binance::CsvParser.call(StringIO.new(csv))
-    assert_equal 0, trades.size
+    assert_equal 3, trades.size
   end
 
   test "skips rows with unparseable date" do
-    csv = VALID_CSV.lines.first +
+    csv = VALID_CSV +
           "862706699,NOTADATE,BTCUSDT,BUY,100,1,100,0.1 USDT,0,true,false,999,888\n"
     trades = Exchanges::Binance::CsvParser.call(StringIO.new(csv))
-    assert_equal 0, trades.size
+    assert_equal 3, trades.size
   end
 
   test "skips rows where side is not buy or sell" do
-    csv = VALID_CSV.lines.first +
+    csv = VALID_CSV +
           "862706699,26-03-17 09:34:12,BTCUSDT,TRANSFER,100,1,100,0.1 USDT,0,true,false,999,888\n"
     trades = Exchanges::Binance::CsvParser.call(StringIO.new(csv))
-    assert_equal 0, trades.size
+    assert_equal 3, trades.size
+  end
+
+  test "skips rows with zero price or zero quantity" do
+    csv = VALID_CSV +
+          "862706699,26-03-17 09:34:12,BTCUSDT,BUY,0,0,0,0.1 USDT,0,true,false,ZEROPRICE,888\n"
+    trades = Exchanges::Binance::CsvParser.call(StringIO.new(csv))
+    assert_equal 3, trades.size
   end
 
   test "raises ParseError when required headers are missing" do

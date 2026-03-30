@@ -62,6 +62,10 @@ module Exchanges
         side = row["Side"]&.to_s&.strip&.downcase
         return nil unless %w[buy sell].include?(side)
 
+        price    = row["Price"].to_d
+        quantity = row["Quantity"].to_d
+        return nil if price.zero? || quantity.zero?
+
         symbol = Binance::TradeNormalizer.normalize_symbol(symbol_raw)
         return nil if symbol.blank?
 
@@ -69,8 +73,8 @@ module Exchanges
           exchange_reference_id: trade_id,
           symbol:                symbol,
           side:                  side,
-          price:                 row["Price"].to_d,
-          quantity:              row["Quantity"].to_d,
+          price:                 price,
+          quantity:              quantity,
           fee_from_exchange:     parse_fee(row["Fee"]),
           executed_at:           executed_at,
           raw_payload:           row.to_h.merge(
