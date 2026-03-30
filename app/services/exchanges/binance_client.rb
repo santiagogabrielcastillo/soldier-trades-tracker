@@ -42,17 +42,25 @@ module Exchanges
     def fetch_my_trades(since:, extra_symbols: [])
       since_ms = time_to_ms(since)
       symbols = (discover_symbols(since_ms) + Array(extra_symbols)).uniq
+      Rails.logger.info("[BinanceClient] account fetch_my_trades: since=#{since}, discovered #{symbols.size} symbol(s): #{symbols.inspect}")
       return [] if symbols.empty?
 
       all_trades = []
       symbols.each do |raw_symbol|
         # Normalize to app format (e.g. BTCUSDC → BTC-USDC) to check quote currency before fetching.
         normalized = Binance::TradeNormalizer.normalize_symbol(raw_symbol)
-        next unless allowed_quote?(normalized)
-        all_trades.concat(fetch_user_trades_for_symbol(raw_symbol, since_ms))
+        unless allowed_quote?(normalized)
+          Rails.logger.info("[BinanceClient] skipping #{raw_symbol} (quote currency not in whitelist)")
+          next
+        end
+        trades = fetch_user_trades_for_symbol(raw_symbol, since_ms)
+        Rails.logger.info("[BinanceClient] #{raw_symbol}: #{trades.size} trade(s)")
+        all_trades.concat(trades)
       end
 
-      all_trades.uniq { |t| t[:exchange_reference_id] }.sort_by { |t| t[:executed_at] }
+      result = all_trades.uniq { |t| t[:exchange_reference_id] }.sort_by { |t| t[:executed_at] }
+      Rails.logger.info("[BinanceClient] total trades after dedup: #{result.size}")
+      result
     end
 
     def self.ping(api_key:, api_secret:)
@@ -111,11 +119,13 @@ module Exchanges
       check_binance_error!(resp)
       return [] unless resp.is_a?(Array)
 
-      resp.filter_map do |pos|
+      symbols = resp.filter_map do |pos|
         amt = (pos["positionAmt"] || pos["position_amt"] || 0).to_d
         next if amt.zero?
         pos["symbol"]&.to_s&.strip
       end.uniq
+      Rails.logger.info("[BinanceClient] positionRisk: #{resp.size} position(s) returned, #{symbols.size} with non-zero amt: #{symbols.inspect}")
+      symbols
     end
 
     # Paginate income (max 1000 per call) so we don't miss symbols when there are many REALIZED_PNL records.
@@ -125,11 +135,15 @@ module Exchanges
       # lookback window so a historic since_ms (e.g. 2018-01-01) doesn't produce an
       # empty first page that causes the loop to exit with zero symbols.
       start_ms = [ since_ms, end_ms - INCOME_LOOKBACK_MS ].max
+      Rails.logger.info("[BinanceClient] income discovery: startTime=#{Time.at(start_ms / 1000).utc} endTime=#{Time.at(end_ms / 1000).utc}")
       symbols = []
+      pages = 0
       loop do
         resp = signed_get(INCOME_PATH, "incomeType" => "REALIZED_PNL", "startTime" => start_ms, "endTime" => end_ms, "limit" => INCOME_LIMIT)
         check_binance_error!(resp)
         break unless resp.is_a?(Array)
+        pages += 1
+        Rails.logger.info("[BinanceClient] income page #{pages}: #{resp.size} record(s)")
 
         resp.each do |rec|
           s = rec["symbol"]&.to_s&.strip
@@ -140,7 +154,9 @@ module Exchanges
         break if last_time.nil?
         start_ms = last_time.to_i + 1
       end
-      symbols.uniq
+      unique = symbols.uniq
+      Rails.logger.info("[BinanceClient] income discovery done: #{unique.size} unique symbol(s): #{unique.inspect}")
+      unique
     end
 
     def fetch_user_trades_for_symbol(symbol, since_ms)

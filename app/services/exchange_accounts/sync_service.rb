@@ -63,7 +63,7 @@ class ExchangeAccounts::SyncService
   # 1. Symbols already in the DB (for re-syncs or symbols with no recent income data)
   # 2. Symbols passed explicitly by the caller (e.g. from the historic sync UI form)
   def historic_extra_symbols(client)
-    return @extra_symbols_from_params if !@historic || !client.is_a?(Exchanges::BinanceClient)
+    return [] unless @historic && client.is_a?(Exchanges::BinanceClient)
     db_symbols = @account.trades
                          .where.not(symbol: [nil, ""])
                          .distinct
