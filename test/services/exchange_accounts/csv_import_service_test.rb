@@ -78,4 +78,35 @@ class ExchangeAccounts::CsvImportServiceTest < ActiveSupport::TestCase
       ExchangeAccounts::CsvImportService.call(exchange_account: @account, csv_io: StringIO.new(bad_csv))
     end
   end
+
+  test "counts skipped when RecordNotUnique is raised" do
+    original_save = Trade.instance_method(:save!)
+    Trade.define_method(:save!) { raise ActiveRecord::RecordNotUnique }
+
+    result = ExchangeAccounts::CsvImportService.call(
+      exchange_account: @account,
+      csv_io: StringIO.new(TWO_ROW_CSV)
+    )
+
+    assert_equal 0, result.created
+    assert_equal 2, result.skipped
+  ensure
+    Trade.define_method(:save!, original_save)
+  end
+
+  test "appends error message when RecordInvalid is raised" do
+    original_save = Trade.instance_method(:save!)
+    Trade.define_method(:save!) { raise ActiveRecord::RecordInvalid.new(Trade.new) }
+
+    result = ExchangeAccounts::CsvImportService.call(
+      exchange_account: @account,
+      csv_io: StringIO.new(TWO_ROW_CSV)
+    )
+
+    assert_equal 0, result.created
+    assert_equal 2, result.errors.size
+    assert result.errors.first.include?("Row")
+  ensure
+    Trade.define_method(:save!, original_save)
+  end
 end
