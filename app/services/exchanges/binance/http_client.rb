@@ -42,6 +42,9 @@ module Exchanges
         if code != "200"
           parsed = (JSON.parse(res.body) if res.body.presence) rescue nil
           msg = parsed&.dig("msg") || parsed&.dig("message") || res.body.to_s[0..500]
+          if msg.to_s.include?("restricted location") || msg.to_s.include?("Eligibility")
+            raise ApiError, "Binance API is geo-restricted from this server's location. Binance blocks access from certain cloud providers (e.g. AWS/Railway). Trades cannot be synced from this host."
+          end
           if code == "429" || code.start_with?("5")
             retry_after = res["Retry-After"]&.to_i
             raise ApiError.new("Binance API error #{code}: #{msg}", response_code: code, retry_after: retry_after)

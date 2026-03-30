@@ -4,19 +4,84 @@ require "net/http"
 
 module Exchanges
   module Binance
-    # Fetches current price for Spot tokens via Binance public Futures API (no authentication).
-    # Uses /fapi/v1/ticker/price?symbol=XXXUSDT — one request per token.
-    # fapi.binance.com is used because api.binance.com (Spot domain) is geo-blocked on some
-    # cloud providers (e.g. Railway/AWS). The Futures ticker price is equivalent for major tokens.
-    # Note: fapi does NOT support the `symbols` batch parameter (Spot API feature); individual
-    # requests per token are used instead.
+    # Fetches current USD prices for spot tokens via the CoinGecko public API (no authentication).
+    # Uses GET /api/v3/simple/price?ids=...&vs_currencies=usd — one batched request for all tokens.
+    # CoinGecko is used instead of Binance because Binance (fapi.binance.com) is geo-blocked from
+    # some cloud providers such as Railway/AWS.
+    #
+    # Symbol → CoinGecko ID mapping: common tokens are listed in SYMBOL_TO_ID; unknown tokens fall
+    # back to the lowercase symbol (works for many tokens whose CoinGecko ID matches their ticker,
+    # e.g. "aave" → "aave"). The reverse mapping (id → token symbol) is used when building the
+    # result hash so callers always receive the original token symbol as the key.
     class SpotTickerFetcher
-      BASE_URL = "https://fapi.binance.com"
-      TICKER_PRICE_PATH = "/fapi/v1/ticker/price"
+      BASE_URL = "https://api.coingecko.com"
+      SIMPLE_PRICE_PATH = "/api/v3/simple/price"
       OPEN_TIMEOUT = 5
-      READ_TIMEOUT = 10
+      READ_TIMEOUT = 15
 
-      # @param tokens [Array<String>] list of token symbols (e.g. ["LDO", "AVAX"])
+      # Mapping from uppercase token symbol to CoinGecko coin ID.
+      # Add entries here whenever a symbol's CoinGecko ID differs from its lowercase ticker.
+      SYMBOL_TO_ID = {
+        "BTC"   => "bitcoin",
+        "ETH"   => "ethereum",
+        "SOL"   => "solana",
+        "BNB"   => "binancecoin",
+        "XRP"   => "ripple",
+        "ADA"   => "cardano",
+        "DOT"   => "polkadot",
+        "DOGE"  => "dogecoin",
+        "SHIB"  => "shiba-inu",
+        "LTC"   => "litecoin",
+        "AVAX"  => "avalanche-2",
+        "LINK"  => "chainlink",
+        "ATOM"  => "cosmos",
+        "UNI"   => "uniswap",
+        "MATIC" => "matic-network",
+        "POL"   => "matic-network",
+        "FTM"   => "fantom",
+        "NEAR"  => "near",
+        "ALGO"  => "algorand",
+        "ETC"   => "ethereum-classic",
+        "TRX"   => "tron",
+        "XLM"   => "stellar",
+        "VET"   => "vechain",
+        "FIL"   => "filecoin",
+        "HBAR"  => "hedera-hashgraph",
+        "SAND"  => "the-sandbox",
+        "MANA"  => "decentraland",
+        "AXS"   => "axie-infinity",
+        "LUNA"  => "terra-luna-2",
+        "APE"   => "apecoin",
+        "OP"    => "optimism",
+        "ARB"   => "arbitrum",
+        "SUI"   => "sui",
+        "INJ"   => "injective-protocol",
+        "MKR"   => "maker",
+        "COMP"  => "compound-governance-token",
+        "SNX"   => "havven",
+        "CRV"   => "curve-dao-token",
+        "LDO"   => "lido-dao",
+        "GRT"   => "the-graph",
+        "SUSHI" => "sushi",
+        "YFI"   => "yearn-finance",
+        "1INCH" => "1inch",
+        "GMX"   => "gmx",
+        "WLD"   => "worldcoin-wld",
+        "ARK"   => "ark",
+        "TIA"   => "celestia",
+        "SEI"   => "sei-network",
+        "JUP"   => "jupiter-exchange-solana",
+        "PYTH"  => "pyth-network",
+        "W"     => "wormhole",
+        "ENA"   => "ethena",
+        "EIGEN" => "eigenlayer",
+        "PENDLE"=> "pendle",
+        "STRK"  => "starknet",
+        "BLUR"  => "blur",
+        "DYDX"  => "dydx-chain",
+      }.freeze
+
+      # @param tokens [Array<String>] list of token symbols (e.g. ["AAVE", "BTC"])
       # @return [Hash<String, BigDecimal>] token => price; only includes tokens that succeeded
       def self.fetch_prices(tokens:)
         new.fetch_prices(tokens: tokens)
@@ -27,49 +92,48 @@ module Exchanges
         tokens = tokens.uniq.map { |t| t.to_s.strip.upcase }.reject(&:blank?)
         return {} if tokens.empty?
 
-        result = {}
-        tokens.each do |token|
-          price = fetch_one(token)
-          result[token] = price if price.present?
+        id_to_token = tokens.each_with_object({}) do |token, h|
+          id = SYMBOL_TO_ID[token] || token.downcase
+          h[id] = token
         end
-        result
-      end
 
-      private
+        ids = id_to_token.keys.join(",")
+        uri = URI("#{BASE_URL}#{SIMPLE_PRICE_PATH}")
+        uri.query = URI.encode_www_form("ids" => ids, "vs_currencies" => "usd", "precision" => "8")
 
-      def fetch_one(token)
-        symbol = "#{token}USDT"
-        uri = URI("#{BASE_URL}#{TICKER_PRICE_PATH}")
-        uri.query = URI.encode_www_form("symbol" => symbol)
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true
         http.open_timeout = OPEN_TIMEOUT
         http.read_timeout = READ_TIMEOUT
         req = Net::HTTP::Get.new(uri)
+        req["Accept"] = "application/json"
+
         res = http.request(req)
         unless res.code.to_s == "200"
-          Rails.logger.warn("[Binance::SpotTickerFetcher] HTTP #{res.code} for #{token}: #{res.body.to_s[0..200]}")
-          return nil
+          Rails.logger.warn("[Binance::SpotTickerFetcher] CoinGecko HTTP #{res.code}: #{res.body.to_s[0..200]}")
+          return {}
         end
-        data = JSON.parse(res.body)
-        extract_price(data)
-      rescue Net::OpenTimeout, Net::ReadTimeout, Timeout::Error => e
-        Rails.logger.warn("[Binance::SpotTickerFetcher] Timeout for #{token}: #{e.message}")
-        nil
-      rescue JSON::ParserError => e
-        Rails.logger.warn("[Binance::SpotTickerFetcher] Parse error for #{token}: #{e.message}")
-        nil
-      rescue StandardError => e
-        Rails.logger.warn("[Binance::SpotTickerFetcher] Error for #{token}: #{e.class} #{e.message}")
-        nil
-      end
 
-      def extract_price(item)
-        return nil if item.blank?
-        val = item["price"].to_s.strip
-        return nil if val.blank?
-        parsed = val.to_d
-        parsed.positive? ? parsed : nil
+        data = JSON.parse(res.body)
+        result = {}
+        data.each do |id, prices|
+          token = id_to_token[id]
+          next unless token
+          price = prices["usd"].to_s.strip
+          next if price.blank?
+          parsed = price.to_d
+          result[token] = parsed if parsed.positive?
+        end
+        result
+      rescue Net::OpenTimeout, Net::ReadTimeout, Timeout::Error => e
+        Rails.logger.warn("[Binance::SpotTickerFetcher] Timeout: #{e.message}")
+        {}
+      rescue JSON::ParserError => e
+        Rails.logger.warn("[Binance::SpotTickerFetcher] Parse error: #{e.message}")
+        {}
+      rescue StandardError => e
+        Rails.logger.warn("[Binance::SpotTickerFetcher] Error: #{e.class} #{e.message}")
+        {}
       end
     end
   end
