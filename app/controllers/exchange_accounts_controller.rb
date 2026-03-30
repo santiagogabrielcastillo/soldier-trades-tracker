@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ExchangeAccountsController < ApplicationController
-  before_action :set_exchange_account, only: %i[destroy sync historic_sync edit update]
+  before_action :set_exchange_account, only: %i[destroy sync historic_sync import_csv edit update]
 
   def index
     @pagy, @exchange_accounts = pagy(:offset, current_user.exchange_accounts, limit: 25)
@@ -72,6 +72,34 @@ class ExchangeAccountsController < ApplicationController
     extra_symbols = params[:extra_symbols].to_s.split(/[\s,]+/).map(&:strip).map(&:upcase).reject(&:blank?)
     SyncExchangeAccountJob.perform_later(@exchange_account.id, historic: true, extra_symbols: extra_symbols)
     redirect_to exchange_accounts_path, notice: "Historic sync started. This may take a few minutes."
+  end
+
+  def import_csv
+    unless @exchange_account.provider_type == "binance"
+      redirect_to exchange_accounts_path, alert: "CSV import is only available for Binance accounts."
+      return
+    end
+    unless params[:csv_file].present?
+      redirect_to exchange_accounts_path, alert: "Please select a CSV file."
+      return
+    end
+    if params[:csv_file].respond_to?(:size) && params[:csv_file].size > 10.megabytes
+      redirect_to exchange_accounts_path, alert: "CSV file must be under 10 MB."
+      return
+    end
+
+    result = ExchangeAccounts::CsvImportService.call(
+      exchange_account: @exchange_account,
+      csv_io: params[:csv_file]
+    )
+
+    notice = "Imported #{result.created} trade(s)"
+    notice += ", #{result.updated} updated" if result.updated > 0
+    notice += ", #{result.skipped} skipped" if result.skipped > 0
+    notice += ". Errors: #{result.errors.join('; ')}" if result.errors.any?
+    redirect_to exchange_accounts_path, notice: notice
+  rescue ArgumentError => e
+    redirect_to exchange_accounts_path, alert: e.message
   end
 
   private

@@ -80,6 +80,57 @@ class ExchangeAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/linked successfully/i, response.body)
   end
 
+  # --- import_csv ---
+
+  test "import_csv redirects with alert for non-Binance accounts" do
+    sign_in_as(@user)
+    @user.exchange_accounts.destroy_all
+    account = @user.exchange_accounts.create!(
+      provider_type: "bingx", api_key: "k", api_secret: "s", linked_at: Time.current
+    )
+    post import_csv_exchange_account_path(account),
+         params: { csv_file: fixture_file_upload("binance_trades.csv", "text/csv") }
+    assert_redirected_to exchange_accounts_path
+    follow_redirect!
+    assert_match(/only available for Binance/i, response.body)
+  end
+
+  test "import_csv redirects with alert when no file attached" do
+    sign_in_as(@user)
+    @user.exchange_accounts.destroy_all
+    account = @user.exchange_accounts.create!(
+      provider_type: "binance", api_key: "k", api_secret: "s", linked_at: Time.current
+    )
+    post import_csv_exchange_account_path(account)
+    assert_redirected_to exchange_accounts_path
+    follow_redirect!
+    assert_match(/select a CSV file/i, response.body)
+  end
+
+  test "import_csv redirects with success notice on valid upload" do
+    sign_in_as(@user)
+    @user.exchange_accounts.destroy_all
+    account = @user.exchange_accounts.create!(
+      provider_type: "binance", api_key: "k", api_secret: "s", linked_at: Time.current
+    )
+    post import_csv_exchange_account_path(account),
+         params: { csv_file: fixture_file_upload("binance_trades.csv", "text/csv") }
+    assert_redirected_to exchange_accounts_path
+    follow_redirect!
+    assert_match(/Imported/i, response.body)
+  end
+
+  test "import_csv returns 404 for another user's account" do
+    other_user = users(:two)
+    other_account = other_user.exchange_accounts.create!(
+      provider_type: "binance", api_key: "k", api_secret: "s", linked_at: Time.current
+    )
+    sign_in_as(@user)
+    post import_csv_exchange_account_path(other_account),
+         params: { csv_file: fixture_file_upload("binance_trades.csv", "text/csv") }
+    assert_response :not_found
+  end
+
   private
 
   def sign_in_as(user)
