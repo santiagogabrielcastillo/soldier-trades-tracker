@@ -79,6 +79,7 @@ module Exchanges
         "STRK"  => "starknet",
         "BLUR"  => "blur",
         "DYDX"  => "dydx-chain",
+        "ONDO"  => "ondo-finance",
       }.freeze
 
       # @param tokens [Array<String>] list of token symbols (e.g. ["AAVE", "BTC"])
