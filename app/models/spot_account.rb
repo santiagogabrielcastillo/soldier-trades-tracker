@@ -22,6 +22,14 @@ class SpotAccount < ApplicationRecord
     user.spot_accounts.create!(name: "Default", default: true)
   end
 
+  def prices_as_decimals
+    (cached_prices || {}).transform_values { |v| BigDecimal(v.to_s) }
+  end
+
+  def cache_prices!(prices_hash)
+    update!(cached_prices: prices_hash.transform_values(&:to_s), prices_synced_at: Time.current)
+  end
+
   def cash_balance
     deposit_sum = spot_transactions.where(side: "deposit").sum(:amount)
     withdraw_sum = spot_transactions.where(side: "withdraw").sum(:amount)

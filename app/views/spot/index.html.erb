@@ -8,6 +8,12 @@
 
   <% if @view == "portfolio" %>
   <div class="mb-6 flex flex-wrap items-center gap-3">
+    <%= button_to "Sync prices", spot_sync_prices_path, method: :post, class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+    <% if @prices_synced_at %>
+      <span class="text-xs text-slate-400">Last synced <%= time_ago_in_words(@prices_synced_at) %> ago</span>
+    <% else %>
+      <span class="text-xs text-slate-400">Prices not synced yet</span>
+    <% end %>
     <%= render ModalComponent.new(title: "New transaction", trigger_label: "New transaction", open_on_connect: @open_new_transaction_modal.present?) do %>
       <%= form_with url: spot_transactions_path, method: :post, local: true, data: { turbo: false, controller: "spot-transaction-form" } do |f| %>
         <div class="space-y-4">

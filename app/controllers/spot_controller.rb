@@ -107,6 +107,15 @@ class SpotController < ApplicationController
     end
   end
 
+  def sync_prices
+    @spot_account = SpotAccount.find_or_create_default_for(current_user)
+    all_positions = Spot::PositionStateService.call(spot_account: @spot_account)
+    open_tokens = all_positions.select(&:open?).map(&:token).uniq
+    prices = Spot::CurrentPriceFetcher.call(user: current_user, tokens: open_tokens)
+    @spot_account.cache_prices!(prices)
+    redirect_to spot_path, notice: "Prices updated."
+  end
+
   private
 
   def parse_executed_at(value)
@@ -171,8 +180,8 @@ class SpotController < ApplicationController
   def load_index_data
     all_positions = Spot::PositionStateService.call(spot_account: @spot_account)
     open_positions = all_positions.select(&:open?)
-    open_tokens = open_positions.map(&:token).uniq
-    @current_prices = Spot::CurrentPriceFetcher.call(user: current_user, tokens: open_tokens)
+    @current_prices = @spot_account.prices_as_decimals
+    @prices_synced_at = @spot_account.prices_synced_at
     @positions = open_positions.sort_by { |pos| -((@current_prices[pos.token] || 0).to_d * pos.balance) }
     @tokens_for_select = tokens_for_select_for(@spot_account)
     @cash_balance = @spot_account.cash_balance

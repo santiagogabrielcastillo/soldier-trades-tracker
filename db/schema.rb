@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_28_182313) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_31_152335) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -238,6 +238,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_28_182313) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "allocation_bucket_id"
+    t.jsonb "cached_prices", default: {}
+    t.datetime "prices_synced_at"
     t.index ["allocation_bucket_id"], name: "index_spot_accounts_on_allocation_bucket_id"
     t.index ["user_id", "default"], name: "index_spot_accounts_on_user_id_and_default"
     t.index ["user_id"], name: "index_spot_accounts_on_user_id"

@@ -4,10 +4,12 @@ require "net/http"
 
 module Exchanges
   module Binance
-    # Fetches current USD prices for spot tokens via the CoinGecko public API (no authentication).
+    # Fetches current USD prices for spot tokens via the CoinGecko API.
     # Uses GET /api/v3/simple/price?ids=...&vs_currencies=usd — one batched request for all tokens.
     # CoinGecko is used instead of Binance because Binance (fapi.binance.com) is geo-blocked from
     # some cloud providers such as Railway/AWS.
+    #
+    # When ENV['COINGECKO_API_KEY'] is set, the x-cg-demo-api-key header is included (demo tier).
     #
     # Symbol → CoinGecko ID mapping: common tokens are listed in SYMBOL_TO_ID; unknown tokens fall
     # back to the lowercase symbol (works for many tokens whose CoinGecko ID matches their ticker,
@@ -108,6 +110,7 @@ module Exchanges
         http.read_timeout = READ_TIMEOUT
         req = Net::HTTP::Get.new(uri)
         req["Accept"] = "application/json"
+        req["x-cg-demo-api-key"] = ENV["COINGECKO_API_KEY"] if ENV["COINGECKO_API_KEY"].present?
 
         res = http.request(req)
         unless res.code.to_s == "200"
