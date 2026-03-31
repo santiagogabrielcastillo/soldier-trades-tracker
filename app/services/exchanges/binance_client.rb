@@ -30,7 +30,7 @@ module Exchanges
       @http = Binance::HttpClient.new(
         api_key: api_key,
         api_secret: api_secret,
-        base_url: base_url.presence || BASE_URL
+        base_url: base_url.presence
       )
     end
 
