@@ -19,7 +19,6 @@ Rails.application.routes.draw do
     member do
       post :sync
       post :historic_sync
-      post :import_csv
     end
     resources :manual_trades, only: %i[new create edit update destroy]
   end
