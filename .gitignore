@@ -39,3 +39,4 @@ node_modules/
 
 # Ignore Claude Code worktrees and internal tooling.
 .claude/worktrees/
+cloudflare/binance-proxy/.wrangler/
