@@ -1,7 +1,7 @@
 export default {
   async fetch(request, env) {
     const token = request.headers.get("X-Proxy-Token");
-    if (token !== env.PROXY_SECRET) {
+    if (!token || token !== env.PROXY_SECRET) {
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -13,6 +13,6 @@ export default {
     const headers = new Headers(request.headers);
     headers.delete("X-Proxy-Token");
 
-    return fetch(target.toString(), { method: "GET", headers });
+    return fetch(target.toString(), { method: request.method, headers });
   }
 };
