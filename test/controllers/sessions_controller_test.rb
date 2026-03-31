@@ -28,4 +28,22 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_nil session[:user_id]
     assert_response :unprocessable_entity
   end
+
+  test "login regenerates session id" do
+    get login_url  # establish a pre-auth session
+    pre_login_cookie = cookies["_soldier_trades_tracker_session"]
+
+    post login_url, params: { email: @user.email, password: "password" }
+    assert_not_equal pre_login_cookie, cookies["_soldier_trades_tracker_session"],
+      "Session ID must change on login to prevent session fixation"
+  end
+
+  test "logout regenerates session id" do
+    post login_url, params: { email: @user.email, password: "password" }
+    logged_in_cookie = cookies["_soldier_trades_tracker_session"]
+
+    delete logout_url
+    assert_not_equal logged_in_cookie, cookies["_soldier_trades_tracker_session"],
+      "Session ID must change on logout"
+  end
 end
