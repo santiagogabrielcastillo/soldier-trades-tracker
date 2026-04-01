@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Portfolio < ApplicationRecord
+  include HasSingleDefault
+
   belongs_to :user
   belongs_to :exchange_account, optional: true
 
@@ -8,8 +10,6 @@ class Portfolio < ApplicationRecord
   validates :start_date, presence: true
   validate :end_date_after_start_date_if_present
   validate :exchange_account_belongs_to_user, if: :exchange_account_id?
-
-  before_save :clear_other_defaults, if: :default?
 
   scope :default_first, -> { order(default: :desc, start_date: :desc) }
 
@@ -41,8 +41,4 @@ class Portfolio < ApplicationRecord
     errors.add(:exchange_account_id, "must be one of your exchange accounts")
   end
 
-  def clear_other_defaults
-    return unless default?
-    Portfolio.where(user_id: user_id).where.not(id: id).update_all(default: false)
-  end
 end

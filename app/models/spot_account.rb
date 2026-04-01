@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 class SpotAccount < ApplicationRecord
+  include HasSingleDefault
+
   belongs_to :user
   belongs_to :allocation_bucket, optional: true
   has_many :spot_transactions, dependent: :destroy
 
   validates :name, presence: true
-
-  before_save :clear_other_defaults, if: :default?
 
   scope :default_first, -> { order(default: :desc) }
 
@@ -34,8 +34,4 @@ class SpotAccount < ApplicationRecord
 
   private
 
-  def clear_other_defaults
-    return unless default?
-    SpotAccount.where(user_id: user_id).where.not(id: id).update_all(default: false)
-  end
 end
