@@ -7,18 +7,14 @@ module Exchanges
   module Binance
     # Signed GET for Binance USDⓈ-M Futures API. Builds URI, signs with HMAC-SHA256 on query string,
     # sends request, parses JSON. Raises Exchanges::ApiError for 429, 5xx, timeouts, empty body, parse errors.
-    # When BINANCE_PROXY_URL is set, requests are routed through the Cloudflare Worker proxy to bypass
-    # Railway/AWS geo-restriction. The proxy validates X-Proxy-Token against PROXY_SECRET on the Worker.
     # Optional base_url argument for testnet (https://testnet.binancefuture.com).
     class HttpClient
       DEFAULT_BASE_URL = "https://fapi.binance.com"
 
-      attr_reader :base_url
-
       def initialize(api_key:, api_secret:, base_url: nil)
         @api_key    = api_key
         @api_secret = api_secret
-        @base_url   = base_url.presence || ENV["BINANCE_PROXY_URL"].presence || DEFAULT_BASE_URL
+        @base_url   = base_url.presence || DEFAULT_BASE_URL
       end
 
       def get(path, params = {})
@@ -35,7 +31,6 @@ module Exchanges
 
         req = Net::HTTP::Get.new(uri)
         req["X-MBX-APIKEY"] = @api_key
-        req["X-Proxy-Token"] = ENV["BINANCE_PROXY_SECRET"] if ENV["BINANCE_PROXY_SECRET"].present?
 
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true
@@ -47,9 +42,6 @@ module Exchanges
         if code != "200"
           parsed = (JSON.parse(res.body) if res.body.presence) rescue nil
           msg = parsed&.dig("msg") || parsed&.dig("message") || res.body.to_s[0..500]
-          if msg.to_s.include?("restricted location") || msg.to_s.include?("Eligibility")
-            raise ApiError, "Binance API is geo-restricted from this server's location. Binance blocks access from certain cloud providers (e.g. AWS/Railway). Trades cannot be synced from this host."
-          end
           if code == "429" || code.start_with?("5")
             retry_after = res["Retry-After"]&.to_i
             raise ApiError.new("Binance API error #{code}: #{msg}", response_code: code, retry_after: retry_after)
