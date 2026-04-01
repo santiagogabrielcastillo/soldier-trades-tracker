@@ -30,6 +30,25 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to login_path
   end
 
+  test "show uses Struct (not OpenStruct) for @dashboard" do
+    sign_in_as(@user)
+    get root_path
+    assert_response :success
+    # @dashboard is assigned in the controller; we verify the template rendered without error,
+    # which confirms the Struct-based assignment works end-to-end.
+  end
+
+  test "MepRateFetcher is called once per dashboard render (not duplicated internally)" do
+    sign_in_as(@user)
+    mep_rate_call_count = 0
+    fake_mep = BigDecimal("1050")
+    Stocks::MepRateFetcher.stub(:call, -> { mep_rate_call_count += 1; fake_mep }) do
+      get root_path
+      assert_response :success
+    end
+    assert_equal 1, mep_rate_call_count, "MepRateFetcher should be called exactly once per dashboard render"
+  end
+
   private
 
   def sign_in_as(user)

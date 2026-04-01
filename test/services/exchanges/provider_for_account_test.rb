@@ -4,42 +4,44 @@ require "test_helper"
 
 module Exchanges
   class ProviderForAccountTest < ActiveSupport::TestCase
+    AccountStub = Struct.new(:provider_type, :api_key, :api_secret, :allowed_quote_currencies, keyword_init: true)
+
     test "supported? returns true for bingx with credentials" do
-      account = OpenStruct.new(provider_type: "bingx", api_key: "k", api_secret: "s")
+      account = AccountStub.new(provider_type: "bingx", api_key: "k", api_secret: "s")
       assert ProviderForAccount.new(account).supported?
     end
 
     test "supported? returns true for binance with credentials" do
-      account = OpenStruct.new(provider_type: "binance", api_key: "k", api_secret: "s")
+      account = AccountStub.new(provider_type: "binance", api_key: "k", api_secret: "s")
       assert ProviderForAccount.new(account).supported?
     end
 
     test "supported? returns false for unknown provider" do
-      account = OpenStruct.new(provider_type: "other", api_key: "k", api_secret: "s")
+      account = AccountStub.new(provider_type: "other", api_key: "k", api_secret: "s")
       refute ProviderForAccount.new(account).supported?
     end
 
     test "supported? returns false when credentials blank" do
-      account = OpenStruct.new(provider_type: "bingx", api_key: "", api_secret: "s")
+      account = AccountStub.new(provider_type: "bingx", api_key: "", api_secret: "s")
       refute ProviderForAccount.new(account).supported?
     end
 
     test "client returns a client for bingx that responds to fetch_my_trades" do
-      account = OpenStruct.new(provider_type: "bingx", api_key: "k", api_secret: "s")
+      account = AccountStub.new(provider_type: "bingx", api_key: "k", api_secret: "s")
       client = ProviderForAccount.new(account).client
       assert client
       assert_respond_to client, :fetch_my_trades
     end
 
     test "client returns a client for binance that responds to fetch_my_trades" do
-      account = OpenStruct.new(provider_type: "binance", api_key: "k", api_secret: "s")
+      account = AccountStub.new(provider_type: "binance", api_key: "k", api_secret: "s")
       client = ProviderForAccount.new(account).client
       assert client
       assert_respond_to client, :fetch_my_trades
     end
 
     test "client returns nil for unsupported provider" do
-      account = OpenStruct.new(provider_type: "other", api_key: "k", api_secret: "s")
+      account = AccountStub.new(provider_type: "other", api_key: "k", api_secret: "s")
       assert_nil ProviderForAccount.new(account).client
     end
 
@@ -48,19 +50,19 @@ module Exchanges
     end
 
     test "client forwards allowed_quote_currencies to bingx client" do
-      account = OpenStruct.new(provider_type: "bingx", api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
+      account = AccountStub.new(provider_type: "bingx", api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
       client = ProviderForAccount.new(account).client
       assert_equal [ "USDT" ], client.instance_variable_get(:@allowed_quote_currencies)
     end
 
     test "client forwards allowed_quote_currencies to binance client" do
-      account = OpenStruct.new(provider_type: "binance", api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
+      account = AccountStub.new(provider_type: "binance", api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
       client = ProviderForAccount.new(account).client
       assert_equal [ "USDT" ], client.instance_variable_get(:@allowed_quote_currencies)
     end
 
     test "client uses default whitelist when allowed_quote_currencies is nil" do
-      account = OpenStruct.new(provider_type: "bingx", api_key: "k", api_secret: "s", allowed_quote_currencies: nil)
+      account = AccountStub.new(provider_type: "bingx", api_key: "k", api_secret: "s", allowed_quote_currencies: nil)
       client = ProviderForAccount.new(account).client
       assert_equal Exchanges::QuoteCurrencies::DEFAULT, client.instance_variable_get(:@allowed_quote_currencies)
     end
