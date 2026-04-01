@@ -66,7 +66,7 @@ export default class extends Controller {
           label: "Balance",
           data: values,
           borderColor: "rgb(15 23 42)",
-          backgroundColor: "rgba(15 23 42, 0.1)",
+          backgroundColor: "rgba(15, 23, 42, 0.1)",
           fill: true,
           tension: 0.2
         }]
@@ -87,7 +87,7 @@ export default class extends Controller {
           label: "Cumulative P&L",
           data: values,
           borderColor: color,
-          backgroundColor: color.replace("rgb", "rgba").replace(")", ", 0.1)"),
+          backgroundColor: color.replace(/^rgb\((\d+)\s+(\d+)\s+(\d+)\)$/, "rgba($1, $2, $3, 0.1)"),
           fill: true,
           tension: 0.2
         }]
