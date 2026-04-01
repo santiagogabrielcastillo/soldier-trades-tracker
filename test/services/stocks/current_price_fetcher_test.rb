@@ -47,6 +47,31 @@ module Stocks
       end
     end
 
+    test "normalizes and deduplicates tickers" do
+      call_count = 0
+      stub_client = Object.new
+      stub_client.define_singleton_method(:quote) do |_ticker|
+        call_count += 1
+        BigDecimal("180.0")
+      end
+
+      CurrentPriceFetcher.stub(:finnhub_client, stub_client) do
+        result = CurrentPriceFetcher.call(tickers: ["aapl", "AAPL", "aapl"])
+        assert_equal 1, call_count, "Expected Finnhub to be called once for deduplicated tickers"
+        assert_equal BigDecimal("180.0"), result["AAPL"]
+      end
+    end
+
+    test "returns prices for multiple tickers" do
+      stub_client = stub_finnhub("AAPL" => BigDecimal("180.0"), "MSFT" => BigDecimal("420.0"))
+
+      CurrentPriceFetcher.stub(:finnhub_client, stub_client) do
+        result = CurrentPriceFetcher.call(tickers: ["AAPL", "MSFT"])
+        assert_equal BigDecimal("180.0"), result["AAPL"]
+        assert_equal BigDecimal("420.0"), result["MSFT"]
+      end
+    end
+
     private
 
     def stub_finnhub(prices_by_ticker)

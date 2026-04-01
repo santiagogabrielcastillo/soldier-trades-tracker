@@ -10,7 +10,7 @@ module Stocks
     end
 
     def initialize(tickers:)
-      @tickers = tickers.to_a.uniq.map { |t| t.to_s.strip.upcase }.reject(&:blank?)
+      @tickers = tickers.to_a.map { |t| t.to_s.strip.upcase }.reject(&:blank?).uniq
     end
 
     def call
