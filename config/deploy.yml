@@ -1,107 +1,46 @@
-# Name of your application. Used to uniquely configure containers.
 service: soldier-trades-tracker
+image: ghcr.io/santiagogabrielcastillo/soldier-trades-tracker
 
-# Name of the container image.
-image: soldier-trades-tracker
-
-# Deploy to these servers. Web runs Rails; job runs Solid Queue worker (bin/jobs).
 servers:
   web:
-    - 192.168.0.1
+    - 204.168.208.150
   job:
     hosts:
-      - 192.168.0.1
+      - 204.168.208.150
     cmd: bin/jobs
 
-# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
-# Remove this section when using multiple web servers and ensure you terminate SSL at your load balancer.
-#
-# Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
 proxy:
   ssl: true
-  host: app.example.com
-  # Proxy connects to your container on port 80 by default.
-  # app_port: 3000
+  host: soldier-trades.trade
 
-# Credentials for your image host.
 registry:
-  server: localhost:5555
-  # Specify the registry server, if you're not using Docker Hub
-  # server: registry.digitalocean.com / ghcr.io / ...
-  # username: my-user
+  server: ghcr.io
+  username: santiagogabrielcastillo
+  password:
+    - KAMAL_REGISTRY_PASSWORD
 
-  # Always use an access token rather than real password (pulled from .kamal/secrets).
-  # password:
-  #   - KAMAL_REGISTRY_PASSWORD
-
-# Configure builder setup.
 builder:
   arch: amd64
-  # Pass in additional build args needed for your Dockerfile.
-  # args:
-  #   RUBY_VERSION: <%= ENV["RBENV_VERSION"] || ENV["rvm_ruby_string"] || "#{RUBY_ENGINE}-#{RUBY_ENGINE_VERSION}" %>
 
-# Inject ENV into containers. List secret names here; set values in .kamal/secrets (or use Kamal secrets).
-# Required: RAILS_MASTER_KEY (decrypts credentials; credentials can hold DB and encryption keys).
-# Required for DB: SOLDIER_TRADES_TRACKER_DATABASE_PASSWORD if DB uses password auth.
-# Optional: ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY, ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY,
-#           ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT if not using credentials. See docs/deployment.md.
-#
-# env:
-#   clear:
-#     RAILS_ENV: production
-#   secret:
-#     - RAILS_MASTER_KEY
-#     - SOLDIER_TRADES_TRACKER_DATABASE_PASSWORD
+env:
+  secret:
+    - RAILS_MASTER_KEY
+    - DATABASE_URL
+    - QUEUE_DATABASE_URL
+    - ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+    - ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+    - ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+    - COINGECKO_API_KEY
+    - IOL_USERNAME
+    - IOL_PASSWORD
 
-# Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
-# "bin/kamal app logs -r job" will tail logs from the first server in the job section.
-#
-# aliases:
-#   shell: app exec --interactive --reuse "bash"
-
-# Use a different ssh user than root
-#
-# ssh:
-#   user: app
-
-# Use a persistent storage volume.
-#
-# volumes:
-#   - "app_storage:/app/storage"
-
-# Bridge fingerprinted assets, like JS and CSS, between versions to avoid
-# hitting 404 on in-flight requests. Combines all files from new and old
-# version inside the asset_path.
-#
-# asset_path: /app/public/assets
-
-# Configure rolling deploys by setting a wait time between batches of restarts.
-#
-# boot:
-#   limit: 10 # Can also specify as a percentage of total hosts, such as "25%"
-#   wait: 2
-
-# Use accessory services (secrets come from .kamal/secrets).
-#
-# accessories:
-#   db:
-#     image: mysql:8.0
-#     host: 192.168.0.2
-#     port: 3306
-#     env:
-#       clear:
-#         MYSQL_ROOT_HOST: '%'
-#       secret:
-#         - MYSQL_ROOT_PASSWORD
-#     files:
-#       - config/mysql/production.cnf:/etc/mysql/my.cnf
-#       - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
-#     directories:
-#       - data:/var/lib/mysql
-#   redis:
-#     image: valkey/valkey:8
-#     host: 192.168.0.2
-#     port: 6379
-#     directories:
-#       - data:/data
+accessories:
+  postgres:
+    image: postgres:16
+    host: 204.168.208.150
+    port: "127.0.0.1:5432:5432"
+    env:
+      secret:
+        - POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data
