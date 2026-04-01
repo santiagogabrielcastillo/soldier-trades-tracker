@@ -11,10 +11,6 @@ class SpotAccount < ApplicationRecord
 
   scope :default_first, -> { order(default: :desc) }
 
-  def self.default_for(user)
-    user.spot_accounts.find_by(default: true) || user.spot_accounts.first
-  end
-
   def self.find_or_create_default_for(user)
     return nil unless user
     account = user.spot_accounts.find_by(default: true) || user.spot_accounts.first
