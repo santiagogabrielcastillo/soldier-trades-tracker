@@ -5,7 +5,6 @@ module Exchanges
   # and Bingx::TradeNormalizer for payloads. See: https://bingx-api.github.io/docs-v3/
   class BingxClient < BaseProvider
     BASE_URL = "https://open-api.bingx.com"
-    BASE_URL_TESTNET = "https://open-api-vst.bingx.com"
     SWAP_FILL_ORDERS_PATH = "/openApi/swap/v2/trade/allFillOrders"
     SWAP_V1_FULL_ORDER_PATH = "/openApi/swap/v1/trade/fullOrder"
     SWAP_USER_INCOME_PATH = "/openApi/swap/v2/user/income"
@@ -35,37 +34,9 @@ module Exchanges
       trades
     end
 
-    def debug_fetch_fills(since:, limit: 10)
-      @http.get(SWAP_FILL_ORDERS_PATH, "startTime" => since.to_i * 1000, "limit" => limit)
-    end
-
-    def debug_fetch_income(since:, limit: 20)
-      @http.get(SWAP_USER_INCOME_PATH, "startTime" => since.to_i * 1000, "limit" => limit)
-    end
-
-    def debug_fetch_full_order(since:, limit: 100)
-      since_ms = since.to_i * 1000
-      end_ms = [ since_ms + SEVEN_DAYS_MS - 1, (Time.now.to_f * 1000).to_i ].min
-      @http.get(SWAP_V1_FULL_ORDER_PATH, "startTime" => since_ms, "endTime" => end_ms, "limit" => limit)
-    end
-
-    def debug_fetch_balance
-      @http.get("/openApi/swap/v2/user/balance", {})
-    end
-
-    def debug_fetch_all_raw(since:)
-      since_ms = since.to_i * 1000
-      end_ms = [ since_ms + SEVEN_DAYS_MS - 1, (Time.now.to_f * 1000).to_i ].min
-      {
-        v1_full_order: @http.get(SWAP_V1_FULL_ORDER_PATH, "startTime" => since_ms, "endTime" => end_ms, "limit" => 10),
-        v2_fills: @http.get(SWAP_FILL_ORDERS_PATH, "startTime" => since_ms, "limit" => 10),
-        income: @http.get(SWAP_USER_INCOME_PATH, "startTime" => since_ms, "limit" => 10)
-      }
-    end
-
     def self.ping(api_key:, api_secret:)
       client = new(api_key: api_key, api_secret: api_secret)
-      client.debug_fetch_fills(since: 1.day.ago, limit: 1)
+      client.signed_get(SWAP_FILL_ORDERS_PATH, "startTime" => 1.day.ago.to_i * 1000, "limit" => 1)
       true
     rescue => e
       Rails.logger.warn("[BingxClient] Ping failed: #{e.message}")
@@ -102,8 +73,6 @@ module Exchanges
       @allowed_quote_currencies.include?(quote)
     end
 
-    alias stablequote_pair? allowed_quote?
-
     def fetch_trades_from_v2_fills(since_ms, limit: 100)
       trades = []
       start_time = since_ms
@@ -114,7 +83,7 @@ module Exchanges
         break if fills.empty?
         fills.each_with_index do |fill, idx|
           normalized = Bingx::TradeNormalizer.normalize_fill_to_trade(fill, idx)
-          trades << normalized if normalized && stablequote_pair?(normalized[:symbol])
+          trades << normalized if normalized && allowed_quote?(normalized[:symbol])
         end
         break if fills.size < limit
         last_time = fills.map { |f| f["time"] || f["updateTime"] }.compact.max
@@ -148,7 +117,7 @@ module Exchanges
             next if order_id.blank? || seen_ids.include?(order_id)
             seen_ids << order_id
             normalized = Bingx::TradeNormalizer.normalize_v1_order_to_trade(order)
-            trades << normalized if normalized && stablequote_pair?(normalized[:symbol])
+            trades << normalized if normalized && allowed_quote?(normalized[:symbol])
           end
 
           break if orders.size < V1_ORDER_LIMIT
@@ -173,7 +142,7 @@ module Exchanges
         break if items.empty?
         items.each_with_index do |rec, idx|
           normalized = Bingx::TradeNormalizer.normalize_income_to_trade(rec, idx)
-          trades << normalized if normalized && stablequote_pair?(normalized[:symbol])
+          trades << normalized if normalized && allowed_quote?(normalized[:symbol])
         end
         break if items.size < limit
         last_time = items.map { |r| r["time"] || r["updateTime"] }.compact.max

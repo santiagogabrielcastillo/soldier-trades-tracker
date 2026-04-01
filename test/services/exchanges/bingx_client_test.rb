@@ -70,10 +70,10 @@ module Exchanges
       assert client.send(:allowed_quote?, "BTC-usdt"), "lowercase quote should be normalized"
     end
 
-    test "stablequote_pair? is an alias for allowed_quote?" do
+    test "allowed_quote? accepts symbols with matching quote currency" do
       client = BingxClient.new(api_key: "k", api_secret: "s", allowed_quote_currencies: [ "USDT" ])
-      assert_equal client.send(:allowed_quote?, "BTC-USDT"), client.send(:stablequote_pair?, "BTC-USDT")
-      assert_equal client.send(:allowed_quote?, "BTC-USDC"), client.send(:stablequote_pair?, "BTC-USDC")
+      assert client.send(:allowed_quote?, "BTC-USDT")
+      assert_not client.send(:allowed_quote?, "BTC-USDC")
     end
 
     # --- fetch_my_trades whitelist filtering per path ---

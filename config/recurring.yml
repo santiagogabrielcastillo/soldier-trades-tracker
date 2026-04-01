@@ -15,11 +15,13 @@ default: &default
     schedule: every 15 minutes
 
   stocks_weekly_snapshot:
-    class: Stocks::WeeklySnapshotJob
+    class: Stocks::TakeSnapshotJob
+    args: ["weekly"]
     schedule: "0 8 * * 1"
 
   stocks_monthly_snapshot:
-    class: Stocks::MonthlySnapshotJob
+    class: Stocks::TakeSnapshotJob
+    args: ["monthly"]
     schedule: "0 8 1 * *"
 
 development:

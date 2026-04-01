@@ -1,13 +1,34 @@
 # frozen_string_literal: true
 
-require "ostruct"
-
 class DashboardsController < ApplicationController
   def show
-    result = Dashboards::SummaryService.call(current_user)
-    result[:summary_trades_path] = trades_path(result[:summary_trades_path_params])
-    @dashboard = OpenStruct.new(result)
-    mep_rate = Stocks::MepRateFetcher.call rescue nil
-    @allocation_summary = Allocations::SummaryService.call(user: current_user, mep_rate: mep_rate)
+    mep_rate = begin
+      Stocks::MepRateFetcher.call
+    rescue StandardError => e
+      Rails.logger.warn("[DashboardsController] MEP rate unavailable: #{e.message}")
+      nil
+    end
+
+    summary_thread    = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do
+        Dashboards::SummaryService.call(current_user)
+      end
+    end
+    allocation_thread = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do
+        Allocations::SummaryService.call(user: current_user, mep_rate: mep_rate)
+      end
+    end
+
+    begin
+      result = summary_thread.value
+      result[:summary_trades_path] = trades_path(result[:summary_trades_path_params])
+      @dashboard = Struct.new(*result.keys, keyword_init: true).new(**result)
+
+      @allocation_summary = allocation_thread.value
+    ensure
+      # Guarantee both threads are joined and their connections returned even if one raises.
+      [summary_thread, allocation_thread].each { |t| t.join rescue nil }
+    end
   end
 end

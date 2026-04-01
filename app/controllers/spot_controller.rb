@@ -111,7 +111,7 @@ class SpotController < ApplicationController
     @spot_account = SpotAccount.find_or_create_default_for(current_user)
     all_positions = Spot::PositionStateService.call(spot_account: @spot_account)
     open_tokens = all_positions.select(&:open?).map(&:token).uniq
-    prices = Spot::CurrentPriceFetcher.call(user: current_user, tokens: open_tokens)
+    prices = Spot::CurrentPriceFetcher.call(tokens: open_tokens)
     @spot_account.cache_prices!(prices)
     redirect_to spot_path, notice: "Prices updated."
   end

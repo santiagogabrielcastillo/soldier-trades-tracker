@@ -22,12 +22,15 @@ module Allocations
     end
 
     def call
-      buckets = @user.allocation_buckets.ordered
-      manual_by_bucket    = @user.allocation_manual_entries.group_by(&:allocation_bucket_id)
+      buckets              = @user.allocation_buckets.ordered
+      manual_by_bucket     = @user.allocation_manual_entries.group_by(&:allocation_bucket_id)
       portfolios_by_bucket = @user.stock_portfolios.where.not(allocation_bucket_id: nil)
                                    .group_by(&:allocation_bucket_id)
-      spot_by_bucket      = @user.spot_accounts.where.not(allocation_bucket_id: nil)
-                                   .group_by(&:allocation_bucket_id)
+      # Batch: compute USD value for every spot account in a single price fetch
+      all_spot_accounts = @user.spot_accounts.to_a
+      spot_by_bucket    = all_spot_accounts.select { |s| s.allocation_bucket_id.present? }
+                                           .group_by(&:allocation_bucket_id)
+      spot_usd_by_id    = compute_all_spot_usd(all_spot_accounts)
 
       bucket_data = buckets.map do |bucket|
         sources = []
@@ -42,7 +45,7 @@ module Allocations
         end
 
         (spot_by_bucket[bucket.id] || []).each do |spot|
-          sources << SourceData.new(label: spot.name, amount_usd: spot_account_usd(spot), source_type: :spot_account)
+          sources << SourceData.new(label: spot.name, amount_usd: spot_usd_by_id[spot.id], source_type: :spot_account)
         end
 
         BucketData.new(
@@ -60,11 +63,29 @@ module Allocations
         bd.drift_pct  = bd.target_pct ? (bd.actual_pct - bd.target_pct).round(2) : nil
       end
 
-      unassigned = unassigned_sources
+      unassigned = unassigned_sources(spot_usd_by_id, all_spot_accounts)
       Result.new(buckets: bucket_data, total_usd: total_usd, unassigned_sources: unassigned)
     end
 
     private
+
+    # Fetches spot prices once for all accounts and returns a Hash of spot_account_id => USD value.
+    def compute_all_spot_usd(spot_accounts)
+      return {} if spot_accounts.empty?
+
+      positions_by_account = spot_accounts.index_with do |spot|
+        Spot::PositionStateService.call(spot_account: spot)
+      end
+
+      all_open_tokens = positions_by_account.values.flatten.select(&:open?).map(&:token).uniq
+      prices = all_open_tokens.any? ? Spot::CurrentPriceFetcher.call(tokens: all_open_tokens) : {}
+
+      spot_accounts.to_h do |spot|
+        open_positions = positions_by_account[spot].select(&:open?)
+        crypto_value   = open_positions.sum(BigDecimal("0")) { |pos| (prices[pos.token] || 0).to_d * pos.balance }
+        [spot.id, crypto_value + spot.cash_balance.to_d]
+      end
+    end
 
     def stock_portfolio_usd(portfolio)
       snapshot = portfolio.stock_portfolio_snapshots.order(recorded_at: :desc).first
@@ -79,27 +100,14 @@ module Allocations
       end
     end
 
-    def spot_account_usd(spot)
-      positions = Spot::PositionStateService.call(spot_account: spot)
-      open_positions = positions.select(&:open?)
-      crypto_value = if open_positions.any?
-        tokens = open_positions.map(&:token).uniq
-        prices = Spot::CurrentPriceFetcher.call(tokens: tokens)
-        open_positions.sum(BigDecimal("0")) { |pos| (prices[pos.token] || 0).to_d * pos.balance }
-      else
-        BigDecimal("0")
-      end
-      crypto_value + spot.cash_balance.to_d
-    end
-
-    def unassigned_sources
+    def unassigned_sources(spot_usd_by_id, all_spot_accounts)
       sources = []
       @user.stock_portfolios.where(allocation_bucket_id: nil).each do |p|
         usd = stock_portfolio_usd(p)
         sources << SourceData.new(label: "#{p.name} (stocks)", amount_usd: usd || BigDecimal("0"), source_type: :stock_portfolio)
       end
-      @user.spot_accounts.where(allocation_bucket_id: nil).each do |s|
-        sources << SourceData.new(label: "#{s.name} (spot)", amount_usd: spot_account_usd(s), source_type: :spot_account)
+      all_spot_accounts.reject { |s| s.allocation_bucket_id.present? }.each do |s|
+        sources << SourceData.new(label: "#{s.name} (spot)", amount_usd: spot_usd_by_id[s.id] || BigDecimal("0"), source_type: :spot_account)
       end
       sources
     end

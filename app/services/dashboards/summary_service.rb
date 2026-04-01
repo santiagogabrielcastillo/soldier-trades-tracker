@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
 class Dashboards::SummaryService
-  def self.call(user)
-    new(user).call
+  def self.call(user, mep_rate: nil)
+    new(user, mep_rate: mep_rate).call
   end
 
-  def initialize(user)
+  def initialize(user, mep_rate: nil)
     @user = user
+    @mep_rate = mep_rate
   end
 
   def call
@@ -162,7 +163,7 @@ class Dashboards::SummaryService
     end
 
     open_tokens = open_positions.map(&:token).uniq
-    current_prices = Spot::CurrentPriceFetcher.call(user: @user, tokens: open_tokens)
+    current_prices = Spot::CurrentPriceFetcher.call(tokens: open_tokens)
     spot_value = open_positions.sum(BigDecimal("0")) { |pos| (current_prices[pos.token] || 0).to_d * pos.balance }
     spot_cost_basis = open_positions.sum(BigDecimal("0")) { |pos| pos.net_usd_invested.to_d }
     spot_unrealized_pl = open_positions.sum(BigDecimal("0")) do |pos|
@@ -198,7 +199,8 @@ class Dashboards::SummaryService
         stocks_cost_basis: 0.to_d,
         stocks_roi_pct: nil,
         stocks_position_count: 0,
-        stocks_currency: stock_portfolio.argentina? ? :ars : :usd
+        stocks_currency: stock_portfolio.argentina? ? :ars : :usd,
+        stocks_pie_series: []
       }
     end
 
@@ -208,7 +210,7 @@ class Dashboards::SummaryService
     # We attempt to convert to USD via the MEP rate for dashboard display.
     if stock_portfolio.argentina?
       current_prices = Stocks::ArgentineCurrentPriceFetcher.call(tickers: open_tickers)
-      mep_rate = Stocks::MepRateFetcher.call
+      mep_rate = @mep_rate
     else
       current_prices = Stocks::CurrentPriceFetcher.call(tickers: open_tickers)
       mep_rate = nil

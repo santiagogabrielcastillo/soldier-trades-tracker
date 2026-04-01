@@ -3,6 +3,8 @@
 class StockPortfolio < ApplicationRecord
   MARKET_TYPES = %w[us argentina].freeze
 
+  include HasSingleDefault
+
   belongs_to :user
   belongs_to :allocation_bucket, optional: true
   has_many :stock_trades, dependent: :destroy
@@ -12,8 +14,6 @@ class StockPortfolio < ApplicationRecord
   validates :market, inclusion: { in: MARKET_TYPES }
 
   validate :market_immutable_if_trades_exist, on: :update
-
-  before_save :clear_other_defaults, if: :default?
 
   scope :default_first, -> { order(default: :desc) }
 
@@ -29,10 +29,6 @@ class StockPortfolio < ApplicationRecord
   end
 
   private
-
-  def clear_other_defaults
-    StockPortfolio.where(user_id: user_id).where.not(id: id).update_all(default: false)
-  end
 
   def market_immutable_if_trades_exist
     if market_changed? && stock_trades.exists?

@@ -12,7 +12,6 @@ module Exchanges
   # trade. This was most visible with USDC trades. Fix: SyncService now skips content-match for Binance.
   class BinanceClient < BaseProvider
     BASE_URL = "https://fapi.binance.com"
-    BASE_URL_TESTNET = "https://testnet.binancefuture.com"
     POSITION_RISK_PATH = "/fapi/v2/positionRisk"
     INCOME_PATH = "/fapi/v1/income"
     USER_TRADES_PATH = "/fapi/v1/userTrades"
