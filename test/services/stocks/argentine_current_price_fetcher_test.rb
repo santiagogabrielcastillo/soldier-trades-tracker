@@ -4,6 +4,10 @@ require "test_helper"
 
 module Stocks
   class ArgentineCurrentPriceFetcherTest < ActiveSupport::TestCase
+    setup do
+      Rails.cache.clear
+    end
+
     test "returns empty hash when tickers list is empty" do
       result = ArgentineCurrentPriceFetcher.call(tickers: [])
       assert_equal({}, result)
