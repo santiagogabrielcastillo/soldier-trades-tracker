@@ -26,11 +26,10 @@ module Allocations
       manual_by_bucket     = @user.allocation_manual_entries.group_by(&:allocation_bucket_id)
       portfolios_by_bucket = @user.stock_portfolios.where.not(allocation_bucket_id: nil)
                                    .group_by(&:allocation_bucket_id)
-      spot_by_bucket       = @user.spot_accounts.where.not(allocation_bucket_id: nil)
-                                   .group_by(&:allocation_bucket_id)
-
       # Batch: compute USD value for every spot account in a single price fetch
       all_spot_accounts = @user.spot_accounts.to_a
+      spot_by_bucket    = all_spot_accounts.select { |s| s.allocation_bucket_id.present? }
+                                           .group_by(&:allocation_bucket_id)
       spot_usd_by_id    = compute_all_spot_usd(all_spot_accounts)
 
       bucket_data = buckets.map do |bucket|
@@ -64,7 +63,7 @@ module Allocations
         bd.drift_pct  = bd.target_pct ? (bd.actual_pct - bd.target_pct).round(2) : nil
       end
 
-      unassigned = unassigned_sources(spot_usd_by_id)
+      unassigned = unassigned_sources(spot_usd_by_id, all_spot_accounts)
       Result.new(buckets: bucket_data, total_usd: total_usd, unassigned_sources: unassigned)
     end
 
@@ -81,10 +80,10 @@ module Allocations
       all_open_tokens = positions_by_account.values.flatten.select(&:open?).map(&:token).uniq
       prices = all_open_tokens.any? ? Spot::CurrentPriceFetcher.call(tokens: all_open_tokens) : {}
 
-      spot_accounts.index_with do |spot|
+      spot_accounts.to_h do |spot|
         open_positions = positions_by_account[spot].select(&:open?)
         crypto_value   = open_positions.sum(BigDecimal("0")) { |pos| (prices[pos.token] || 0).to_d * pos.balance }
-        crypto_value + spot.cash_balance.to_d
+        [spot.id, crypto_value + spot.cash_balance.to_d]
       end
     end
 
@@ -101,13 +100,13 @@ module Allocations
       end
     end
 
-    def unassigned_sources(spot_usd_by_id)
+    def unassigned_sources(spot_usd_by_id, all_spot_accounts)
       sources = []
       @user.stock_portfolios.where(allocation_bucket_id: nil).each do |p|
         usd = stock_portfolio_usd(p)
         sources << SourceData.new(label: "#{p.name} (stocks)", amount_usd: usd || BigDecimal("0"), source_type: :stock_portfolio)
       end
-      @user.spot_accounts.where(allocation_bucket_id: nil).each do |s|
+      all_spot_accounts.reject { |s| s.allocation_bucket_id.present? }.each do |s|
         sources << SourceData.new(label: "#{s.name} (spot)", amount_usd: spot_usd_by_id[s.id] || BigDecimal("0"), source_type: :spot_account)
       end
       sources

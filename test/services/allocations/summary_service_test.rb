@@ -31,8 +31,8 @@ module Allocations
         end
       end
 
-      assert_operator fetch_call_count, :<=, 1,
-        "Expected at most 1 price fetch call, got #{fetch_call_count}"
+      assert_equal 1, fetch_call_count,
+        "Expected exactly 1 price fetch call, got #{fetch_call_count}"
     end
   end
 end
