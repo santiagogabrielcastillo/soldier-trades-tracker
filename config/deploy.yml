@@ -12,6 +12,7 @@ servers:
 proxy:
   ssl: true
   host: soldier-trades.trade
+  app_port: 3000
 
 registry:
   server: ghcr.io
