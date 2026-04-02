@@ -22,6 +22,7 @@ registry:
 
 builder:
   arch: amd64
+  remote: ssh://root@204.168.208.150
 
 env:
   clear:
