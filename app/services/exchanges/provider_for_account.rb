@@ -27,12 +27,17 @@ module Exchanges
         api_secret: @account.api_secret,
         allowed_quote_currencies: @account.allowed_quote_currencies
       )
+    rescue ActiveRecord::Encryption::Errors::Decryption
+      nil
     end
 
     # Lightweight check: registry + credentials only; does not instantiate the client.
     # Use #client when you need the actual client.
     def supported?
-      REGISTRY.key?(@account.provider_type.to_s.downcase) && @account.api_key.present? && @account.api_secret.present?
+      return false unless REGISTRY.key?(@account.provider_type.to_s.downcase)
+      @account.api_key.present? && @account.api_secret.present?
+    rescue ActiveRecord::Encryption::Errors::Decryption
+      false
     end
 
     # Validates credentials via provider ping. Returns true if valid/read-only, false otherwise.
