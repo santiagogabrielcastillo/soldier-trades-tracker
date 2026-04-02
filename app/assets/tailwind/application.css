@@ -3,3 +3,4 @@
 @source "../../helpers/**/*.rb";
 @source "../../javascript/**/*.js";
 @source "../../components/**/*.html.erb";
+@source "../../components/**/*.rb";
