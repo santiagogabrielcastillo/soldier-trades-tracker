@@ -46,8 +46,10 @@ module Ai
         parse_success!(response.body)
       when "429"
         raise Ai::RateLimitError, "Gemini rate limit exceeded"
-      when "400", "401", "403"
-        raise Ai::InvalidKeyError, "Gemini API key invalid or unauthorized"
+      when "401", "403"
+        raise Ai::InvalidKeyError, "Gemini API key invalid or unauthorized (#{code})"
+      when "400"
+        raise Ai::ServiceError, "Gemini bad request (400)"
       else
         raise Ai::ServiceError, "Gemini API returned #{code}"
       end

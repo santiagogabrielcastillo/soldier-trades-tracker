@@ -40,10 +40,10 @@ class Ai::GeminiServiceTest < ActiveSupport::TestCase
     end
   end
 
-  test "generate raises InvalidKeyError on 400" do
+  test "generate raises ServiceError on 400" do
     body = JSON.generate({ "error" => { "code" => 400, "message" => "Bad Request" } })
     stub_http_response(code: "400", body: body) do
-      assert_raises(Ai::InvalidKeyError) { @service.generate(prompt: "test") }
+      assert_raises(Ai::ServiceError) { @service.generate(prompt: "test") }
     end
   end
 
