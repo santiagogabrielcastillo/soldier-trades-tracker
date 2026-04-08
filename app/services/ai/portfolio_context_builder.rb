@@ -60,7 +60,7 @@ module Ai
       lines << "| Token | Balance | Net USD Invested | Breakeven |"
       lines << "|-------|---------|-----------------|-----------|"
       open_positions.each do |p|
-        bal = p.balance.round(6)
+        bal = p.balance ? p.balance.round(6) : "—"
         invested = p.net_usd_invested ? "$#{p.net_usd_invested.round(2)}" : "—"
         be = p.breakeven ? "$#{p.breakeven.round(4)}" : "—"
         lines << "| #{p.token} | #{bal} | #{invested} | #{be} |"
@@ -82,7 +82,7 @@ module Ai
       lines << "| Ticker | Shares | Net USD Invested | Breakeven |"
       lines << "|--------|--------|-----------------|-----------|"
       open_positions.each do |p|
-        shares = p.shares.round(4)
+        shares = p.shares ? p.shares.round(4) : "—"
         invested = p.net_usd_invested ? "$#{p.net_usd_invested.round(2)}" : "—"
         be = p.breakeven ? "$#{p.breakeven.round(4)}" : "—"
         lines << "| #{p.ticker} | #{shares} | #{invested} | #{be} |"

@@ -48,9 +48,9 @@ class Ai::PortfolioContextBuilderTest < ActiveSupport::TestCase
   end
 
   test "futures section includes position data when positions exist" do
-    FakePos = Struct.new(:symbol, :position_side, :entry_price, :net_pl, :open_quantity,
-                         :open?, :roi_percent, :leverage, :open_at, :close_at, keyword_init: true)
-    open_pos = FakePos.new(
+    fake_pos_class = Struct.new(:symbol, :position_side, :entry_price, :net_pl, :open_quantity,
+                                :open?, :roi_percent, :leverage, :open_at, :close_at, keyword_init: true)
+    open_pos = fake_pos_class.new(
       symbol: "BTC-USDT", position_side: "LONG", entry_price: BigDecimal("50000"),
       net_pl: BigDecimal("1000"), open_quantity: BigDecimal("0.02"),
       open?: true, roi_percent: nil, leverage: 10, open_at: 1.day.ago, close_at: nil
