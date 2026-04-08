@@ -1,5 +1,5 @@
 <div>
-  <h1 class="mb-4 text-2xl font-semibold text-slate-900">Trades</h1>
+  <%= render PageHeaderComponent.new(title: "Trades") %>
 
   <nav class="mb-6 flex gap-1 border-b border-slate-200" aria-label="Tabs">
     <%= link_to "History", trades_path(trades_index_filter_params.merge("view" => "history")), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'history' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}" %>
@@ -10,44 +10,33 @@
   </nav>
 
   <% if @view == "history" %>
-    <%= form_with url: trades_path, method: :get, local: true, class: "mb-4 flex flex-wrap items-end gap-4", data: { controller: "auto-submit-form", turbo: false } do |f| %>
-      <%= f.hidden_field :view, value: "history" %>
-      <div class="flex flex-col gap-1">
-        <%= f.label :from_date, "From", class: "text-sm font-medium text-slate-700" %>
-        <%= f.date_field :from_date, value: @from_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[10rem]", data: { auto_submit_form_target: "trigger" } %>
-      </div>
-      <div class="flex flex-col gap-1">
-        <%= f.label :to_date, "To", class: "text-sm font-medium text-slate-700" %>
-        <%= f.date_field :to_date, value: @to_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[10rem]", data: { auto_submit_form_target: "trigger" } %>
-      </div>
-      <div class="flex flex-col gap-1">
-        <%= f.label :exchange_account_id, "Exchange", class: "text-sm font-medium text-slate-700" %>
-        <%= f.select :exchange_account_id, options_for_select([["All exchanges", nil]] + (@exchange_accounts || []).map { |a| [a.provider_type.to_s.capitalize, a.id] }, params[:exchange_account_id]), {}, { class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[8rem]", data: { auto_submit_form_target: "trigger" } } %>
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium text-slate-700">&nbsp;</span>
-        <%= link_to "Clear filters", trades_path(view: "history"), class: "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
-      </div>
+    <%= render DateRangeFilterComponent.new(
+          url: trades_path,
+          from: @from_date,
+          to: @to_date,
+          extra_params: { view: "history" },
+          clear_url: trades_path(view: "history")
+        ) do |c| %>
+      <% c.with_extra_fields do %>
+        <div class="flex flex-col gap-1">
+          <label for="exchange_account_id" class="text-sm font-medium text-slate-700">Exchange</label>
+          <%= select_tag :exchange_account_id,
+                options_for_select([["All exchanges", nil]] + (@exchange_accounts || []).map { |a| [a.provider_type.to_s.capitalize, a.id] }, params[:exchange_account_id]),
+                class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[8rem]",
+                data: { auto_submit_form_target: "trigger" } %>
+        </div>
+      <% end %>
     <% end %>
   <% end %>
 
   <% if @view == "exchange" %>
-    <%= form_with url: trades_path, method: :get, local: true, class: "mb-4 flex flex-wrap items-end gap-4", data: { controller: "auto-submit-form", turbo: false } do |f| %>
-      <%= f.hidden_field :view, value: "exchange" %>
-      <%= f.hidden_field :exchange_account_id, value: @exchange_account&.id %>
-      <div class="flex flex-col gap-1">
-        <%= f.label :from_date, "From", class: "text-sm font-medium text-slate-700" %>
-        <%= f.date_field :from_date, value: @from_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[10rem]", data: { auto_submit_form_target: "trigger" } %>
-      </div>
-      <div class="flex flex-col gap-1">
-        <%= f.label :to_date, "To", class: "text-sm font-medium text-slate-700" %>
-        <%= f.date_field :to_date, value: @to_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[10rem]", data: { auto_submit_form_target: "trigger" } %>
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium text-slate-700">&nbsp;</span>
-        <%= link_to "Clear filters", trades_path(view: "exchange", exchange_account_id: @exchange_account&.id), class: "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
-      </div>
-    <% end %>
+    <%= render DateRangeFilterComponent.new(
+          url: trades_path,
+          from: @from_date,
+          to: @to_date,
+          extra_params: { view: "exchange", exchange_account_id: @exchange_account&.id },
+          clear_url: trades_path(view: "exchange", exchange_account_id: @exchange_account&.id)
+        ) %>
   <% end %>
 
   <% if @view == "portfolio" && @portfolios.present? %>

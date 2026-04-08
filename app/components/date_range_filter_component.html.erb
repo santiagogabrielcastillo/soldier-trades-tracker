@@ -10,4 +10,11 @@
     <%= f.label :to_date, "To", class: "text-sm font-medium text-slate-700" %>
     <%= f.date_field :to_date, value: @to, class: DateRangeFilterComponent::DATE_FIELD_CLASSES, data: { auto_submit_form_target: "trigger" } %>
   </div>
+  <%= extra_fields if extra_fields %>
+  <% if @clear_url %>
+    <div class="flex flex-col gap-1">
+      <span class="text-sm font-medium text-slate-700">&nbsp;</span>
+      <%= link_to "Clear filters", @clear_url, class: DateRangeFilterComponent::CLEAR_LINK_CLASSES %>
+    </div>
+  <% end %>
 <% end %>
