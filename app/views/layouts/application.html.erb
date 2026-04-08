@@ -179,6 +179,7 @@
       <button
         type="button"
         data-action="click->ai-chat#toggle"
+        data-ai-chat-target="trigger"
         aria-expanded="false"
         aria-controls="ai-chat-panel"
         class="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-slate-800 text-white shadow-lg hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
@@ -194,6 +195,7 @@
         id="ai-chat-panel"
         data-ai-chat-target="panel"
         role="dialog"
+        aria-modal="true"
         aria-label="AI Portfolio Assistant"
         class="hidden fixed bottom-24 right-6 z-50 w-96 max-h-[70vh] rounded-xl shadow-2xl border border-slate-200 overflow-hidden"
       >

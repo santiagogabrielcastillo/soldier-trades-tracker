@@ -2,12 +2,15 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static values = { chatUrl: String }
-  static targets = ["panel", "input", "messages", "submit"]
+  static targets = ["panel", "input", "messages", "submit", "trigger"]
 
   toggle() {
+    const isOpen = !this.panelTarget.classList.contains("hidden")
     this.panelTarget.classList.toggle("hidden")
     if (!this.panelTarget.classList.contains("hidden")) {
       this.inputTarget.focus()
+    } else if (this.hasTriggerTarget) {
+      this.triggerTarget.focus()
     }
   }
 
