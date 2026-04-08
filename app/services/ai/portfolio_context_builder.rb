@@ -27,7 +27,7 @@ module Ai
       closed_positions = all_positions.reject(&:open?).first(CLOSED_POSITIONS_LIMIT)
       positions = open_positions + closed_positions
 
-      lines = ["## Crypto Futures Positions"]
+      lines = [ "## Crypto Futures Positions" ]
       if positions.empty?
         lines << "No futures positions found."
         return lines.join("\n")
@@ -51,7 +51,7 @@ module Ai
       positions = Spot::PositionStateService.call(spot_account: spot_account)
       open_positions = positions.select(&:open?)
 
-      lines = ["## Spot Holdings"]
+      lines = [ "## Spot Holdings" ]
       if open_positions.empty?
         lines << "No spot positions found."
         return lines.join("\n")
@@ -73,7 +73,7 @@ module Ai
       positions = Stocks::PositionStateService.call(stock_portfolio: stock_portfolio)
       open_positions = positions.select(&:open?)
 
-      lines = ["## Stock Portfolio"]
+      lines = [ "## Stock Portfolio" ]
       if open_positions.empty?
         lines << "No stock positions found."
         return lines.join("\n")
@@ -92,7 +92,7 @@ module Ai
 
     def allocation_section
       summary = Allocations::SummaryService.call(user: @user)
-      lines = ["## Asset Allocation"]
+      lines = [ "## Asset Allocation" ]
 
       if summary.buckets.empty?
         lines << "No allocation buckets configured."
@@ -112,7 +112,7 @@ module Ai
 
     def watchlist_section
       tickers = @user.watchlist_tickers.ordered.map(&:ticker)
-      lines = ["## Watchlist"]
+      lines = [ "## Watchlist" ]
 
       if tickers.empty?
         lines << "No watchlist tickers."
