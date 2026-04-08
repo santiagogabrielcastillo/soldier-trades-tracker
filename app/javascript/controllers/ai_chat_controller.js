@@ -5,9 +5,12 @@ export default class extends Controller {
   static targets = ["panel", "input", "messages", "submit", "trigger"]
 
   toggle() {
-    const isOpen = !this.panelTarget.classList.contains("hidden")
     this.panelTarget.classList.toggle("hidden")
-    if (!this.panelTarget.classList.contains("hidden")) {
+    const isOpen = !this.panelTarget.classList.contains("hidden")
+    if (this.hasTriggerTarget) {
+      this.triggerTarget.setAttribute("aria-expanded", String(isOpen))
+    }
+    if (isOpen) {
       this.inputTarget.focus()
     } else if (this.hasTriggerTarget) {
       this.triggerTarget.focus()
