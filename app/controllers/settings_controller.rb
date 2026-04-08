@@ -13,6 +13,16 @@ class SettingsController < ApplicationController
     end
   end
 
+  def update_ai_key
+    current_user.update!(gemini_api_key: params[:api_key].to_s.strip.presence)
+    redirect_to settings_path, notice: "AI Assistant key saved."
+  end
+
+  def remove_ai_key
+    current_user.update!(gemini_api_key: nil)
+    redirect_to settings_path, notice: "AI Assistant key removed."
+  end
+
   private
 
   def settings_params
