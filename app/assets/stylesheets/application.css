@@ -14,6 +14,12 @@
  *= require_self
  */
 
+@layer base {
+  button {
+    cursor: pointer;
+  }
+}
+
 /* ── Typography ─────────────────────────────────────────────────────────── */
 body {
   font-family: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
