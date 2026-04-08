@@ -23,7 +23,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
 
   test "remove_ai_key clears the API key" do
     @user.update!(gemini_api_key: "AIzaExistingKey1234")
-    delete settings_ai_key_path
+    delete remove_settings_ai_key_path
     assert_redirected_to settings_path
     @user.reload
     assert_nil @user.gemini_api_key
