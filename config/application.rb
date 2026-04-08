@@ -18,6 +18,11 @@ module SoldierTradesTracker
 
     config.middleware.use Rack::Attack
 
+    # errors.rb defines multiple constants (Ai::Error, Ai::RateLimitError, etc.)
+    # so Zeitwerk cannot autoload it by name. It is require_relative'd explicitly
+    # in gemini_service.rb instead.
+    Rails.autoloaders.main.ignore(Rails.root.join("app/services/ai/errors.rb"))
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
