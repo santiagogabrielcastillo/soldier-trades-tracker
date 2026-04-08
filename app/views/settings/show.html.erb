@@ -37,41 +37,64 @@
 
   <hr class="border-slate-200">
 
-  <fieldset>
-    <legend class="block text-sm font-medium text-slate-900">AI Assistant</legend>
-    <p class="mb-3 text-sm text-slate-500">Connect your Gemini API key to enable AI-powered insights on your portfolio.</p>
-
-    <% if current_user.gemini_api_key_configured? %>
-      <div class="rounded-lg border border-slate-200 bg-white p-4"
-           data-controller="ai-settings"
-           data-ai-settings-test-url-value="<%= ai_test_saved_key_path %>">
-        <div class="mb-3 flex items-center gap-2">
-          <span class="font-mono text-sm text-slate-700"><%= current_user.gemini_api_key_masked %></span>
-          <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">Configured</span>
-        </div>
-        <div class="flex flex-wrap items-center gap-3">
-          <%= button_to "Remove", remove_settings_ai_key_path, method: :delete,
-                class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
-          <button type="button"
-                  data-action="click->ai-settings#testConnection"
-                  class="rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">
-            Test Connection
-          </button>
-          <span data-ai-settings-target="result" class="text-sm"></span>
-        </div>
+  <div class="rounded-lg border border-slate-200 bg-white">
+    <%# Header %>
+    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+      <div class="flex items-center gap-2">
+        <%# Lock icon %>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-500">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+        </svg>
+        <span class="text-sm font-semibold text-slate-800">AI Assistant</span>
       </div>
-    <% else %>
-      <%= form_with url: settings_ai_key_path, method: :patch, local: true do |f| %>
-        <div class="rounded-lg border border-slate-200 bg-white p-4">
-          <div class="mb-3">
-            <%= f.label :api_key, "Gemini API Key", class: "block text-sm font-medium text-slate-700 mb-1" %>
-            <%= f.text_field :api_key, placeholder: "AIza...",
-                  class: "block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+      <span class="text-xs text-slate-400">Powered by Gemini</span>
+    </div>
+
+    <%# Body %>
+    <div class="px-4 py-4 space-y-4">
+      <%# Description %>
+      <p class="text-sm text-slate-600">
+        Connect your free Gemini API key to enable AI-powered portfolio analysis.
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-slate-800 underline underline-offset-2 hover:text-slate-600">Get a free key at aistudio.google.com</a>
+      </p>
+
+      <% if current_user.gemini_api_key_configured? %>
+        <%# Configured state %>
+        <div data-controller="ai-settings" data-ai-settings-test-url-value="<%= ai_test_saved_key_path %>">
+          <%# Key display row %>
+          <div class="flex items-center gap-3 mb-3">
+            <code class="flex-1 rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-sm font-mono text-slate-700"><%= current_user.gemini_api_key_masked %></code>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span class="text-xs font-medium text-emerald-700">Active</span>
+            </div>
           </div>
-          <%= f.submit "Save API Key",
-                class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
+          <%# Button row %>
+          <div class="flex items-center gap-2">
+            <button type="button"
+              data-action="click->ai-settings#testConnection"
+              class="px-3 py-1.5 text-sm bg-slate-800 text-white rounded-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500">
+              Test Connection
+            </button>
+            <%= button_to "Remove", remove_settings_ai_key_path, method: :delete,
+              class: "px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 transition-colors" %>
+          </div>
+          <p class="mt-2 text-xs text-slate-400" data-ai-settings-target="result"></p>
         </div>
+      <% else %>
+        <%# Unconfigured state %>
+        <%= form_with url: settings_ai_key_path, method: :patch do |f| %>
+          <div class="flex gap-2">
+            <%= f.text_field :api_key,
+              placeholder: "AIza...",
+              autocomplete: "off",
+              class: "flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent" %>
+            <%= f.submit "Save",
+              class: "px-4 py-2 text-sm bg-slate-800 text-white rounded-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 shrink-0" %>
+          </div>
+          <p class="mt-1.5 text-xs text-slate-400">Your key is stored encrypted and never shared.</p>
+        <% end %>
       <% end %>
-    <% end %>
-  </fieldset>
+    </div>
+  </div>
 </div>

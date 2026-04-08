@@ -12,7 +12,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
   test "show renders successfully" do
     get settings_path
     assert_response :success
-    assert_select "legend", text: "AI Assistant"
+    assert_select "span", text: "AI Assistant"
   end
 
   test "show displays key entry form when no API key configured" do
