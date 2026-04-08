@@ -23,40 +23,22 @@ class AiController < ApplicationController
     message = params[:message].to_s.strip
     return render json: { error: "empty_message", message: "Message cannot be blank." }, status: :unprocessable_entity if message.blank?
 
-    context = Ai::PortfolioContextBuilder.new(user: current_user).call
-    prompt = "#{SYSTEM_PROMPT}Today's date: #{Date.today}.\n\n#{context}\n\nUser question: #{message}"
-
-    response_text = Ai::GeminiService.new(api_key: current_user.gemini_api_key).generate(prompt: prompt)
-    render json: { response: response_text }
-  rescue Ai::RateLimitError
-    render json: {
-      error: "rate_limited",
-      message: "You've hit your free tier limit. Try again in a moment."
-    }, status: 429
-  rescue Ai::InvalidKeyError
-    render json: {
-      error: "invalid_key",
-      message: "Your API key appears to be invalid. Please check it in Settings."
-    }, status: :unauthorized
-  rescue Ai::ServiceError
-    render json: {
-      error: "service_error",
-      message: "The AI service is temporarily unavailable."
-    }, status: :unprocessable_entity
+    with_ai_errors(invalid_key_message: "Your API key appears to be invalid. Please check it in Settings.") do
+      context = Ai::PortfolioContextBuilder.new(user: current_user).call
+      prompt = "#{SYSTEM_PROMPT}Today's date: #{Date.today}.\n\n#{context}\n\nUser question: #{message}"
+      response_text = Ai::GeminiService.new(api_key: current_user.gemini_api_key).generate(prompt: prompt)
+      render json: { response: response_text }
+    end
   end
 
   def test_key
     api_key = params[:api_key].to_s.strip
     return render json: { error: "no_api_key", message: "API key cannot be blank." }, status: :unprocessable_entity if api_key.blank?
 
-    Ai::GeminiService.new(api_key: api_key).generate(prompt: "Say OK")
-    render json: { ok: true }
-  rescue Ai::RateLimitError
-    render json: { error: "rate_limited", message: "Rate limited. Try again in a moment." }, status: 429
-  rescue Ai::InvalidKeyError
-    render json: { error: "invalid_key", message: "Your API key appears to be invalid." }, status: :unauthorized
-  rescue Ai::ServiceError
-    render json: { error: "service_error", message: "Could not reach the AI service." }, status: :unprocessable_entity
+    with_ai_errors do
+      Ai::GeminiService.new(api_key: api_key).generate(prompt: "Say OK")
+      render json: { ok: true }
+    end
   end
 
   def test_saved_key
@@ -64,13 +46,21 @@ class AiController < ApplicationController
       return render json: { error: "no_api_key", message: "No key configured." }, status: :unprocessable_entity
     end
 
-    Ai::GeminiService.new(api_key: current_user.gemini_api_key).generate(prompt: "Say OK")
-    render json: { ok: true }
+    with_ai_errors do
+      Ai::GeminiService.new(api_key: current_user.gemini_api_key).generate(prompt: "Say OK")
+      render json: { ok: true }
+    end
+  end
+
+  private
+
+  def with_ai_errors(invalid_key_message: "Your API key appears to be invalid.")
+    yield
   rescue Ai::RateLimitError
     render json: { error: "rate_limited", message: "Rate limited. Try again in a moment." }, status: 429
   rescue Ai::InvalidKeyError
-    render json: { error: "invalid_key", message: "Your API key appears to be invalid." }, status: :unauthorized
-  rescue Ai::ServiceError
-    render json: { error: "service_error", message: "Could not reach the AI service." }, status: :unprocessable_entity
+    render json: { error: "invalid_key", message: invalid_key_message }, status: :unauthorized
+  rescue Ai::Error
+    render json: { error: "service_error", message: "The AI service is temporarily unavailable." }, status: :unprocessable_entity
   end
 end
