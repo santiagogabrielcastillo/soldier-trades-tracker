@@ -177,7 +177,10 @@
     <div data-controller="ai-chat" data-ai-chat-chat-url-value="<%= ai_chat_path %>">
       <%# Floating button — bottom right %>
       <button
+        type="button"
         data-action="click->ai-chat#toggle"
+        aria-expanded="false"
+        aria-controls="ai-chat-panel"
         class="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-slate-800 text-white shadow-lg hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
         aria-label="Open AI Assistant"
       >
@@ -188,45 +191,53 @@
 
       <%# Slide-in panel %>
       <div
+        id="ai-chat-panel"
         data-ai-chat-target="panel"
-        class="hidden fixed bottom-24 right-6 z-50 w-96 max-h-[70vh] flex flex-col bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden"
+        role="dialog"
+        aria-label="AI Portfolio Assistant"
+        class="hidden fixed bottom-24 right-6 z-50 w-96 max-h-[70vh] rounded-xl shadow-2xl border border-slate-200 overflow-hidden"
       >
-        <%# Header %>
-        <div class="flex items-center justify-between px-4 py-3 bg-slate-800 text-white">
-          <span class="text-sm font-semibold">AI Portfolio Assistant</span>
-          <button data-action="click->ai-chat#toggle" class="text-slate-300 hover:text-white focus:outline-none" aria-label="Close">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        <div class="flex flex-col bg-white h-full max-h-[70vh]">
+          <%# Header %>
+          <div class="flex items-center justify-between px-4 py-3 bg-slate-800 text-white">
+            <span class="text-sm font-semibold">AI Portfolio Assistant</span>
+            <button data-action="click->ai-chat#toggle" class="text-slate-300 hover:text-white focus:outline-none" aria-label="Close">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
 
-        <%# Messages area %>
-        <div
-          data-ai-chat-target="messages"
-          class="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-50 min-h-[200px]"
-        >
-          <div class="flex justify-start mb-2">
-            <div class="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg px-3 py-2 max-w-[80%]">
-              Hi! I can analyze your portfolio — futures, spot, stocks, allocations, and watchlist. What would you like to know?
+          <%# Messages area %>
+          <div
+            data-ai-chat-target="messages"
+            aria-live="polite"
+            aria-atomic="false"
+            class="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-50 min-h-[200px]"
+          >
+            <div class="flex justify-start mb-2">
+              <div class="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg px-3 py-2 max-w-[80%]">
+                Hi! I can analyze your portfolio — futures, spot, stocks, allocations, and watchlist. What would you like to know?
+              </div>
             </div>
           </div>
-        </div>
 
-        <%# Input area %>
-        <div class="border-t border-slate-200 p-3 bg-white flex gap-2">
-          <textarea
-            data-ai-chat-target="input"
-            data-action="keydown->ai-chat#handleKeydown"
-            placeholder="Ask about your portfolio… (Ctrl+Enter to send)"
-            rows="2"
-            class="flex-1 resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-          ></textarea>
-          <button
-            data-ai-chat-target="submit"
-            data-action="click->ai-chat#sendMessage"
-            class="self-end px-3 py-2 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >Send</button>
+          <%# Input area %>
+          <div class="border-t border-slate-200 p-3 bg-white flex gap-2">
+            <textarea
+              data-ai-chat-target="input"
+              data-action="keydown->ai-chat#handleKeydown"
+              placeholder="Ask about your portfolio… (Ctrl+Enter / ⌘Enter)"
+              rows="2"
+              class="flex-1 resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+            ></textarea>
+            <button
+              type="button"
+              data-ai-chat-target="submit"
+              data-action="click->ai-chat#sendMessage"
+              class="self-end px-3 py-2 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >Send</button>
+          </div>
         </div>
       </div>
     </div>
