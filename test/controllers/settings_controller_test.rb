@@ -12,6 +12,22 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
   test "show renders successfully" do
     get settings_path
     assert_response :success
+    assert_select "legend", text: "AI Assistant"
+  end
+
+  test "show displays key entry form when no API key configured" do
+    @user.update!(gemini_api_key: nil)
+    get settings_path
+    assert_response :success
+    assert_select "input[name='api_key']"
+  end
+
+  test "show displays masked key and actions when API key is configured" do
+    @user.update!(gemini_api_key: "AIzaTestKey12345678")
+    get settings_path
+    assert_response :success
+    assert_match @user.gemini_api_key_masked, response.body
+    assert_select "button", text: "Test Connection"
   end
 
   test "update_ai_key saves the API key" do

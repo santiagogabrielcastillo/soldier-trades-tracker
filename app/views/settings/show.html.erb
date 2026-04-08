@@ -34,4 +34,78 @@
 
     <%= f.submit "Save settings", class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
   <% end %>
+
+  <hr class="border-slate-200">
+
+  <fieldset>
+    <legend class="block text-sm font-medium text-slate-900">AI Assistant</legend>
+    <p class="mb-3 text-sm text-slate-500">Connect your Gemini API key to enable AI-powered insights on your portfolio.</p>
+
+    <% if current_user.gemini_api_key_configured? %>
+      <div class="rounded-lg border border-slate-200 bg-white p-4">
+        <div class="mb-3 flex items-center gap-2">
+          <span class="font-mono text-sm text-slate-700"><%= current_user.gemini_api_key_masked %></span>
+          <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">Configured</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <%= button_to "Remove", remove_settings_ai_key_path, method: :delete,
+                class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
+          <button type="button" id="ai-test-btn"
+                  class="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            Test Connection
+          </button>
+          <span id="ai-test-result" class="text-sm"></span>
+        </div>
+      </div>
+
+      <script>
+        document.getElementById('ai-test-btn').addEventListener('click', function() {
+          var btn = this;
+          var result = document.getElementById('ai-test-result');
+          btn.disabled = true;
+          btn.textContent = 'Testing...';
+          result.textContent = '';
+          result.className = 'text-sm';
+
+          fetch('<%= ai_test_saved_key_path %>', {
+            method: 'POST',
+            headers: {
+              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+              'Accept': 'application/json'
+            }
+          })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.success) {
+              result.textContent = '\u2713 Connection successful';
+              result.className = 'text-sm font-medium text-emerald-600';
+            } else {
+              result.textContent = '\u2717 ' + (data.error || 'Invalid key');
+              result.className = 'text-sm font-medium text-red-600';
+            }
+          })
+          .catch(function() {
+            result.textContent = '\u2717 Request failed';
+            result.className = 'text-sm font-medium text-red-600';
+          })
+          .finally(function() {
+            btn.disabled = false;
+            btn.textContent = 'Test Connection';
+          });
+        });
+      </script>
+    <% else %>
+      <%= form_with url: settings_ai_key_path, method: :patch, local: true do |f| %>
+        <div class="rounded-lg border border-slate-200 bg-white p-4">
+          <div class="mb-3">
+            <%= f.label :api_key, "Gemini API Key", class: "block text-sm font-medium text-slate-700 mb-1" %>
+            <%= f.text_field :api_key, placeholder: "AIza...",
+                  class: "block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+          </div>
+          <%= f.submit "Save API Key",
+                class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
+        </div>
+      <% end %>
+    <% end %>
+  </fieldset>
 </div>
