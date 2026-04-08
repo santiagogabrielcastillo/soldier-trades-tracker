@@ -23,8 +23,11 @@ class SettingsController < ApplicationController
   end
 
   def remove_ai_key
-    current_user.update!(gemini_api_key: nil)
-    redirect_to settings_path, notice: "AI Assistant key removed."
+    if current_user.update(gemini_api_key: nil)
+      redirect_to settings_path, notice: "AI Assistant key removed."
+    else
+      redirect_to settings_path, alert: "Could not remove API key."
+    end
   end
 
   private
