@@ -57,4 +57,8 @@ Rails.application.routes.draw do
   patch "allocation/assign_spot_account/:id",   to: "allocations#assign_spot_account",    as: :allocation_assign_spot_account
   resources :allocation_buckets,        only: %i[create update destroy]
   resources :allocation_manual_entries, only: %i[create update destroy]
+
+  post "ai/chat",           to: "ai#chat",          as: :ai_chat
+  post "ai/test_key",       to: "ai#test_key",      as: :ai_test_key
+  post "ai/test_saved_key", to: "ai#test_saved_key", as: :ai_test_saved_key
 end
