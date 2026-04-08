@@ -16,7 +16,7 @@ export default class extends Controller {
     fetch(this.testUrlValue, {
       method: "POST",
       headers: {
-        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
+        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content,
         "Accept": "application/json"
       }
     })
