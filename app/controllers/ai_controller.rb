@@ -35,7 +35,7 @@ class AiController < ApplicationController
     api_key = params[:api_key].to_s.strip
     return render json: { error: "no_api_key", message: "API key cannot be blank." }, status: :unprocessable_entity if api_key.blank?
 
-    with_ai_errors do
+    with_key_test_errors do
       Ai::GeminiService.new(api_key: api_key).generate(prompt: "Say OK")
       render json: { ok: true }
     end
@@ -46,7 +46,7 @@ class AiController < ApplicationController
       return render json: { error: "no_api_key", message: "No key configured." }, status: :unprocessable_entity
     end
 
-    with_ai_errors do
+    with_key_test_errors do
       Ai::GeminiService.new(api_key: current_user.gemini_api_key).generate(prompt: "Say OK")
       render json: { ok: true }
     end
@@ -62,5 +62,15 @@ class AiController < ApplicationController
     render json: { error: "invalid_key", message: invalid_key_message }, status: :unauthorized
   rescue Ai::Error
     render json: { error: "service_error", message: "The AI service is temporarily unavailable." }, status: :unprocessable_entity
+  end
+
+  # For key validation: 429 means the key authenticated (just throttled = valid),
+  # and service errors are Google infrastructure issues — not key problems.
+  def with_key_test_errors
+    yield
+  rescue Ai::RateLimitError, Ai::ServiceError
+    render json: { ok: true }
+  rescue Ai::InvalidKeyError
+    render json: { error: "invalid_key", message: "Your API key appears to be invalid. Please check it in Settings." }, status: :unauthorized
   end
 end

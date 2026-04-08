@@ -22,7 +22,7 @@ export default class extends Controller {
     })
       .then(res => res.json())
       .then(data => {
-        if (data.success) {
+        if (data.ok) {
           result.textContent = "\u2713 Connection successful"
           result.className = "text-sm font-medium text-emerald-600"
         } else {

@@ -109,6 +109,32 @@ class AiControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "test_key returns ok: true when rate limited (key authenticated)" do
+    Ai::GeminiService.stub(:new, ->(_opts) {
+      svc = Object.new
+      svc.define_singleton_method(:generate) { |_opts| raise Ai::RateLimitError, "rate limited" }
+      svc
+    }) do
+      post ai_test_key_path, params: { api_key: "AIzaGoodKey12345678" }, as: :json
+      assert_response :success
+      json = JSON.parse(response.body)
+      assert_equal true, json["ok"]
+    end
+  end
+
+  test "test_key returns ok: true on service error (Google infra, not key problem)" do
+    Ai::GeminiService.stub(:new, ->(_opts) {
+      svc = Object.new
+      svc.define_singleton_method(:generate) { |_opts| raise Ai::ServiceError, "503 unavailable" }
+      svc
+    }) do
+      post ai_test_key_path, params: { api_key: "AIzaGoodKey12345678" }, as: :json
+      assert_response :success
+      json = JSON.parse(response.body)
+      assert_equal true, json["ok"]
+    end
+  end
+
   # --- /ai/test_saved_key ---
 
   test "test_saved_key returns ok when stored key works" do
