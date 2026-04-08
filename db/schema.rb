@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_31_152335) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_07_173716) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -368,6 +368,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_31_152335) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "admin", default: false, null: false
+    t.text "gemini_api_key"
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 

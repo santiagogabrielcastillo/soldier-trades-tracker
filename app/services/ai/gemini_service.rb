@@ -21,7 +21,7 @@ module Ai
       request["Content-Type"] = "application/json"
       request.body = JSON.generate({
         "contents" => [
-          { "parts" => [{ "text" => prompt }] }
+          { "parts" => [ { "text" => prompt } ] }
         ]
       })
 

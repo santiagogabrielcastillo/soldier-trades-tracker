@@ -102,7 +102,7 @@
   </div>
 
   <% if @positions.any? %>
-  <div data-controller="stocks-table">
+  <div>
     <% if @stock_portfolio.argentina? %>
       <%# ── Argentina stat cards ── %>
       <%
@@ -111,41 +111,23 @@
         pnl_usd             = @mep_rate&.positive? ? (@total_unrealized_pnl / @mep_rate) : nil
         cash_usd_stat       = @mep_rate&.positive? ? (@cash_balance / @mep_rate) : nil
       %>
-      <% mc = { data: { "stocks-table-target": "moneyCell" } } %>
       <div class="mb-6 flex flex-wrap items-baseline gap-6">
-        <%= render StatCardComponent.new(label: "Stocks (ARS)", value: format_ars(total_positions_ars), value_html: mc) %>
-        <%= render StatCardComponent.new(label: "Stocks (USD)", value: total_positions_usd ? format_money(total_positions_usd) : nil, value_html: mc) %>
-        <%= render StatCardComponent.new(label: "Unrealized P&L (ARS)", value: format_ars(@total_unrealized_pnl), signed: true, color_value: @total_unrealized_pnl, value_html: mc) %>
-        <%= render StatCardComponent.new(label: "Unrealized P&L (USD)", value: pnl_usd ? format_money(pnl_usd) : nil, signed: true, color_value: pnl_usd, value_html: mc) %>
-        <%= render StatCardComponent.new(label: "Cash (ARS)", value: format_ars(@cash_balance), value_html: mc) %>
-        <%= render StatCardComponent.new(label: "Cash (USD)", value: cash_usd_stat ? format_money(cash_usd_stat) : nil, value_html: mc) %>
+        <%= render StatCardComponent.new(label: "Stocks (ARS)", value: format_ars(total_positions_ars)) %>
+        <%= render StatCardComponent.new(label: "Stocks (USD)", value: total_positions_usd ? format_money(total_positions_usd) : nil) %>
+        <%= render StatCardComponent.new(label: "Unrealized P&L (ARS)", value: format_ars(@total_unrealized_pnl), signed: true, color_value: @total_unrealized_pnl) %>
+        <%= render StatCardComponent.new(label: "Unrealized P&L (USD)", value: pnl_usd ? format_money(pnl_usd) : nil, signed: true, color_value: pnl_usd) %>
+        <%= render StatCardComponent.new(label: "Cash (ARS)", value: format_ars(@cash_balance)) %>
+        <%= render StatCardComponent.new(label: "Cash (USD)", value: cash_usd_stat ? format_money(cash_usd_stat) : nil) %>
       </div>
     <% else %>
       <%# ── US stat cards ── %>
-      <% mc = { data: { "stocks-table-target": "moneyCell" } } %>
       <div class="mb-6 flex flex-wrap items-baseline gap-6">
-        <%= render StatCardComponent.new(label: "Stocks (USD)", value: format_money(@stocks_value - @cash_balance), value_html: mc) %>
-        <%= render StatCardComponent.new(label: "Unrealized P&L", value: format_money(@total_unrealized_pnl), signed: true, color_value: @total_unrealized_pnl, value_html: mc) %>
-        <%= render StatCardComponent.new(label: "Cash (USD)", value: format_money(@cash_balance), value_html: mc) %>
+        <%= render StatCardComponent.new(label: "Stocks (USD)", value: format_money(@stocks_value - @cash_balance)) %>
+        <%= render StatCardComponent.new(label: "Unrealized P&L", value: format_money(@total_unrealized_pnl), signed: true, color_value: @total_unrealized_pnl) %>
+        <%= render StatCardComponent.new(label: "Cash (USD)", value: format_money(@cash_balance)) %>
       </div>
     <% end %>
 
-    <div class="mb-2 flex justify-end">
-      <button type="button"
-              data-action="click->stocks-table#toggle"
-              title="Toggle amounts"
-              class="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors duration-150">
-        <%# Eye open — shown when amounts are visible %>
-        <svg data-stocks-table-target="eyeOn" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.573-3.007-9.964-7.178Z" />
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-        </svg>
-        <%# Eye off — shown when amounts are hidden %>
-        <svg data-stocks-table-target="eyeOff" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden h-4 w-4" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-        </svg>
-      </button>
-    </div>
 
     <% if @stock_portfolio.argentina? %>
       <%# ── Argentina CEDEAR portfolio table ── %>
@@ -172,13 +154,13 @@
           <% ratio = @cedear_instruments[pos.ticker]&.ratio %>
           <% table.with_row do %>
             <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900"><%= pos.ticker %></td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700" data-stocks-table-target="moneyCell"><%= ratio ? number_with_precision(ratio, precision: 4, strip_insignificant_zeros: true) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= ratio ? number_with_precision(ratio, precision: 4, strip_insignificant_zeros: true) : "—" %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_precision(pos.shares, precision: 6, strip_insignificant_zeros: true) %></td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700" data-stocks-table-target="moneyCell"><%= pos.breakeven ? format_ars(pos.breakeven) : "—" %></td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700" data-stocks-table-target="moneyCell"><%= current_price_ars ? format_ars(current_price_ars) : "—" %></td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700" data-stocks-table-target="moneyCell"><%= current_price_usd ? format_money(current_price_usd) : "—" %></td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700" data-stocks-table-target="moneyCell"><%= total_pos_ars ? format_ars(total_pos_ars) : "—" %></td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700" data-stocks-table-target="moneyCell"><%= total_pos_usd ? format_money(total_pos_usd) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= pos.breakeven ? format_ars(pos.breakeven) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_price_ars ? format_ars(current_price_ars) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_price_usd ? format_money(current_price_usd) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= total_pos_ars ? format_ars(total_pos_ars) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= total_pos_usd ? format_money(total_pos_usd) : "—" %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-500"><%= pct_total ? number_to_percentage(pct_total, precision: 1) : "—" %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= pct_pnl.nil? ? 'text-slate-500' : (pct_pnl >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= pct_pnl ? number_to_percentage(pct_pnl, precision: 2) : "—" %></td>
           <% end %>
@@ -188,13 +170,13 @@
           <% cash_pct_total = @stocks_value.positive? ? (@cash_balance / @stocks_value * 100) : nil %>
           <% table.with_row do %>
             <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900">CASH</td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= @cash_balance.negative? ? 'text-red-600' : 'text-slate-700' %>" data-stocks-table-target="moneyCell"><%= format_ars(@cash_balance) %></td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700" data-stocks-table-target="moneyCell"><%= cash_usd ? format_money(cash_usd) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= @cash_balance.negative? ? 'text-red-600' : 'text-slate-700' %>"><%= format_ars(@cash_balance) %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= cash_usd ? format_money(cash_usd) : "—" %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-500"><%= cash_pct_total ? number_to_percentage(cash_pct_total, precision: 1) : "—" %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
           <% end %>
@@ -205,11 +187,11 @@
           <td class="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900">TOTAL</td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-slate-900" data-stocks-table-target="moneyCell"><%= format_ars(@stocks_value) %></td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-slate-900" data-stocks-table-target="moneyCell"><%= total_usd ? format_money(total_usd) : "—" %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-slate-900"><%= format_ars(@stocks_value) %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-slate-900"><%= total_usd ? format_money(total_usd) : "—" %></td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
         <% end %>
@@ -237,12 +219,12 @@
           <% unrealized_roi = unrealized && pos.net_usd_invested.to_d.positive? ? (unrealized / pos.net_usd_invested.to_d * 100) : nil %>
           <% table.with_row do %>
             <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900"><%= pos.ticker %></td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700" data-stocks-table-target="moneyCell"><%= pos.breakeven ? format_money(pos.breakeven) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= pos.breakeven ? format_money(pos.breakeven) : "—" %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_precision(pos.shares, precision: 6, strip_insignificant_zeros: true) %></td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700" data-stocks-table-target="moneyCell"><%= current_price ? format_money(current_price) : "—" %></td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700" data-stocks-table-target="moneyCell"><%= market_value ? format_money(market_value) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_price ? format_money(current_price) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= market_value ? format_money(market_value) : "—" %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-500"><%= pct_total ? number_to_percentage(pct_total, precision: 1) : "—" %></td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized.nil? ? 'text-slate-500' : (unrealized >= 0 ? 'text-emerald-600' : 'text-red-600') %>" data-stocks-table-target="moneyCell"><%= unrealized ? format_money(unrealized) : "—" %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized.nil? ? 'text-slate-500' : (unrealized >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized ? format_money(unrealized) : "—" %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized_roi.nil? ? 'text-slate-500' : (unrealized_roi >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized_roi ? number_to_percentage(unrealized_roi, precision: 2) : "—" %></td>
           <% end %>
         <% end %>
@@ -250,24 +232,24 @@
           <% cash_pct_total = @stocks_value.positive? ? (@cash_balance / @stocks_value * 100) : nil %>
           <% table.with_row do %>
             <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900">CASH</td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= @cash_balance.negative? ? 'text-red-600' : 'text-slate-700' %>" data-stocks-table-target="moneyCell"><%= format_money(@cash_balance) %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= @cash_balance.negative? ? 'text-red-600' : 'text-slate-700' %>"><%= format_money(@cash_balance) %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-500"><%= cash_pct_total ? number_to_percentage(cash_pct_total, precision: 1) : "—" %></td>
-            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
           <% end %>
         <% end %>
         <%# ── Totals row ── %>
         <% table.with_row(classes: "border-t-2 border-slate-200 bg-slate-50") do %>
           <td class="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900">TOTAL</td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-slate-900" data-stocks-table-target="moneyCell"><%= format_money(@stocks_value) %></td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400" data-stocks-table-target="moneyCell">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-slate-900"><%= format_money(@stocks_value) %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
         <% end %>
       <% end %>

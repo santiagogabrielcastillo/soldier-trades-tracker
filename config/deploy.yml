@@ -27,6 +27,7 @@ builder:
 env:
   clear:
     RAILS_SERVE_STATIC_FILES: "true"
+    REGISTRATION_OPEN: "true"
   secret:
     - RAILS_MASTER_KEY
     - DATABASE_URL
