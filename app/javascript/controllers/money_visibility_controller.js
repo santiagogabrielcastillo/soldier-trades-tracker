@@ -7,13 +7,25 @@ export default class extends Controller {
   static targets = ["eyeOn", "eyeOff"]
 
   connect() {
-    this.#applyVisibility(localStorage.getItem(STORAGE_KEY) === "true")
+    this.#applyVisibility(this.#getHidden())
+  }
+
+  disconnect() {
+    this.#applyVisibility(false)
   }
 
   toggle() {
-    const next = !(localStorage.getItem(STORAGE_KEY) === "true")
-    localStorage.setItem(STORAGE_KEY, String(next))
+    const next = !this.#getHidden()
+    this.#setHidden(next)
     this.#applyVisibility(next)
+  }
+
+  #getHidden() {
+    try { return localStorage.getItem(STORAGE_KEY) === "true" } catch { return false }
+  }
+
+  #setHidden(value) {
+    try { localStorage.setItem(STORAGE_KEY, String(value)) } catch { /* ignore */ }
   }
 
   #applyVisibility(hidden) {
@@ -33,5 +45,9 @@ export default class extends Controller {
 
     this.eyeOnTargets.forEach(t => t.classList.toggle("hidden", hidden))
     this.eyeOffTargets.forEach(t => t.classList.toggle("hidden", !hidden))
+
+    document.querySelectorAll("[data-action*='money-visibility#toggle']").forEach(btn => {
+      btn.setAttribute("aria-pressed", String(hidden))
+    })
   }
 }
