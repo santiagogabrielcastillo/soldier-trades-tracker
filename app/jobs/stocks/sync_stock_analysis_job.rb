@@ -42,7 +42,7 @@ module Stocks
               created_at:         now,
               updated_at:         now
             },
-            unique_by: [:user_id, :ticker],
+            unique_by: [ :user_id, :ticker ],
             update_only: %i[rating executive_summary risk_reward_rating thesis_breakdown red_flags analyzed_at]
           )
 
