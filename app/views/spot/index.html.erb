@@ -1,5 +1,5 @@
 <div>
-  <h1 class="mb-4 text-2xl font-semibold text-slate-900">Spot portfolio</h1>
+  <%= render PageHeaderComponent.new(title: "Spot portfolio") %>
 
   <%= render TabNavComponent.new(tabs: [
     { label: "Portfolio", url: spot_path(spot_index_filter_params.merge("view" => "portfolio")), active: @view == "portfolio" },
@@ -121,31 +121,29 @@
   <% end %>
 
   <% if @view == "transactions" %>
-    <%= form_with url: spot_path, method: :get, local: true, class: "mb-4 flex flex-wrap items-end gap-4", data: { controller: "auto-submit-form", turbo: false } do |f| %>
-      <%= f.hidden_field :view, value: "transactions" %>
-      <div class="flex flex-col gap-1">
-        <%= f.label :from_date, "From", class: "text-sm font-medium text-slate-700" %>
-        <%= f.date_field :from_date, value: @from_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[10rem]", data: { auto_submit_form_target: "trigger" } %>
-      </div>
-      <div class="flex flex-col gap-1">
-        <%= f.label :to_date, "To", class: "text-sm font-medium text-slate-700" %>
-        <%= f.date_field :to_date, value: @to_date, class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[10rem]", data: { auto_submit_form_target: "trigger" } %>
-      </div>
-      <div class="flex flex-col gap-1">
-        <%= f.label :token, "Token", class: "text-sm font-medium text-slate-700" %>
-        <%= f.select :token, options_for_select([["All", ""]] + (@tokens_for_filter || []).map { |t| [t, t] }, @filter_token), {}, { class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[8rem]", data: { auto_submit_form_target: "trigger" } } %>
-      </div>
-      <div class="flex flex-col gap-1">
-        <%= f.label :side, "Side", class: "text-sm font-medium text-slate-700" %>
-        <%= f.select :side, options_for_select([["All", ""], ["Buy", "buy"], ["Sell", "sell"], ["Deposit", "deposit"], ["Withdraw", "withdraw"]], @filter_side), {}, { class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[6rem]", data: { auto_submit_form_target: "trigger" } } %>
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium text-slate-700">&nbsp;</span>
-        <div class="flex gap-2">
-          <%= f.submit "Filter", class: "rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
-          <%= link_to "Clear filters", spot_path(view: "transactions"), class: "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+    <%= render DateRangeFilterComponent.new(
+          url: spot_path,
+          from: @from_date,
+          to: @to_date,
+          extra_params: { view: "transactions" },
+          clear_url: spot_path(view: "transactions")
+        ) do |c| %>
+      <% c.with_extra_fields do %>
+        <div class="flex flex-col gap-1">
+          <label for="token" class="text-sm font-medium text-slate-700">Token</label>
+          <%= select_tag :token,
+                options_for_select([["All", ""]] + (@tokens_for_filter || []).map { |t| [t, t] }, @filter_token),
+                class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[8rem]",
+                data: { auto_submit_form_target: "trigger" } %>
         </div>
-      </div>
+        <div class="flex flex-col gap-1">
+          <label for="side" class="text-sm font-medium text-slate-700">Side</label>
+          <%= select_tag :side,
+                options_for_select([["All", ""], ["Buy", "buy"], ["Sell", "sell"], ["Deposit", "deposit"], ["Withdraw", "withdraw"]], @filter_side),
+                class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[6rem]",
+                data: { auto_submit_form_target: "trigger" } %>
+        </div>
+      <% end %>
     <% end %>
 
     <% if @transactions.present? %>
