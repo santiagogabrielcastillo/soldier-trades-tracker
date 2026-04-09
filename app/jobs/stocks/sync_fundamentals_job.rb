@@ -13,6 +13,7 @@ module Stocks
           { ticker: ticker, pe: f.pe, fwd_pe: f.fwd_pe, peg: f.peg, ps: f.ps, pfcf: f.pfcf,
             net_margin: f.net_margin, roe: f.roe, roic: f.roic,
             debt_eq: f.debt_eq, sales_5y: f.sales_5y, sales_qq: f.sales_qq,
+            sector: f.sector, industry: f.industry, ev_ebitda: f.ev_ebitda,
             fetched_at: now },
           unique_by: :ticker
         )

@@ -1,0 +1,17 @@
+aapl:
+  ticker: AAPL
+  pe: 28.5
+  fwd_pe: 25.1
+  peg: 2.30
+  ps: 7.50
+  pfcf: 30.2
+  net_margin: 25.31
+  roe: 147.25
+  roic: 55.10
+  debt_eq: 1.87
+  sales_5y: 2.02
+  sales_qq: 4.87
+  sector: Technology
+  industry: Consumer Electronics
+  ev_ebitda: 22.10
+  fetched_at: 2026-04-08 10:00:00
