@@ -3,7 +3,7 @@
 ---
 title: Institute Multi-User Platform
 type: feat
-status: active
+status: completed
 date: 2026-04-08
 origin: docs/brainstorms/2026-04-08-institute-multi-user-brainstorm.md
 deepened: 2026-04-08
@@ -711,12 +711,12 @@ All admin views use:
 
 ### Phase 3 Acceptance Criteria
 
-- [ ] Non-admin users hitting any `/admin/*` route are redirected to root with "Not authorized"
-- [ ] Admin dashboard shows correct % profitable (over all students, not just those with trades), total P&L, avg P&L, total/active student counts
-- [ ] Student leaderboard is sorted by descending realized P&L; students with no trades appear at bottom with 0.0
-- [ ] Students index lists all non-admin users with their realized P&L and active status badge
-- [ ] Students index is built from `pluck` — no full User AR objects with encrypted fields
-- [ ] Admin can toggle a student's `active` flag from the students index
+- [x] Non-admin users hitting any `/admin/*` route are redirected to root with "Not authorized"
+- [x] Admin dashboard shows correct % profitable (over all students, not just those with trades), total P&L, avg P&L, total/active student counts
+- [x] Student leaderboard is sorted by descending realized P&L; students with no trades appear at bottom with 0.0
+- [x] Students index lists all non-admin users with their realized P&L and active status badge
+- [x] Students index is built from `pluck` — no full User AR objects with encrypted fields
+- [x] Admin can toggle a student's `active` flag from the students index
 - [ ] Last active admin cannot be deactivated (error shown)
 - [ ] `toggle_active` uses `before_action :set_student, only:` — does not run on index
 - [ ] Per-student show page: one query for position counts (GROUP BY open), not three
