@@ -62,7 +62,7 @@ group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
   # Kamal deployment CLI — only needed on the developer machine, not in the container
-  gem "kamal", "~> 2.0"
+  gem "kamal", "~> 2.11"
 end
 
 group :test do
