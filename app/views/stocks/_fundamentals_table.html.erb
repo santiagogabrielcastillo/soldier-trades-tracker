@@ -1,4 +1,4 @@
-<%# locals: (tickers:, fundamentals:, sync_url:, watchlist_items: nil) %>
+<%# locals: (tickers:, fundamentals:, sync_url:, watchlist_items: nil, analyze_url: nil, analyses: {}) %>
 <% last_synced = fundamentals.values.map(&:fetched_at).min %>
 <div class="mb-4 flex items-center justify-between">
   <p class="text-xs text-slate-500">
@@ -8,9 +8,16 @@
       No data yet — click Sync to fetch fundamentals from Finviz
     <% end %>
   </p>
-  <%= button_to "Sync now", sync_url,
-        method: :post,
-        class: "rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+  <div class="flex items-center gap-2">
+    <%= button_to "Sync now", sync_url,
+          method: :post,
+          class: "rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+    <% if analyze_url && current_user.gemini_api_key_configured? %>
+      <%= button_to "Analyze", analyze_url,
+            method: :post,
+            class: "rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+    <% end %>
+  </div>
 </div>
 
 <%= render DataTableComponent.new(columns: [
@@ -32,11 +39,22 @@
   *(watchlist_items ? [{ label: "", classes: "text-right" }] : [])
 ]) do |table| %>
   <% tickers.each do |ticker| %>
-    <% f = fundamentals[ticker] %>
+    <% f        = fundamentals[ticker] %>
+    <% analysis = analyses[ticker] %>
     <% table.with_row do %>
       <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900"><%= ticker %></td>
       <td class="whitespace-nowrap px-6 py-4 text-center text-sm">
-        <% if current_user.gemini_api_key_configured? %>
+        <% if analysis %>
+          <% badge_class = case analysis.rating
+             when "buy"   then "bg-emerald-100 text-emerald-800"
+             when "hold"  then "bg-amber-100 text-amber-800"
+             when "sell"  then "bg-red-100 text-red-800"
+             else              "bg-slate-100 text-slate-700"
+             end %>
+          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide <%= badge_class %>">
+            <%= analysis.rating %>
+          </span>
+        <% elsif current_user.gemini_api_key_configured? %>
           <span class="text-slate-400">—</span>
         <% else %>
           <%= link_to "Configure AI", settings_path,

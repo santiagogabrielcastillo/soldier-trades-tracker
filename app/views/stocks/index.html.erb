@@ -454,7 +454,9 @@
       <%= render "stocks/fundamentals_table",
             tickers:       @positions.map(&:ticker),
             fundamentals:  @fundamentals,
-            sync_url:      stocks_sync_fundamentals_path(portfolio_id: @stock_portfolio.id) %>
+            sync_url:      stocks_sync_fundamentals_path(portfolio_id: @stock_portfolio.id),
+            analyses:      @analyses,
+            analyze_url:   stocks_sync_analysis_path %>
     <% end %>
   <% end %>
 
@@ -472,10 +474,12 @@
       <%= render EmptyStateComponent.new(message: "No tickers yet — add one above.") %>
     <% else %>
       <%= render "stocks/fundamentals_table",
-            tickers:        @watchlist_tickers.map(&:ticker),
-            fundamentals:   @fundamentals,
-            sync_url:       stocks_watchlist_sync_path,
-            watchlist_items: @watchlist_tickers.index_by(&:ticker) %>
+            tickers:         @watchlist_tickers.map(&:ticker),
+            fundamentals:    @fundamentals,
+            sync_url:        stocks_watchlist_sync_path,
+            watchlist_items: @watchlist_tickers.index_by(&:ticker),
+            analyses:        @analyses,
+            analyze_url:     stocks_sync_analysis_path %>
     <% end %>
   <% end %>
 </div>
