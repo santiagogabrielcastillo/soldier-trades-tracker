@@ -21,10 +21,14 @@ class StocksController < ApplicationController
     when "valuations"
       all_positions = Stocks::PositionStateService.call(stock_portfolio: @stock_portfolio)
       @positions    = all_positions.select(&:open?)
-      @fundamentals = StockFundamental.for_tickers(@positions.map(&:ticker))
+      tickers       = @positions.map(&:ticker)
+      @fundamentals = StockFundamental.for_tickers(tickers)
+      @analyses     = StockAnalysis.for_user_and_tickers(current_user, tickers)
     when "watchlist"
       @watchlist_tickers = current_user.watchlist_tickers.ordered
-      @fundamentals      = StockFundamental.for_tickers(@watchlist_tickers.pluck(:ticker))
+      tickers            = @watchlist_tickers.pluck(:ticker)
+      @fundamentals      = StockFundamental.for_tickers(tickers)
+      @analyses          = StockAnalysis.for_user_and_tickers(current_user, tickers)
     else
       load_portfolio_data
     end
@@ -69,6 +73,17 @@ class StocksController < ApplicationController
     Stocks::SyncFundamentalsJob.perform_later(tickers)
     redirect_to stocks_path(view: "watchlist"),
                 notice: "Sync started — refresh in a moment to see updated data."
+  end
+
+  def sync_analysis
+    tickers = collect_analysis_tickers
+    if tickers.any?
+      Stocks::SyncStockAnalysisJob.perform_later(current_user.id, tickers)
+      notice = "Analysis started — refresh in a moment to see ratings."
+    else
+      notice = "No tickers to analyze."
+    end
+    redirect_back fallback_location: stocks_path, notice: notice
   end
 
   def add_to_watchlist
@@ -234,5 +249,13 @@ class StocksController < ApplicationController
 
   def stock_trade_params
     params.permit(:ticker, :side, :shares, :price_usd, :executed_at)
+  end
+
+  def collect_analysis_tickers
+    portfolio = StockPortfolio.find_or_create_default_for(current_user)
+    open_tickers = Stocks::PositionStateService.call(stock_portfolio: portfolio)
+                    .select(&:open?).map(&:ticker)
+    watchlist_tickers = current_user.watchlist_tickers.pluck(:ticker)
+    (open_tickers + watchlist_tickers).uniq
   end
 end

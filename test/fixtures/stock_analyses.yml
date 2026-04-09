@@ -1,0 +1,19 @@
+aapl_analysis:
+  user: one
+  ticker: AAPL
+  rating: buy
+  executive_summary: Strong moat with durable cash flows.
+  risk_reward_rating: Good — low leverage, dominant brand.
+  thesis_breakdown: Apple's ecosystem creates high switching costs. Asset-light services business growing.
+  red_flags: None
+  analyzed_at: 2026-04-09 10:00:00
+
+msft_analysis:
+  user: one
+  ticker: MSFT
+  rating: hold
+  executive_summary: Fair value, strong but priced in.
+  risk_reward_rating: Fair — reasonable leverage, cloud competition increasing.
+  thesis_breakdown: Azure growth decelerating. Wide moat in enterprise software.
+  red_flags: Valuation premium, slowing cloud growth
+  analyzed_at: 2026-04-09 10:00:00
