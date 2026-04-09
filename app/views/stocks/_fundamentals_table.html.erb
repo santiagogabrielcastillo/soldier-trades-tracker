@@ -15,11 +15,14 @@
 
 <%= render DataTableComponent.new(columns: [
   { label: "Ticker",     classes: "text-left" },
+  { label: "AI Rating",  classes: "text-center" },
+  { label: "Sector",     classes: "text-left" },
   { label: "P/E",        classes: "text-right" },
   { label: "Fwd P/E",   classes: "text-right" },
   { label: "PEG",        classes: "text-right" },
   { label: "P/S",        classes: "text-right" },
   { label: "P/FCF",      classes: "text-right" },
+  { label: "EV/EBITDA",  classes: "text-right" },
   { label: "Net Margin", classes: "text-right" },
   { label: "ROE",        classes: "text-right" },
   { label: "ROIC",       classes: "text-right" },
@@ -32,11 +35,21 @@
     <% f = fundamentals[ticker] %>
     <% table.with_row do %>
       <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900"><%= ticker %></td>
+      <td class="whitespace-nowrap px-6 py-4 text-center text-sm">
+        <% if current_user.gemini_api_key_configured? %>
+          <span class="text-slate-400">—</span>
+        <% else %>
+          <%= link_to "Configure AI", settings_path,
+                class: "text-xs font-medium text-indigo-600 hover:text-indigo-800 underline underline-offset-2" %>
+        <% end %>
+      </td>
+      <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-500"><%= f&.sector || "—" %></td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.pe     ? number_with_precision(f.pe,     precision: 1) : "—" %></td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.fwd_pe ? number_with_precision(f.fwd_pe, precision: 1) : "—" %></td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.peg    ? number_with_precision(f.peg,    precision: 2) : "—" %></td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.ps     ? number_with_precision(f.ps,     precision: 1) : "—" %></td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.pfcf   ? number_with_precision(f.pfcf,   precision: 1) : "—" %></td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.ev_ebitda ? number_with_precision(f.ev_ebitda, precision: 1) : "—" %></td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= f&.net_margin ? (f.net_margin >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-500' %>">
         <%= f&.net_margin ? number_to_percentage(f.net_margin, precision: 1) : "—" %>
       </td>
