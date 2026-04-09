@@ -106,14 +106,14 @@ module Stocks
     end
 
     def decimal(val)
-      return nil if val.nil? || val.strip.in?(["-", "", "N/A"])
+      return nil if val.nil? || val.strip.in?([ "-", "", "N/A" ])
       BigDecimal(val.to_s.gsub(",", ""))
     rescue ArgumentError, TypeError
       nil
     end
 
     def pct(val)
-      return nil if val.nil? || val.strip.in?(["-", "", "N/A"])
+      return nil if val.nil? || val.strip.in?([ "-", "", "N/A" ])
       BigDecimal(val.to_s.delete("%,").strip)
     rescue ArgumentError, TypeError
       nil
