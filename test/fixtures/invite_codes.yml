@@ -1,0 +1,8 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# NOTE: The invite_codes table enforces a singleton constraint (at most one row).
+# Only one fixture may exist here. Tests needing different states should use
+# InviteCode.delete_all + InviteCode.create! or travel_to to manipulate expiry.
+
+valid:
+  code: validinvitecode1234567890abcdef
+  expires_at: <%= 1.year.from_now.iso8601 %>

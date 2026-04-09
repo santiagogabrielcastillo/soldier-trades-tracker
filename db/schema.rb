@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_07_173716) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_09_221713) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -61,6 +61,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_07_173716) do
     t.string "last_sync_error"
     t.datetime "historic_sync_requested_at"
     t.index ["user_id"], name: "index_exchange_accounts_on_user_id"
+  end
+
+  create_table "invite_codes", force: :cascade do |t|
+    t.string "code", limit: 64, null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "(true)", name: "index_invite_codes_singleton", unique: true
+    t.index ["code"], name: "index_invite_codes_on_code", unique: true
+    t.index ["expires_at"], name: "index_invite_codes_on_expires_at"
   end
 
   create_table "portfolios", force: :cascade do |t|
@@ -262,6 +272,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_07_173716) do
     t.index ["spot_account_id"], name: "index_spot_transactions_on_spot_account_id"
   end
 
+  create_table "stock_analyses", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "ticker", null: false
+    t.string "rating", null: false
+    t.text "executive_summary"
+    t.string "risk_reward_rating"
+    t.text "thesis_breakdown"
+    t.text "red_flags"
+    t.datetime "analyzed_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "ticker"], name: "index_stock_analyses_on_user_id_and_ticker", unique: true
+    t.index ["user_id"], name: "index_stock_analyses_on_user_id"
+  end
+
   create_table "stock_fundamentals", force: :cascade do |t|
     t.string "ticker", null: false
     t.decimal "pe", precision: 12, scale: 4
@@ -278,6 +303,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_07_173716) do
     t.decimal "debt_eq", precision: 12, scale: 4
     t.decimal "sales_5y", precision: 12, scale: 4
     t.decimal "sales_qq", precision: 12, scale: 4
+    t.string "sector"
+    t.string "industry"
+    t.decimal "ev_ebitda", precision: 12, scale: 4
     t.index ["ticker"], name: "index_stock_fundamentals_on_ticker", unique: true
   end
 
@@ -369,6 +397,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_07_173716) do
     t.datetime "updated_at", null: false
     t.boolean "admin", default: false, null: false
     t.text "gemini_api_key"
+    t.boolean "active", default: true, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
@@ -400,6 +429,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_07_173716) do
   add_foreign_key "spot_accounts", "allocation_buckets", on_delete: :nullify
   add_foreign_key "spot_accounts", "users"
   add_foreign_key "spot_transactions", "spot_accounts"
+  add_foreign_key "stock_analyses", "users"
   add_foreign_key "stock_portfolio_snapshots", "stock_portfolios"
   add_foreign_key "stock_portfolios", "allocation_buckets", on_delete: :nullify
   add_foreign_key "stock_portfolios", "users"

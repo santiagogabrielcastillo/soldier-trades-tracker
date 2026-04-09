@@ -6,6 +6,12 @@
     <%= render FormFieldComponent.new(form: f, attribute: :email, label: "Email", autofocus: true, autocomplete: "email") %>
     <%= render FormFieldComponent.new(form: f, attribute: :password, label: "Password", type: :password, autocomplete: "new-password") %>
     <%= render FormFieldComponent.new(form: f, attribute: :password_confirmation, label: "Confirm password", type: :password, autocomplete: "new-password") %>
+    <div class="flex flex-col gap-1">
+      <label for="invite_code" class="text-sm font-medium text-slate-700">Invite code</label>
+      <input type="text" name="invite_code" id="invite_code" autocomplete="off"
+             class="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+             placeholder="Enter your invite code" />
+    </div>
     <%= f.submit "Sign up", class: "mt-2 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
   <% end %>
   <p class="mt-5 text-center text-sm text-slate-500">
