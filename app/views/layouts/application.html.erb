@@ -61,6 +61,11 @@
               <% end %>
             </div>
             <div class="space-y-0.5 border-t border-slate-800 px-3 py-4">
+              <% if current_user&.admin? %>
+                <%= link_to "Admin panel →", admin_root_path,
+                      class: "flex items-center rounded-md px-3 py-2 text-sm font-medium text-amber-400 hover:bg-slate-800 hover:text-amber-300 transition-colors duration-150",
+                      data: { action: "nav#close" } %>
+              <% end %>
               <% active_settings = request.path.start_with?("/settings") %>
               <%= link_to "Settings", settings_path,
                     class: "flex items-center rounded-md px-3 py-2 text-sm transition-colors duration-150 #{active_settings ? 'bg-slate-700 font-medium text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}",
@@ -127,6 +132,10 @@
               <% end %>
             </div>
             <div class="space-y-0.5 border-t border-slate-800 px-3 py-4">
+              <% if current_user&.admin? %>
+                <%= link_to "Admin panel →", admin_root_path,
+                      class: "flex items-center rounded-md px-3 py-2 text-sm font-medium text-amber-400 hover:bg-slate-800 hover:text-amber-300 transition-colors duration-150" %>
+              <% end %>
               <% active_settings = request.path.start_with?("/settings") %>
               <%= link_to "Settings", settings_path,
                     class: "flex items-center rounded-md px-3 py-2 text-sm transition-colors duration-150 #{active_settings ? 'bg-slate-700 font-medium text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}" %>
