@@ -15,7 +15,7 @@ module Stocks
 
     FundamentalsData = Struct.new(
       :pe, :fwd_pe, :peg, :ps, :pfcf, :net_margin, :roe, :roic,
-      :debt_eq, :sales_5y, :sales_qq,
+      :debt_eq, :sales_5y, :sales_qq, :sector, :industry, :ev_ebitda,
       keyword_init: true
     )
 
@@ -82,7 +82,10 @@ module Stocks
 
       return nil if metrics.empty?
 
-      Rails.logger.info("[Stocks::FundamentalsFetcher] #{ticker} metrics: #{metrics.slice('P/E','Fwd P/E','PEG','P/S','P/FCF','Profit Margin','ROE','ROIC','Debt/Eq','Sales Y/Y TTM','Sales Q/Q')}")
+      Rails.logger.info("[Stocks::FundamentalsFetcher] #{ticker} metrics: #{metrics.slice('P/E', 'Fwd P/E', 'PEG', 'P/S', 'P/FCF', 'Profit Margin', 'ROE', 'ROIC', 'Debt/Eq', 'Sales Y/Y TTM', 'Sales Q/Q', 'EV/EBITDA')}")
+
+      sector_link   = doc.at_css("a[href*='f=sec_']")
+      industry_link = doc.at_css("a[href*='f=ind_']")
 
       FundamentalsData.new(
         pe:         decimal(metrics["P/E"]),
@@ -95,7 +98,10 @@ module Stocks
         roic:       pct(metrics["ROIC"]),
         debt_eq:    decimal(metrics["Debt/Eq"]),
         sales_5y:   pct(metrics["Sales Y/Y TTM"]),
-        sales_qq:   pct(metrics["Sales Q/Q"])
+        sales_qq:   pct(metrics["Sales Q/Q"]),
+        ev_ebitda:  decimal(metrics["EV/EBITDA"]),
+        sector:     sector_link&.text&.strip.presence,
+        industry:   industry_link&.text&.strip.presence
       )
     end
 
