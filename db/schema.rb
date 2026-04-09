@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_07_173716) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_08_210805) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -278,6 +278,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_07_173716) do
     t.decimal "debt_eq", precision: 12, scale: 4
     t.decimal "sales_5y", precision: 12, scale: 4
     t.decimal "sales_qq", precision: 12, scale: 4
+    t.string "sector"
+    t.string "industry"
+    t.decimal "ev_ebitda", precision: 12, scale: 4
     t.index ["ticker"], name: "index_stock_fundamentals_on_ticker", unique: true
   end
 
