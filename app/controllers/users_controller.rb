@@ -8,9 +8,16 @@ class UsersController < ApplicationController
   end
 
   def create
-    raise ActionController::RoutingError, "Not Found" unless registration_open?
-
     @user = User.new(user_params)
+    invite = InviteCode.current
+
+    unless invite&.valid_for_registration? && ActiveSupport::SecurityUtils.secure_compare(
+      params[:invite_code].to_s, invite.code
+    )
+      flash.now[:alert] = "Invalid or expired invite code."
+      render :new, status: :unprocessable_entity and return
+    end
+
     if @user.save
       reset_session
       session[:user_id] = @user.id
@@ -21,10 +28,6 @@ class UsersController < ApplicationController
   end
 
   private
-
-  def registration_open?
-    ENV["REGISTRATION_OPEN"] == "true"
-  end
 
   def user_params
     params.require(:user).permit(:email, :password, :password_confirmation, :sync_interval)

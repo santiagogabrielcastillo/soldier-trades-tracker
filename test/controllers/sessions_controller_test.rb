@@ -14,6 +14,29 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
+  test "login works with mixed-case email" do
+    post login_url, params: { email: @user.email.upcase, password: "password" }
+    assert_equal @user.id, session[:user_id]
+    assert_redirected_to root_url
+  end
+
+  test "inactive user cannot log in" do
+    inactive = users(:inactive)
+    inactive.update!(password: "password", password_confirmation: "password")
+
+    post login_url, params: { email: inactive.email, password: "password" }
+    assert_nil session[:user_id]
+    assert_response :unprocessable_entity
+  end
+
+  test "inactive user login shows generic error (no enumeration)" do
+    inactive = users(:inactive)
+    inactive.update!(password: "password", password_confirmation: "password")
+
+    post login_url, params: { email: inactive.email, password: "password" }
+    assert_match "Invalid email or password", flash[:alert]
+  end
+
   test "logout clears entire session" do
     post login_url, params: { email: @user.email, password: "password" }
     assert_equal @user.id, session[:user_id]

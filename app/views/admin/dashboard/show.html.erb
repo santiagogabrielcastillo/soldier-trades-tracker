@@ -1,0 +1,39 @@
+<%= render PageHeaderComponent.new(title: "Class Overview", subtitle: "Aggregated statistics for all students") %>
+
+<%# ── Class-wide stats ── %>
+<%= render SummaryStatRowComponent.new(mb: 8) do %>
+  <%= render StatCardComponent.new(label: "Total students", value: @total_students) %>
+  <%= render StatCardComponent.new(label: "Active students", value: @active_students) %>
+  <%= render StatCardComponent.new(label: "% Profitable", value: "#{@profitable_pct}%") %>
+  <%= render StatCardComponent.new(label: "Total realized P&L", value: format_money(@total_realized), signed: true, color_value: @total_realized) %>
+  <%= render StatCardComponent.new(label: "Avg realized P&L", value: format_money(@avg_realized), signed: true, color_value: @avg_realized) %>
+<% end %>
+
+<%# ── Leaderboard ── %>
+<%= render CardComponent.new(heading: "Leaderboard") do %>
+  <% if @leaderboard.any? %>
+    <%= render DataTableComponent.new(columns: [
+      { label: "#",            classes: "text-left w-10" },
+      { label: "Student",      classes: "text-left" },
+      { label: "Realized P&L", classes: "text-right" },
+      { label: "Status",       classes: "text-left" }
+    ]) do |table| %>
+      <% @leaderboard.each_with_index do |row, i| %>
+        <% table.with_row do %>
+          <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-500"><%= i + 1 %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900">
+            <%= link_to row[:email], admin_student_path(row[:user_id]), class: "hover:text-indigo-600 hover:underline" %>
+          </td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium <%= row[:realized_pl] >= 0 ? 'text-emerald-600' : 'text-red-600' %>">
+            <%= format_money(row[:realized_pl]) %>
+          </td>
+          <td class="whitespace-nowrap px-6 py-4 text-sm">
+            <%= render BadgeComponent.new(label: row[:active] ? "Active" : "Inactive", variant: row[:active] ? :success : :danger) %>
+          </td>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% else %>
+    <p class="text-sm text-slate-500">No students registered yet.</p>
+  <% end %>
+<% end %>

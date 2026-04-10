@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_09_174944) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_09_221713) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -61,6 +61,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_09_174944) do
     t.string "last_sync_error"
     t.datetime "historic_sync_requested_at"
     t.index ["user_id"], name: "index_exchange_accounts_on_user_id"
+  end
+
+  create_table "invite_codes", force: :cascade do |t|
+    t.string "code", limit: 64, null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "(true)", name: "index_invite_codes_singleton", unique: true
+    t.index ["code"], name: "index_invite_codes_on_code", unique: true
+    t.index ["expires_at"], name: "index_invite_codes_on_expires_at"
   end
 
   create_table "portfolios", force: :cascade do |t|
@@ -387,6 +397,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_09_174944) do
     t.datetime "updated_at", null: false
     t.boolean "admin", default: false, null: false
     t.text "gemini_api_key"
+    t.boolean "active", default: true, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 

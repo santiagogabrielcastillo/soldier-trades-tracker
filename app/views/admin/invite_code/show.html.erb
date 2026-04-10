@@ -1,0 +1,40 @@
+<%= render PageHeaderComponent.new(title: "Invite Code", subtitle: "Students use this code to register.") %>
+
+<%# ── Current code card ── %>
+<%= render CardComponent.new(heading: "Current code", class: "mb-6") do %>
+  <% if @invite_code %>
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+      <code class="rounded-md bg-slate-100 px-4 py-2.5 font-mono text-lg font-semibold tracking-wider text-slate-900 select-all">
+        <%= @invite_code.code %>
+      </code>
+      <span class="text-sm text-slate-500">
+        Expires <%= @invite_code.expires_at.strftime("%b %d, %Y at %H:%M %Z") %>
+      </span>
+      <% if @invite_code.valid_for_registration? %>
+        <%= render BadgeComponent.new(label: "Valid", variant: :success) %>
+      <% else %>
+        <%= render BadgeComponent.new(label: "Expired", variant: :danger) %>
+      <% end %>
+    </div>
+    <p class="text-xs text-slate-400">Share this code with your students. They will enter it during registration.</p>
+  <% else %>
+    <p class="text-sm text-slate-500">No invite code set. Generate one below before students can register.</p>
+  <% end %>
+<% end %>
+
+<%# ── Rotate form ── %>
+<%= render CardComponent.new(heading: "Rotate code") do %>
+  <p class="mb-4 text-sm text-slate-500">Generating a new code immediately invalidates the old one. Set an expiry date for when the registration window should close.</p>
+  <%= form_with url: admin_invite_code_path, method: :post, local: true, data: { turbo: false } do |f| %>
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="flex flex-col gap-1">
+        <label for="expires_at" class="text-sm font-medium text-slate-700">Expiry date &amp; time</label>
+        <input type="datetime-local" name="expires_at" id="expires_at" required
+               class="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[14rem]"
+               min="<%= Time.current.strftime("%Y-%m-%dT%H:%M") %>" />
+      </div>
+      <%= f.submit "Generate new code",
+            class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 cursor-pointer" %>
+    </div>
+  <% end %>
+<% end %>

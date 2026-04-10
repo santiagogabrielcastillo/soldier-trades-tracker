@@ -13,6 +13,7 @@ class Position < ApplicationRecord
   scope :closed_positions, -> { where(open: false) }
   scope :for_exchange_account, ->(id) { where(exchange_account_id: id) }
   scope :for_user, ->(user) { where(exchange_account_id: user.exchange_account_ids) }
+  scope :for_student, ->(user) { joins(:exchange_account).where(exchange_accounts: { user_id: user.id }) }
 
   # Positions that overlap the given date range (open_at <= to_date and (close_at nil or close_at >= from_date)).
   scope :in_date_range, ->(from_date, to_date) {
