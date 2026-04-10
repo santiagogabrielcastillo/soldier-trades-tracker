@@ -3,6 +3,8 @@
 require "test_helper"
 
 class UsersMailerTest < ActionMailer::TestCase
+  include Rails.application.routes.url_helpers
+
   setup do
     @user = users(:one)
     @user.update!(password: "password")
@@ -26,6 +28,6 @@ class UsersMailerTest < ActionMailer::TestCase
 
   test "password_reset text body contains reset link" do
     mail = UsersMailer.password_reset(@user, @token)
-    assert_match @token, mail.text_part.body.encoded
+    assert_match edit_password_reset_url(token: @token, host: "www.example.com"), mail.text_part.body.encoded
   end
 end
