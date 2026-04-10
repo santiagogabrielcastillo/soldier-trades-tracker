@@ -77,4 +77,31 @@ class UserTest < ActiveSupport::TestCase
     user.gemini_api_key = "AIzaSyTestKey12345678"
     assert_equal "AIza...5678", user.gemini_api_key_masked
   end
+
+  test "generates a password reset token" do
+    user = users(:one)
+    user.update!(password: "password")
+    token = user.generate_token_for(:password_reset)
+    assert_not_nil token
+    assert_equal user, User.find_by_token_for(:password_reset, token)
+  end
+
+  test "password reset token expires after 2 hours" do
+    user = users(:one)
+    user.update!(password: "password")
+    token = user.generate_token_for(:password_reset)
+
+    travel 2.hours + 1.second do
+      assert_nil User.find_by_token_for(:password_reset, token)
+    end
+  end
+
+  test "password reset token is invalidated after password change" do
+    user = users(:one)
+    user.update!(password: "oldpassword")
+    token = user.generate_token_for(:password_reset)
+
+    user.update!(password: "newpassword", password_confirmation: "newpassword")
+    assert_nil User.find_by_token_for(:password_reset, token)
+  end
 end
