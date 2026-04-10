@@ -1,4 +1,4 @@
-<%# locals: (tickers:, fundamentals:, sync_url:, watchlist_items: nil) %>
+<%# locals: (tickers:, fundamentals:, sync_url:, watchlist_items: nil, analyze_url: nil, analyses: {}) %>
 <% last_synced = fundamentals.values.map(&:fetched_at).min %>
 <div class="mb-4 flex items-center justify-between">
   <p class="text-xs text-slate-500">
@@ -8,18 +8,28 @@
       No data yet — click Sync to fetch fundamentals from Finviz
     <% end %>
   </p>
-  <%= button_to "Sync now", sync_url,
-        method: :post,
-        class: "rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+  <div class="flex items-center gap-2">
+    <%= button_to "Sync now", sync_url,
+          method: :post,
+          class: "rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+    <% if analyze_url && current_user.gemini_api_key_configured? %>
+      <%= button_to "Analyze", analyze_url,
+            method: :post,
+            class: "rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+    <% end %>
+  </div>
 </div>
 
 <%= render DataTableComponent.new(columns: [
   { label: "Ticker",     classes: "text-left" },
+  { label: "AI Rating",  classes: "text-center" },
+  { label: "Sector",     classes: "text-left" },
   { label: "P/E",        classes: "text-right" },
   { label: "Fwd P/E",   classes: "text-right" },
   { label: "PEG",        classes: "text-right" },
   { label: "P/S",        classes: "text-right" },
   { label: "P/FCF",      classes: "text-right" },
+  { label: "EV/EBITDA",  classes: "text-right" },
   { label: "Net Margin", classes: "text-right" },
   { label: "ROE",        classes: "text-right" },
   { label: "ROIC",       classes: "text-right" },
@@ -29,14 +39,35 @@
   *(watchlist_items ? [{ label: "", classes: "text-right" }] : [])
 ]) do |table| %>
   <% tickers.each do |ticker| %>
-    <% f = fundamentals[ticker] %>
+    <% f        = fundamentals[ticker] %>
+    <% analysis = analyses[ticker] %>
     <% table.with_row do %>
       <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900"><%= ticker %></td>
+      <td class="whitespace-nowrap px-6 py-4 text-center text-sm">
+        <% if analysis %>
+          <% badge_class = case analysis.rating
+             when "buy"   then "bg-emerald-100 text-emerald-800"
+             when "hold"  then "bg-amber-100 text-amber-800"
+             when "sell"  then "bg-red-100 text-red-800"
+             else              "bg-slate-100 text-slate-700"
+             end %>
+          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide <%= badge_class %>">
+            <%= analysis.rating %>
+          </span>
+        <% elsif current_user.gemini_api_key_configured? %>
+          <span class="text-slate-400">—</span>
+        <% else %>
+          <%= link_to "Configure AI", settings_path,
+                class: "text-xs font-medium text-indigo-600 hover:text-indigo-800 underline underline-offset-2" %>
+        <% end %>
+      </td>
+      <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-500"><%= f&.sector || "—" %></td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.pe     ? number_with_precision(f.pe,     precision: 1) : "—" %></td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.fwd_pe ? number_with_precision(f.fwd_pe, precision: 1) : "—" %></td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.peg    ? number_with_precision(f.peg,    precision: 2) : "—" %></td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.ps     ? number_with_precision(f.ps,     precision: 1) : "—" %></td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.pfcf   ? number_with_precision(f.pfcf,   precision: 1) : "—" %></td>
+      <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= f&.ev_ebitda ? number_with_precision(f.ev_ebitda, precision: 1) : "—" %></td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= f&.net_margin ? (f.net_margin >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-500' %>">
         <%= f&.net_margin ? number_to_percentage(f.net_margin, precision: 1) : "—" %>
       </td>
