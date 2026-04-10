@@ -3,6 +3,12 @@ class User < ApplicationRecord
 
   encrypts :gemini_api_key
 
+  generates_token_for :password_reset, expires_in: 2.hours do
+    # Embedding part of password_digest means this token auto-invalidates
+    # the moment the password changes — true one-time use.
+    password_digest.last(10)
+  end
+
   SYNC_INTERVALS = %w[hourly daily twice_daily].freeze
 
   before_validation { self.email = email.to_s.strip.downcase }
