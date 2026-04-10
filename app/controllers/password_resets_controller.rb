@@ -18,7 +18,7 @@ class PasswordResetsController < ApplicationController
   def edit
     @token = params[:token]
     unless User.find_by_token_for(:password_reset, @token)
-      redirect_to new_password_reset_path, alert: "Reset link is invalid or has expired."
+      redirect_to new_password_reset_path, alert: "Reset link is invalid or has expired." and return
     end
   end
 
@@ -32,6 +32,7 @@ class PasswordResetsController < ApplicationController
       redirect_to login_path, notice: "Password updated. Please sign in."
     else
       @token = params[:token]
+      @user = user
       render :edit, status: :unprocessable_entity
     end
   end
