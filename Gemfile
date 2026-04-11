@@ -70,5 +70,5 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
   # Rails 7.2 LineFiltering expects run(reporter, options); Minitest 6 uses run(klass, method_name, reporter). Pin to 5.x.
-  gem "minitest", "~> 5.0"
+  gem "minitest", "~> 6.0"
 end
