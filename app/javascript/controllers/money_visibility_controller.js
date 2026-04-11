@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 
+// STORAGE_KEY duplicated in application layout boot script (must stay in sync).
 const STORAGE_KEY = "money_hidden"
 const MASK = '<span class="font-numeric text-slate-300 select-none" aria-hidden="true">*</span>'
 
@@ -8,10 +9,13 @@ export default class extends Controller {
 
   connect() {
     this.#applyVisibility(this.#getHidden())
+    document.documentElement.classList.remove("money-hidden--boot")
   }
 
   disconnect() {
-    this.#applyVisibility(false)
+    // When amounts are hidden, do not restore DOM text — it can run after Turbo swaps
+    // the body and would briefly reveal figures on the new page.
+    if (!this.#getHidden()) this.#applyVisibility(false)
   }
 
   toggle() {

@@ -4,3 +4,8 @@
 @source "../../javascript/**/*.js";
 @source "../../components/**/*.html.erb";
 @source "../../components/**/*.rb";
+
+/* Money visibility: hide real figures until Stimulus masks (see layout boot script). */
+html.money-hidden--boot [data-money] {
+  color: transparent !important;
+}

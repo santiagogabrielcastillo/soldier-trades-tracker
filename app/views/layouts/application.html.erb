@@ -7,6 +7,27 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <%# Sync with app/javascript/controllers/money_visibility_controller.js (STORAGE_KEY + MASK). %>
+    <%= javascript_tag nonce: true do %>
+      (function () {
+        var KEY = "money_hidden";
+        var MASK = '<span class="font-numeric text-slate-300 select-none" aria-hidden="true">*</span>';
+        function moneyHidden() {
+          try { return localStorage.getItem(KEY) === "true"; } catch (e) { return false; }
+        }
+        if (moneyHidden()) document.documentElement.classList.add("money-hidden--boot");
+        document.addEventListener("turbo:before-render", function (e) {
+          if (!moneyHidden()) return;
+          var root = e.detail && e.detail.newBody;
+          if (!root || !root.querySelectorAll) return;
+          root.querySelectorAll("[data-money]").forEach(function (el) {
+            if (!el.dataset.originalContent) el.dataset.originalContent = el.innerHTML;
+            el.innerHTML = MASK;
+          });
+        });
+      })();
+    <% end %>
+
     <%= yield :head %>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
