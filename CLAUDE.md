@@ -51,7 +51,7 @@ Each exchange follows a `BaseProvider` pattern:
 ### Models & Relationships
 
 - **User** → many `ExchangeAccount`, `Trade`, `Portfolio`, `SpotAccount`
-- **ExchangeAccount** → many `Trade`, `SyncRun`; holds encrypted `api_key`/`api_secret` (Rails 7.2 encryption)
+- **ExchangeAccount** → many `Trade`, `SyncRun`; holds encrypted `api_key`/`api_secret` (Rails Active Record encryption)
 - **Trade** → belongs to `ExchangeAccount`; linked to many `Position` via `PositionTrade` join table
 - **Position** → computed from trades; has open/closed status, entry/exit prices, P&L
 - **Portfolio** → date range + optional exchange filter for performance analysis; one `default: true` per user enforced via `before_save :clear_other_defaults`

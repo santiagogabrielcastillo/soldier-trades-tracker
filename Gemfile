@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 7.2.3"
+gem "rails", "~> 8.1.0"
 # The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
 gem "sprockets-rails"
 # Use postgresql as the database for Active Record
@@ -69,6 +69,7 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
-  # Rails 7.2 LineFiltering expects run(reporter, options); Minitest 6 uses run(klass, method_name, reporter). Pin to 5.x.
-  gem "minitest", "~> 5.0"
+  gem "minitest", "~> 6.0"
+  # Minitest 6 extracted mock/stub; keep require "minitest/mock" working in tests.
+  gem "minitest-mock"
 end
