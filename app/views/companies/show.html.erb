@@ -27,9 +27,9 @@
       <h2 class="text-base font-medium text-slate-900">Custom Metrics</h2>
     </div>
     <div class="px-6 py-4">
-      <% if @company.custom_metric_definitions.any? %>
+      <% if @custom_metric_definitions.any? %>
         <ul class="mb-4 divide-y divide-slate-100">
-          <% @company.custom_metric_definitions.ordered.each do |defn| %>
+          <% @custom_metric_definitions.each do |defn| %>
             <li class="flex items-center justify-between py-2">
               <span class="text-sm text-slate-700"><%= defn.name %>
                 <span class="ml-1 text-xs text-slate-400">(<%= defn.data_type %>)</span>
@@ -68,10 +68,9 @@
     <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
       <h2 class="text-base font-medium text-slate-900">Earnings Reports</h2>
     </div>
-    <% reports = @company.earnings_reports.order(Arel.sql("fiscal_year DESC, fiscal_quarter DESC NULLS LAST")) %>
-    <% if reports.any? %>
+    <% if @reports.any? %>
       <ul class="divide-y divide-slate-200">
-        <% reports.each do |report| %>
+        <% @reports.each do |report| %>
           <li class="flex items-center justify-between px-6 py-4">
             <div>
               <%= link_to report.period_label, company_earnings_report_path(@company, report),

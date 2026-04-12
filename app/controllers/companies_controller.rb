@@ -8,6 +8,8 @@ class CompaniesController < ApplicationController
   end
 
   def show
+    @custom_metric_definitions = @company.custom_metric_definitions.ordered
+    @reports = @company.earnings_reports.order(Arel.sql("fiscal_year DESC, fiscal_quarter DESC NULLS LAST"))
   end
 
   def new

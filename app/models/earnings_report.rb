@@ -12,6 +12,19 @@ class EarningsReport < ApplicationRecord
 
   validates :period_type, inclusion: { in: PERIOD_TYPES }
   validates :fiscal_year, presence: true
+  validates :fiscal_year,
+    uniqueness: {
+      scope: %i[company_id period_type],
+      conditions: -> { where(fiscal_quarter: nil) },
+      message: "already has an annual report for this year"
+    },
+    if: -> { period_type == "annual" }
+  validates :fiscal_year,
+    uniqueness: {
+      scope: %i[company_id fiscal_quarter period_type],
+      message: "already has a report for this quarter"
+    },
+    if: -> { period_type == "quarterly" }
   validate :fiscal_quarter_matches_period_type
 
   def period_label

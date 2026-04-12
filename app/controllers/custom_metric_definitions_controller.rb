@@ -4,10 +4,7 @@ class CustomMetricDefinitionsController < ApplicationController
   before_action :set_company
 
   def create
-    @definition = @company.custom_metric_definitions.build(
-      name: params[:name],
-      data_type: params[:data_type]
-    )
+    @definition = @company.custom_metric_definitions.build(definition_params)
     if @definition.save
       redirect_to company_path(@company), notice: "#{@definition.name} metric added."
     else
@@ -27,5 +24,9 @@ class CustomMetricDefinitionsController < ApplicationController
     @company = current_user.companies.find(params[:company_id])
   rescue ActiveRecord::RecordNotFound
     render plain: "Not found", status: :not_found
+  end
+
+  def definition_params
+    params.permit(:name, :data_type)
   end
 end

@@ -12,11 +12,11 @@ class CustomMetricValue < ApplicationRecord
 
     case custom_metric_definition.data_type
     when "percentage"
-      "#{decimal_value.round(2)}%"
+      decimal_value ? "#{decimal_value.round(2)}%" : nil
     when "text"
       text_value.to_s
     else
-      decimal_value.to_s
+      decimal_value&.to_s
     end
   end
 
