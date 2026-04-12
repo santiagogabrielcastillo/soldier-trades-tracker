@@ -1,0 +1,101 @@
+<div>
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-slate-900"><%= @company.name %> (<%= @company.ticker %>)</h1>
+      <% if @company.sector.present? %>
+        <p class="mt-1 text-sm text-slate-500"><%= @company.sector %></p>
+      <% end %>
+    </div>
+    <div class="flex gap-3">
+      <%= link_to "Compare", comparison_company_path(@company),
+            class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+      <%= link_to "Edit", edit_company_path(@company),
+            class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+      <%= render ButtonComponent.new(label: "New report", href: new_company_earnings_report_path(@company)) %>
+    </div>
+  </div>
+
+  <% if @company.description.present? %>
+    <div class="mb-6 rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
+      <p class="text-sm text-slate-700 whitespace-pre-wrap"><%= @company.description %></p>
+    </div>
+  <% end %>
+
+  <%# Custom metric definitions management %>
+  <section class="mb-6 rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+      <h2 class="text-base font-medium text-slate-900">Custom Metrics</h2>
+    </div>
+    <div class="px-6 py-4">
+      <% if @company.custom_metric_definitions.any? %>
+        <ul class="mb-4 divide-y divide-slate-100">
+          <% @company.custom_metric_definitions.ordered.each do |defn| %>
+            <li class="flex items-center justify-between py-2">
+              <span class="text-sm text-slate-700"><%= defn.name %>
+                <span class="ml-1 text-xs text-slate-400">(<%= defn.data_type %>)</span>
+              </span>
+              <%= button_to "Remove", company_custom_metric_definition_path(@company, defn),
+                    method: :delete,
+                    data: { turbo_confirm: "Remove \"#{defn.name}\"? This will delete its value from all reports for #{@company.ticker}." },
+                    class: "text-xs text-slate-400 hover:text-red-600" %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="mb-4 text-sm text-slate-500">No custom metrics yet.</p>
+      <% end %>
+
+      <%# Inline add form %>
+      <%= form_with url: company_custom_metric_definitions_path(@company), local: true, class: "flex gap-2 items-end" do |f| %>
+        <div class="flex-1">
+          <%= f.label :name, "Metric name", class: "block text-xs font-medium text-slate-700 mb-1" %>
+          <%= f.text_field :name, class: "block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "e.g. Active Users" %>
+        </div>
+        <div>
+          <%= f.label :data_type, "Type", class: "block text-xs font-medium text-slate-700 mb-1" %>
+          <%= f.select :data_type,
+                options_for_select([["Number", "number"], ["Percentage", "percentage"], ["Text", "text"]]),
+                {},
+                { class: "block rounded-md border border-slate-300 px-3 py-1.5 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" } %>
+        </div>
+        <%= f.submit "Add metric", class: "rounded-md bg-slate-800 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700" %>
+      <% end %>
+    </div>
+  </section>
+
+  <%# Earnings reports list %>
+  <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+      <h2 class="text-base font-medium text-slate-900">Earnings Reports</h2>
+    </div>
+    <% reports = @company.earnings_reports.order(Arel.sql("fiscal_year DESC, fiscal_quarter DESC NULLS LAST")) %>
+    <% if reports.any? %>
+      <ul class="divide-y divide-slate-200">
+        <% reports.each do |report| %>
+          <li class="flex items-center justify-between px-6 py-4">
+            <div>
+              <%= link_to report.period_label, company_earnings_report_path(@company, report),
+                    class: "font-medium text-slate-900 hover:text-indigo-600" %>
+              <% if report.reported_on.present? %>
+                <span class="ml-2 text-sm text-slate-500">Reported <%= report.reported_on.strftime("%b %d, %Y") %></span>
+              <% end %>
+            </div>
+            <div class="flex items-center gap-3">
+              <%= link_to "Edit", edit_company_earnings_report_path(@company, report),
+                    class: "text-sm text-slate-600 hover:text-slate-900" %>
+              <%= button_to "Remove", company_earnings_report_path(@company, report),
+                    method: :delete,
+                    data: { turbo_confirm: "Remove #{report.period_label}?" },
+                    class: "text-sm text-slate-600 hover:text-red-600" %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="px-6 py-12 text-center text-slate-600">
+        <p class="mb-4">No reports yet.</p>
+        <%= render ButtonComponent.new(label: "Add first report", href: new_company_earnings_report_path(@company), class: "inline-block") %>
+      </div>
+    <% end %>
+  </section>
+</div>
