@@ -42,11 +42,10 @@ class CompaniesController < ApplicationController
   def comparison
     @definitions = @company.custom_metric_definitions.ordered
     @reports = @company.earnings_reports
+      .includes(custom_metric_values: :custom_metric_definition)
       .order(Arel.sql("fiscal_year DESC, fiscal_quarter DESC NULLS LAST"))
     @values_by_report = @reports.each_with_object({}) do |report, h|
-      h[report.id] = report.custom_metric_values
-        .includes(:custom_metric_definition)
-        .index_by(&:custom_metric_definition_id)
+      h[report.id] = report.custom_metric_values.index_by(&:custom_metric_definition_id)
     end
   end
 
