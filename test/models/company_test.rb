@@ -8,38 +8,37 @@ class CompanyTest < ActiveSupport::TestCase
   end
 
   test "valid company saves" do
-    company = @user.companies.build(ticker: "aapl", name: "Apple Inc.")
+    company = @user.companies.build(ticker: "tsla", name: "Tesla Inc.")
     assert company.valid?, company.errors.full_messages.inspect
   end
 
   test "ticker is upcased and stripped on validation" do
-    company = @user.companies.build(ticker: "  aapl  ", name: "Apple")
+    company = @user.companies.build(ticker: "  tsla  ", name: "Tesla")
     company.valid?
-    assert_equal "AAPL", company.ticker
+    assert_equal "TSLA", company.ticker
   end
 
   test "ticker is required" do
-    company = @user.companies.build(ticker: nil, name: "Apple")
+    company = @user.companies.build(ticker: nil, name: "Tesla")
     assert_not company.valid?
     assert_includes company.errors[:ticker], "can't be blank"
   end
 
   test "name is required" do
-    company = @user.companies.build(ticker: "AAPL", name: nil)
+    company = @user.companies.build(ticker: "TSLA", name: nil)
     assert_not company.valid?
     assert_includes company.errors[:name], "can't be blank"
   end
 
   test "ticker is unique per user" do
-    @user.companies.create!(ticker: "AAPL", name: "Apple")
-    duplicate = @user.companies.build(ticker: "aapl", name: "Apple Inc.")
+    @user.companies.create!(ticker: "TSLA", name: "Tesla")
+    duplicate = @user.companies.build(ticker: "tsla", name: "Tesla Inc.")
     assert_not duplicate.valid?
     assert_includes duplicate.errors[:ticker], "has already been taken"
   end
 
   test "same ticker is allowed for different users" do
-    @user.companies.create!(ticker: "AAPL", name: "Apple")
-    other = users(:two).companies.build(ticker: "AAPL", name: "Apple")
+    other = users(:two).companies.build(ticker: "TSLA", name: "Tesla")
     assert other.valid?
   end
 

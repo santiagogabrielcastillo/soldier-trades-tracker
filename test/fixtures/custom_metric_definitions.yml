@@ -1,0 +1,11 @@
+apple_services:
+  company: apple
+  name: Services Revenue
+  data_type: number
+  position: 0
+
+apple_margin:
+  company: apple
+  name: Gross Margin %
+  data_type: percentage
+  position: 1

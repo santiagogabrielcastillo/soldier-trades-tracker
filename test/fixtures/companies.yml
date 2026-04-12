@@ -1,0 +1,17 @@
+apple:
+  user: one
+  ticker: AAPL
+  name: Apple Inc.
+  sector: Technology
+
+netflix:
+  user: one
+  ticker: NFLX
+  name: Netflix Inc.
+  sector: Technology
+
+other_user_company:
+  user: two
+  ticker: MSFT
+  name: Microsoft Corp.
+  sector: Technology

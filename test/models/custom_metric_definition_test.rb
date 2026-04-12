@@ -39,7 +39,7 @@ class CustomMetricDefinitionTest < ActiveSupport::TestCase
 
   test "same name allowed for different companies" do
     @company.custom_metric_definitions.create!(name: "ARR", data_type: "number")
-    other = users(:one).companies.create!(ticker: "NFLX", name: "Netflix")
+    other = users(:one).companies.create!(ticker: "AMZN", name: "Amazon")
     defn = other.custom_metric_definitions.build(name: "ARR", data_type: "number")
     assert defn.valid?
   end
