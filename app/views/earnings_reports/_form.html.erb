@@ -54,7 +54,7 @@
               <%= v.hidden_field :id %>
             <% end %>
             <%= v.label defn.data_type == "text" ? :text_value : :decimal_value,
-                  "#{defn.name} <span class='text-xs font-normal text-slate-400'>(#{defn.data_type})</span>".html_safe,
+                  safe_join([h(defn.name), content_tag(:span, " (#{defn.data_type})", class: "text-xs font-normal text-slate-400")]),
                   class: "block text-sm font-medium text-slate-700" %>
             <% if defn.data_type == "text" %>
               <%= v.text_area :text_value, rows: 2,
