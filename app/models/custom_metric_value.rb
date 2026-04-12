@@ -8,9 +8,11 @@ class CustomMetricValue < ApplicationRecord
   validate :value_matches_data_type
 
   def formatted_value
+    return nil unless custom_metric_definition
+
     case custom_metric_definition.data_type
     when "percentage"
-      "#{decimal_value}%"
+      "#{decimal_value.round(2)}%"
     when "text"
       text_value.to_s
     else
