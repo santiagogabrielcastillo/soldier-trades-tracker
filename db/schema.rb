@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_09_221713) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_13_133355) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,6 +45,55 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_09_221713) do
     t.bigint "user_id", null: false
     t.index ["user_id", "ticker"], name: "index_cedear_instruments_on_user_id_and_ticker", unique: true
     t.index ["user_id"], name: "index_cedear_instruments_on_user_id"
+  end
+
+  create_table "companies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.string "sector"
+    t.string "ticker", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "ticker"], name: "index_companies_on_user_id_and_ticker", unique: true
+  end
+
+  create_table "custom_metric_definitions", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.string "data_type", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "name"], name: "index_custom_metric_definitions_on_company_id_and_name", unique: true
+  end
+
+  create_table "custom_metric_values", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "custom_metric_definition_id", null: false
+    t.decimal "decimal_value", precision: 20, scale: 4
+    t.bigint "earnings_report_id", null: false
+    t.text "text_value"
+    t.datetime "updated_at", null: false
+    t.index ["custom_metric_definition_id"], name: "index_custom_metric_values_on_custom_metric_definition_id"
+    t.index ["earnings_report_id", "custom_metric_definition_id"], name: "idx_custom_metric_values_unique", unique: true
+  end
+
+  create_table "earnings_reports", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.decimal "eps", precision: 12, scale: 4
+    t.integer "fiscal_quarter"
+    t.integer "fiscal_year", null: false
+    t.decimal "net_income", precision: 20, scale: 2
+    t.text "notes"
+    t.string "period_type", null: false
+    t.date "reported_on"
+    t.decimal "revenue", precision: 20, scale: 2
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "fiscal_year", "fiscal_quarter", "period_type"], name: "idx_earnings_reports_quarterly_unique", unique: true, where: "(fiscal_quarter IS NOT NULL)"
+    t.index ["company_id", "fiscal_year", "fiscal_quarter"], name: "idx_earnings_reports_on_company_period"
+    t.index ["company_id", "fiscal_year", "period_type"], name: "idx_earnings_reports_annual_unique", unique: true, where: "(fiscal_quarter IS NULL)"
   end
 
   create_table "exchange_accounts", force: :cascade do |t|
@@ -391,11 +440,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_09_221713) do
 
   create_table "users", force: :cascade do |t|
     t.boolean "active", default: true, null: false
-    t.boolean "admin", default: false, null: false
     t.datetime "created_at", null: false
     t.string "email"
     t.text "gemini_api_key"
     t.string "password_digest"
+    t.string "role", default: "user", null: false
     t.string "sync_interval"
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -414,6 +463,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_09_221713) do
   add_foreign_key "allocation_manual_entries", "allocation_buckets"
   add_foreign_key "allocation_manual_entries", "users"
   add_foreign_key "cedear_instruments", "users"
+  add_foreign_key "companies", "users"
+  add_foreign_key "custom_metric_definitions", "companies"
+  add_foreign_key "custom_metric_values", "custom_metric_definitions"
+  add_foreign_key "custom_metric_values", "earnings_reports"
+  add_foreign_key "earnings_reports", "companies"
   add_foreign_key "exchange_accounts", "users"
   add_foreign_key "portfolios", "exchange_accounts", on_delete: :nullify
   add_foreign_key "portfolios", "users"
