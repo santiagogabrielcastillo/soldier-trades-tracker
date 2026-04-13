@@ -1,4 +1,4 @@
-<%# locals: (tickers:, fundamentals:, sync_url:, watchlist_items: nil, analyze_url: nil, analyses: {}) %>
+<%# locals: (tickers:, fundamentals:, sync_url:, watchlist_items: nil, analyses: {}) %>
 <% last_synced = fundamentals.values.map(&:fetched_at).min %>
 <div class="mb-4 flex items-center justify-between">
   <p class="text-xs text-slate-500">
@@ -12,11 +12,6 @@
     <%= button_to "Sync now", sync_url,
           method: :post,
           class: "rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
-    <% if analyze_url && current_user.gemini_api_key_configured? %>
-      <%= button_to "Analyze", analyze_url,
-            method: :post,
-            class: "rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
-    <% end %>
   </div>
 </div>
 
@@ -51,11 +46,20 @@
              when "sell"  then "bg-red-100 text-red-800"
              else              "bg-slate-100 text-slate-700"
              end %>
-          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide <%= badge_class %>">
+          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide <%= badge_class %>"
+                title="Analyzed <%= time_ago_in_words(analysis.analyzed_at) %> ago">
             <%= analysis.rating %>
           </span>
+          <p class="mt-1 text-xs text-slate-400"><%= time_ago_in_words(analysis.analyzed_at) %> ago</p>
+          <% if current_user.gemini_api_key_configured? %>
+            <%= button_to "Re-analyze", stocks_analyze_ticker_path(ticker),
+                  method: :post,
+                  class: "mt-1 text-xs font-medium text-indigo-500 hover:text-indigo-700 bg-transparent border-0 p-0 cursor-pointer" %>
+          <% end %>
         <% elsif current_user.gemini_api_key_configured? %>
-          <span class="text-slate-400">—</span>
+          <%= button_to "Analyze", stocks_analyze_ticker_path(ticker),
+                method: :post,
+                class: "rounded-md bg-indigo-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-indigo-500" %>
         <% else %>
           <%= link_to "Configure AI", settings_path,
                 class: "text-xs font-medium text-indigo-600 hover:text-indigo-800 underline underline-offset-2" %>

@@ -454,8 +454,7 @@
             tickers:       @positions.map(&:ticker),
             fundamentals:  @fundamentals,
             sync_url:      stocks_sync_fundamentals_path(portfolio_id: @stock_portfolio.id),
-            analyses:      @analyses,
-            analyze_url:   stocks_sync_analysis_path %>
+            analyses:      @analyses %>
     <% end %>
   <% end %>
 
@@ -477,8 +476,7 @@
             fundamentals:    @fundamentals,
             sync_url:        stocks_watchlist_sync_path,
             watchlist_items: @watchlist_tickers.index_by(&:ticker),
-            analyses:        @analyses,
-            analyze_url:     stocks_sync_analysis_path %>
+            analyses:        @analyses %>
     <% end %>
   <% end %>
 </div>
