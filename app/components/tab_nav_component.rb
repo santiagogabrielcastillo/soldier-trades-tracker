@@ -8,11 +8,11 @@ class TabNavComponent < ApplicationComponent
   end
 
   def tab_css(active)
-    base = "border-b-2 px-4 py-2 text-sm font-medium transition-colors duration-150"
+    base = "rounded-lg px-4 py-1.5 text-sm font-medium transition-all duration-150 whitespace-nowrap"
     if active
-      "#{base} border-indigo-600 text-slate-900"
+      "#{base} bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/60"
     else
-      "#{base} border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
+      "#{base} text-slate-500 hover:text-slate-800 hover:bg-white/60"
     end
   end
 end

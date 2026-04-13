@@ -17,7 +17,7 @@
 
 <%= render DataTableComponent.new(columns: [
   { label: "Ticker",     classes: "text-left" },
-  { label: "AI Rating",  classes: "text-center" },
+  { label: "AI Signal",  classes: "text-center", html: { title: "Powered by Gemini AI" } },
   { label: "Sector",     classes: "text-left" },
   { label: "P/E",        classes: "text-right" },
   { label: "Fwd P/E",   classes: "text-right" },
@@ -40,30 +40,57 @@
       <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900"><%= ticker %></td>
       <td class="whitespace-nowrap px-6 py-4 text-center text-sm">
         <% if analysis %>
-          <% badge_class = case analysis.rating
-             when "buy"   then "bg-emerald-100 text-emerald-800"
-             when "hold"  then "bg-amber-100 text-amber-800"
-             when "sell"  then "bg-red-100 text-red-800"
-             else              "bg-slate-100 text-slate-700"
-             end %>
-          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide <%= badge_class %>"
-                title="Analyzed on <%= analysis.analyzed_at.strftime('%b %-d, %Y %H:%M UTC') %>">
-            <%= analysis.rating %>
-          </span>
-          <p class="mt-1 text-xs text-slate-400"><%= time_ago_in_words(analysis.analyzed_at) %> ago</p>
-          <% if current_user.gemini_api_key_configured? %>
-            <%= button_to "Re-analyze", stocks_analyze_ticker_path(ticker),
-                  method: :post,
-                  form_class: "inline",
-                  class: "mt-1 text-xs font-medium text-indigo-500 hover:text-indigo-700 bg-transparent border-0 p-0 cursor-pointer" %>
-          <% end %>
+          <%
+            dot_class   = case analysis.rating
+                          when "buy"  then "bg-emerald-400"
+                          when "hold" then "bg-amber-400"
+                          when "sell" then "bg-red-400"
+                          else             "bg-slate-400"
+                          end
+            badge_class = case analysis.rating
+                          when "buy"  then "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                          when "hold" then "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                          when "sell" then "bg-red-50 text-red-700 ring-1 ring-red-200"
+                          else             "bg-slate-50 text-slate-700 ring-1 ring-slate-200"
+                          end
+          %>
+          <div class="flex flex-col items-center gap-1.5">
+            <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide <%= badge_class %>"
+                  title="Analyzed on <%= analysis.analyzed_at.strftime('%b %-d, %Y %H:%M UTC') %>">
+              <span class="h-1.5 w-1.5 rounded-full <%= dot_class %>"></span>
+              <%= analysis.rating %>
+            </span>
+            <span class="flex items-center gap-1 text-xs text-slate-400" title="<%= analysis.analyzed_at.strftime('%b %-d, %Y %H:%M UTC') %>">
+              <svg class="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+              <%= time_ago_in_words(analysis.analyzed_at) %> ago
+            </span>
+            <% if current_user.gemini_api_key_configured? %>
+              <%= button_to stocks_analyze_ticker_path(ticker),
+                    method: :post,
+                    form_class: "inline",
+                    class: "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 bg-transparent border-0 cursor-pointer transition-colors duration-100",
+                    title: "Re-analyze with AI" do %>
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                Re-analyze
+              <% end %>
+            <% end %>
+          </div>
         <% elsif current_user.gemini_api_key_configured? %>
-          <%= button_to "Analyze", stocks_analyze_ticker_path(ticker),
+          <%= button_to stocks_analyze_ticker_path(ticker),
                 method: :post,
-                class: "rounded-md bg-indigo-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-indigo-500" %>
+                class: "inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-slate-700 transition-colors duration-100" do %>
+            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+            </svg>
+            Analyze
+          <% end %>
         <% else %>
           <%= link_to "Configure AI", settings_path,
-                class: "text-xs font-medium text-indigo-600 hover:text-indigo-800 underline underline-offset-2" %>
+                class: "text-xs font-medium text-slate-400 hover:text-indigo-600 underline underline-offset-2 transition-colors duration-100" %>
         <% end %>
       </td>
       <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-500"><%= f&.sector || "—" %></td>
