@@ -1,0 +1,87 @@
+<%= render PageHeaderComponent.new(title: @admin.email, subtitle: "Admin — read-only view") do |c| %>
+  <% c.with_actions do %>
+    <%= render BadgeComponent.new(label: @admin.active? ? "Active" : "Inactive", variant: @admin.active? ? :success : :danger) %>
+    <% if current_user.super_admin? %>
+      <%= button_to @admin.active? ? "Deactivate" : "Activate",
+            toggle_active_admin_admin_path(@admin),
+            method: :patch,
+            class: "rounded-md border px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-500 #{@admin.active? ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'}" %>
+      <%= button_to "Demote to User",
+            demote_admin_admin_path(@admin),
+            method: :patch,
+            class: "rounded-md border border-amber-300 px-3 py-2 text-sm font-medium text-amber-600 hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-500" %>
+    <% end %>
+    <%= link_to "← All admins", admin_admins_path, class: "text-sm text-slate-500 hover:text-slate-800" %>
+  <% end %>
+<% end %>
+
+<%# ── Summary stats ── %>
+<% open_count   = @position_counts.fetch(true, 0) %>
+<% closed_count = @position_counts.fetch(false, 0) %>
+<%= render SummaryStatRowComponent.new(mb: 8) do %>
+  <%= render StatCardComponent.new(label: "Realized P&L", value: format_money(@realized_pl), signed: true, color_value: @realized_pl) %>
+  <%= render StatCardComponent.new(label: "Open positions", value: open_count) %>
+  <%= render StatCardComponent.new(label: "Closed positions", value: closed_count) %>
+<% end %>
+
+<%# ── Recent closed positions ── %>
+<%= render CardComponent.new(heading: "Recent closed positions", class: "mb-6") do %>
+  <% if @recent_positions.any? %>
+    <%= render DataTableComponent.new(columns: [
+      { label: "Symbol",     classes: "text-left" },
+      { label: "Side",       classes: "text-left" },
+      { label: "Exchange",   classes: "text-left" },
+      { label: "Closed at",  classes: "text-left" },
+      { label: "Net P&L",    classes: "text-right" },
+      { label: "ROI",        classes: "text-right" }
+    ]) do |table| %>
+      <% @recent_positions.each do |pos| %>
+        <% table.with_row do %>
+          <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900"><%= pos.symbol %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-sm capitalize text-slate-700"><%= pos.position_side %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-500"><%= pos.exchange_account.provider_type.to_s.capitalize %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-500"><%= pos.close_at&.strftime("%b %d, %Y") || "—" %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium <%= pos.net_pl.to_d >= 0 ? 'text-emerald-600' : 'text-red-600' %>">
+            <%= format_money(pos.net_pl) %>
+          </td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= pos.roi_percent.to_d >= 0 ? 'text-emerald-600' : 'text-red-600' %>">
+            <%= number_to_percentage(pos.roi_percent, precision: 2) %>
+          </td>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% else %>
+    <p class="text-sm text-slate-500">No closed positions yet.</p>
+  <% end %>
+<% end %>
+
+<%# ── Stock portfolios ── %>
+<% if @stock_portfolios.any? %>
+  <%= render CardComponent.new(heading: "Stock portfolios", class: "mb-6") do %>
+    <div class="space-y-2">
+      <% @stock_portfolios.each do |portfolio| %>
+        <div class="flex items-center justify-between rounded-md border border-slate-100 px-4 py-3">
+          <div>
+            <span class="text-sm font-medium text-slate-900"><%= portfolio.name %></span>
+            <span class="ml-2 rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500"><%= portfolio.market %></span>
+          </div>
+          <span class="text-sm text-slate-500"><%= portfolio.stock_trades.size %> trades</span>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
+
+<%# ── Spot accounts ── %>
+<% if @spot_accounts.any? %>
+  <%= render CardComponent.new(heading: "Spot accounts") do %>
+    <div class="space-y-2">
+      <% @spot_accounts.each do |account| %>
+        <div class="flex items-center justify-between rounded-md border border-slate-100 px-4 py-3">
+          <span class="text-sm font-medium text-slate-900"><%= account.name %></span>
+          <span class="text-sm text-slate-500"><%= account.spot_transactions.size %> transactions</span>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
