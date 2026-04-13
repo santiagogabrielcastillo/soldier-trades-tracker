@@ -44,7 +44,7 @@ Rails.application.routes.draw do
   delete "stocks/snapshots/:id", to: "stocks#destroy_snapshot", as: :stocks_snapshot
   post "stocks/sync_fundamentals", to: "stocks#sync_fundamentals", as: :stocks_sync_fundamentals
   post "stocks/watchlist/sync",    to: "stocks#sync_watchlist",    as: :stocks_watchlist_sync
-  post "stocks/sync_analysis",     to: "stocks#sync_analysis",     as: :stocks_sync_analysis
+  post "stocks/analyze/:ticker",   to: "stocks#analyze_ticker",    as: :stocks_analyze_ticker
   post "stocks/watchlist",         to: "stocks#add_to_watchlist",  as: :stocks_watchlist
   delete "stocks/watchlist/:id",   to: "stocks#remove_from_watchlist", as: :stocks_watchlist_item
 

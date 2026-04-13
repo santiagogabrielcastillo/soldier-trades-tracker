@@ -75,15 +75,21 @@ class StocksController < ApplicationController
                 notice: "Sync started — refresh in a moment to see updated data."
   end
 
-  def sync_analysis
-    tickers = collect_analysis_tickers
-    if tickers.any?
-      Stocks::SyncStockAnalysisJob.perform_later(current_user.id, tickers)
-      notice = "Analysis started — refresh in a moment to see ratings."
-    else
-      notice = "No tickers to analyze."
+  def analyze_ticker
+    ticker = params[:ticker].to_s.strip.upcase
+    unless allowed_analysis_tickers.include?(ticker)
+      redirect_back fallback_location: stocks_path, alert: "Ticker not found." and return
     end
-    redirect_back fallback_location: stocks_path, notice: notice
+    Stocks::SyncStockAnalysisJob.perform_later(current_user.id, [ticker])
+    redirect_back fallback_location: stocks_path, notice: "Analysis started — refresh in a moment."
+  end
+
+  def allowed_analysis_tickers
+    portfolio = StockPortfolio.find_or_create_default_for(current_user)
+    open = Stocks::PositionStateService.call(stock_portfolio: portfolio)
+             .select(&:open?).map(&:ticker)
+    watchlist = current_user.watchlist_tickers.pluck(:ticker)
+    (open + watchlist).uniq
   end
 
   def add_to_watchlist
@@ -251,11 +257,4 @@ class StocksController < ApplicationController
     params.permit(:ticker, :side, :shares, :price_usd, :executed_at)
   end
 
-  def collect_analysis_tickers
-    portfolio = StockPortfolio.find_or_create_default_for(current_user)
-    open_tickers = Stocks::PositionStateService.call(stock_portfolio: portfolio)
-                    .select(&:open?).map(&:ticker)
-    watchlist_tickers = current_user.watchlist_tickers.pluck(:ticker)
-    (open_tickers + watchlist_tickers).uniq
-  end
 end
