@@ -6,6 +6,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = users(:one)
     @user.update!(password: "password", password_confirmation: "password")
+    @user.watchlist_tickers.create!(ticker: "AAPL")
   end
 
   # --- analyze_ticker ---
@@ -15,14 +16,11 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to login_path
   end
 
-  test "analyze_ticker enqueues job for valid open-position ticker" do
+  test "analyze_ticker enqueues job for valid watchlist ticker" do
     sign_in_as(@user)
 
-    # Stub allowed tickers so we don't need real positions/watchlist data
-    StocksController.any_instance.stub(:allowed_analysis_tickers, ["AAPL"]) do
-      assert_enqueued_with(job: Stocks::SyncStockAnalysisJob, args: [@user.id, ["AAPL"]]) do
-        post stocks_analyze_ticker_path("AAPL")
-      end
+    assert_enqueued_with(job: Stocks::SyncStockAnalysisJob, args: [@user.id, ["AAPL"]]) do
+      post stocks_analyze_ticker_path("AAPL")
     end
 
     assert_redirected_to stocks_path
@@ -32,9 +30,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   test "analyze_ticker redirects with alert for unknown ticker" do
     sign_in_as(@user)
 
-    StocksController.any_instance.stub(:allowed_analysis_tickers, ["AAPL"]) do
-      post stocks_analyze_ticker_path("UNKNOWN")
-    end
+    post stocks_analyze_ticker_path("UNKNOWN")
 
     assert_redirected_to stocks_path
     assert_match "Ticker not found", flash[:alert]

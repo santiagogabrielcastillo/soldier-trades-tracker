@@ -84,14 +84,6 @@ class StocksController < ApplicationController
     redirect_back fallback_location: stocks_path, notice: "Analysis started — refresh in a moment."
   end
 
-  def allowed_analysis_tickers
-    portfolio = StockPortfolio.find_or_create_default_for(current_user)
-    open = Stocks::PositionStateService.call(stock_portfolio: portfolio)
-             .select(&:open?).map(&:ticker)
-    watchlist = current_user.watchlist_tickers.pluck(:ticker)
-    (open + watchlist).uniq
-  end
-
   def add_to_watchlist
     ticker = params[:ticker].to_s.strip.upcase.presence
     if ticker
@@ -164,6 +156,14 @@ class StocksController < ApplicationController
   end
 
   private
+
+  def allowed_analysis_tickers
+    portfolio = StockPortfolio.find_or_create_default_for(current_user)
+    open = Stocks::PositionStateService.call(stock_portfolio: portfolio)
+             .select(&:open?).map(&:ticker)
+    watchlist = current_user.watchlist_tickers.pluck(:ticker)
+    (open + watchlist).uniq
+  end
 
   def resolve_portfolio
     if params[:portfolio_id].present?
