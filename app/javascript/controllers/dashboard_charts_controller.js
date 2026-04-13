@@ -18,30 +18,36 @@ export default class extends Controller {
     const balanceSeries = data.balance_series || []
     const cumulativePlSeries = data.cumulative_pl_series || []
 
-    if (!balanceSeries.length && !cumulativePlSeries.length) {
-      if (this.hasBalanceEmptyTarget) this.balanceEmptyTarget.classList.remove("hidden")
-      if (this.hasPlEmptyTarget) this.plEmptyTarget.classList.remove("hidden")
-      return
-    }
-
     const labels = (balanceSeries.length ? balanceSeries : cumulativePlSeries).map((d) => d.date)
 
     if (balanceSeries.length) {
       this.renderBalanceChart(labels, balanceSeries.map((d) => d.value))
-    } else if (this.hasBalanceEmptyTarget) {
-      this.balanceEmptyTarget.classList.remove("hidden")
+    } else {
+      this.showEmpty("balanceCanvas", "balanceEmpty")
     }
 
     if (cumulativePlSeries.length) {
       this.renderPlChart(labels, cumulativePlSeries.map((d) => d.value))
-    } else if (this.hasPlEmptyTarget) {
-      this.plEmptyTarget.classList.remove("hidden")
+    } else {
+      this.showEmpty("plCanvas", "plEmpty")
     }
   }
 
   disconnect() {
     if (this.balanceChart) this.balanceChart.destroy()
     if (this.plChart) this.plChart.destroy()
+  }
+
+  // Hide the canvas and reveal the empty state. Using style.display avoids
+  // any Tailwind class ordering conflicts between `hidden` and `flex`.
+  showEmpty(canvasTargetName, emptyTargetName) {
+    const hasCanvas = `has${canvasTargetName.charAt(0).toUpperCase() + canvasTargetName.slice(1)}Target`
+    const hasEmpty  = `has${emptyTargetName.charAt(0).toUpperCase() + emptyTargetName.slice(1)}Target`
+    const canvasKey = `${canvasTargetName}Target`
+    const emptyKey  = `${emptyTargetName}Target`
+
+    if (this[hasCanvas]) this[canvasKey].style.display = "none"
+    if (this[hasEmpty])  this[emptyKey].style.display  = "flex"
   }
 
   chartOptions(yBeginAtZero) {

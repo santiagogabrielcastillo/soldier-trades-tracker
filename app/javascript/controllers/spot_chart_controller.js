@@ -10,7 +10,9 @@ export default class extends Controller {
   connect() {
     const series = this.seriesValue || []
     if (series.length === 0) {
-      if (this.hasEmptyTarget) this.emptyTarget.classList.remove("hidden")
+      // Use style.display to avoid Tailwind hidden/flex class ordering conflicts.
+      if (this.hasCanvasTarget) this.canvasTarget.style.display = "none"
+      if (this.hasEmptyTarget)  this.emptyTarget.style.display  = "flex"
       return
     }
     const labels = series.map((d) => d.date)
@@ -32,7 +34,7 @@ export default class extends Controller {
           label: "Cost basis",
           data: values,
           borderColor: "rgb(15 23 42)",
-          backgroundColor: "rgba(15 23 42, 0.1)",
+          backgroundColor: "rgba(15, 23, 42, 0.1)",
           fill: true,
           tension: 0.2
         }]
