@@ -1,0 +1,30 @@
+<%= form_with model: @company, local: true, class: "space-y-4" do |f| %>
+  <%= render ErrorSummaryComponent.new(model: @company) %>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :ticker, "Ticker", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.text_field :ticker, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 uppercase", placeholder: "AAPL" %>
+    </div>
+    <div>
+      <%= f.label :sector, "Sector (optional)", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.text_field :sector, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "Technology" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :name, "Company name", class: "block text-sm font-medium text-slate-700" %>
+    <%= f.text_field :name, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "Apple Inc." %>
+  </div>
+
+  <div>
+    <%= f.label :description, "Investment thesis / notes (optional)", class: "block text-sm font-medium text-slate-700" %>
+    <%= f.text_area :description, rows: 3, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "Why I hold or am researching this company…" %>
+  </div>
+
+  <div class="flex gap-3 pt-2">
+    <%= f.submit class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
+    <%= link_to "Cancel", @company.new_record? ? companies_path : company_path(@company),
+          class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+  </div>
+<% end %>

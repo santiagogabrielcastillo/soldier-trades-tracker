@@ -1,0 +1,82 @@
+<%= form_with model: [@company, @report], local: true, class: "space-y-6" do |f| %>
+  <%= render ErrorSummaryComponent.new(model: @report) %>
+
+  <div class="grid grid-cols-3 gap-4">
+    <div>
+      <%= f.label :period_type, "Period type", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.select :period_type,
+            options_for_select([["Quarterly", "quarterly"], ["Annual", "annual"]], @report.period_type),
+            {},
+            { class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" } %>
+    </div>
+    <div>
+      <%= f.label :fiscal_year, "Fiscal year", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.number_field :fiscal_year, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "2024" %>
+    </div>
+    <div>
+      <%= f.label :fiscal_quarter, "Quarter (Q1–Q4, leave blank for annual)", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.number_field :fiscal_quarter, in: 1..4, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "4" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :reported_on, "Reported on (optional)", class: "block text-sm font-medium text-slate-700" %>
+    <%= f.date_field :reported_on, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+  </div>
+
+  <fieldset class="rounded-lg border border-slate-200 p-4">
+    <legend class="px-2 text-sm font-medium text-slate-700">Standard Metrics</legend>
+    <div class="grid grid-cols-3 gap-4">
+      <div>
+        <%= f.label :revenue, "Revenue", class: "block text-sm font-medium text-slate-700" %>
+        <%= f.number_field :revenue, step: 0.01, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "124300000000" %>
+      </div>
+      <div>
+        <%= f.label :net_income, "Net Income", class: "block text-sm font-medium text-slate-700" %>
+        <%= f.number_field :net_income, step: 0.01, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "33900000000" %>
+      </div>
+      <div>
+        <%= f.label :eps, "EPS", class: "block text-sm font-medium text-slate-700" %>
+        <%= f.number_field :eps, step: 0.0001, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "2.18" %>
+      </div>
+    </div>
+  </fieldset>
+
+  <% if @report.custom_metric_values.any? %>
+    <fieldset class="rounded-lg border border-slate-200 p-4">
+      <legend class="px-2 text-sm font-medium text-slate-700">Custom Metrics</legend>
+      <div class="space-y-4">
+        <% f.fields_for :custom_metric_values do |v| %>
+          <% defn = v.object.custom_metric_definition %>
+          <div>
+            <%= v.hidden_field :custom_metric_definition_id %>
+            <% if v.object.id.present? %>
+              <%= v.hidden_field :id %>
+            <% end %>
+            <%= v.label defn.data_type == "text" ? :text_value : :decimal_value,
+                  safe_join([h(defn.name), content_tag(:span, " (#{defn.data_type})", class: "text-xs font-normal text-slate-400")]),
+                  class: "block text-sm font-medium text-slate-700" %>
+            <% if defn.data_type == "text" %>
+              <%= v.text_area :text_value, rows: 2,
+                    class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+            <% else %>
+              <%= v.number_field :decimal_value, step: defn.data_type == "percentage" ? 0.01 : 1,
+                    class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </fieldset>
+  <% end %>
+
+  <div>
+    <%= f.label :notes, "Notes (optional)", class: "block text-sm font-medium text-slate-700" %>
+    <%= f.text_area :notes, rows: 3, class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+  </div>
+
+  <div class="flex gap-3 pt-2">
+    <%= f.submit class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
+    <%= link_to "Cancel", company_path(@company),
+          class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+  </div>
+<% end %>

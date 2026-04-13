@@ -1,0 +1,38 @@
+<div>
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-2xl font-semibold text-slate-900">Companies</h1>
+    <%= render ButtonComponent.new(label: "New company", href: new_company_path) %>
+  </div>
+
+  <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
+    <% if @companies.any? %>
+      <ul class="divide-y divide-slate-200">
+        <% @companies.each do |company| %>
+          <li class="flex items-center justify-between px-6 py-4">
+            <div>
+              <%= link_to company_path(company), class: "font-medium text-slate-900 hover:text-indigo-600" do %>
+                <%= company.ticker %>
+              <% end %>
+              <span class="ml-2 text-sm text-slate-500"><%= company.name %></span>
+              <% if company.sector.present? %>
+                <span class="ml-2 text-xs text-slate-400">· <%= company.sector %></span>
+              <% end %>
+            </div>
+            <div class="flex items-center gap-3">
+              <%= link_to "Compare", comparison_company_path(company), class: "text-sm text-indigo-600 hover:text-indigo-800" %>
+              <%= link_to "Edit", edit_company_path(company), class: "text-sm text-slate-600 hover:text-slate-900" %>
+              <%= button_to "Remove", company_path(company), method: :delete,
+                    data: { turbo_confirm: "Remove #{company.ticker} and all its earnings reports?" },
+                    class: "text-sm text-slate-600 hover:text-red-600" %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="px-6 py-12 text-center text-slate-600">
+        <p class="mb-4">No companies yet. Add one to start tracking earnings reports.</p>
+        <%= render ButtonComponent.new(label: "Add company", href: new_company_path, class: "inline-block") %>
+      </div>
+    <% end %>
+  </section>
+</div>
