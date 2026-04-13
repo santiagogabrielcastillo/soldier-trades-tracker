@@ -1,0 +1,9 @@
+apple_q4_services_val:
+  earnings_report: apple_q4_2024
+  custom_metric_definition: apple_services
+  decimal_value: 26300000000.0
+
+apple_q3_services_val:
+  earnings_report: apple_q3_2024
+  custom_metric_definition: apple_services
+  decimal_value: 24213000000.0

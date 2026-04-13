@@ -32,6 +32,7 @@ class User < ApplicationRecord
   has_many :watchlist_tickers, dependent: :destroy
   has_many :allocation_buckets, dependent: :destroy
   has_many :allocation_manual_entries, dependent: :destroy
+  has_many :companies, dependent: :destroy
 
   def default_portfolio
     portfolios.find_by(default: true)

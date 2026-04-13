@@ -82,4 +82,12 @@ Rails.application.routes.draw do
     end
     resource :invite_code, only: %i[show create], controller: "invite_code"
   end
+
+  resources :companies, only: %i[index new create show edit update destroy] do
+    member do
+      get :comparison
+    end
+    resources :earnings_reports, only: %i[new create show edit update destroy]
+    resources :custom_metric_definitions, only: %i[create destroy]
+  end
 end
