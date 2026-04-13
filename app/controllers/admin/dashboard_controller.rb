@@ -2,7 +2,7 @@
 
 class Admin::DashboardController < Admin::BaseController
   def show
-    students          = User.where(admin: false)
+    students          = User.where(role: "user")
     @total_students   = students.count
     @active_students  = students.where(active: true).count
     @pl_by_user       = Admin::StudentStats.realized_pl_by_user
