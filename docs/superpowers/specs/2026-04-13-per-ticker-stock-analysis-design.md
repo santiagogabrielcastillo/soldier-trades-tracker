@@ -5,7 +5,7 @@
 
 ## Overview
 
-Replace the single "Analyze all" button with a per-row "Analyze" button on both the valuations and watchlist views. Each button triggers AI analysis for exactly one ticker.
+Replace the single "Analyze all" button with a per-row "Analyze" button on both the valuations and watchlist views. Each button triggers AI analysis for exactly one ticker. When analysis exists, the badge shows a tooltip with the last analyzed timestamp and a "Re-analyze" button allows triggering a fresh analysis.
 
 ## What Changes
 
@@ -73,21 +73,38 @@ Remove the entire `if analyze_url && current_user.gemini_api_key_configured?` bl
 
 ### AI Rating cell
 
-When `current_user.gemini_api_key_configured?` and no analysis exists, render a per-row "Analyze" button instead of the `—` dash:
+Three states:
+
+**No analysis, Gemini configured** — render an "Analyze" button:
 
 ```erb
-<% if analysis %>
-  <%# badge — unchanged %>
 <% elsif current_user.gemini_api_key_configured? %>
   <%= button_to "Analyze", stocks_analyze_ticker_path(ticker),
         method: :post,
         class: "rounded-md bg-indigo-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-indigo-500" %>
-<% else %>
-  <%= link_to "Configure AI", settings_path, ... %>
-<% end %>
 ```
 
-When analysis exists the badge is shown as before — no re-analyze button (out of scope).
+**Analysis exists, Gemini configured** — show the rating badge with a tooltip and a "Re-analyze" button beneath it:
+
+```erb
+<% if analysis %>
+  <div class="group relative inline-block">
+    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide <%= badge_class %>"
+          title="Analyzed <%= time_ago_in_words(analysis.analyzed_at) %> ago">
+      <%= analysis.rating %>
+    </span>
+    <p class="mt-1 text-xs text-slate-400">
+      <%= time_ago_in_words(analysis.analyzed_at) %> ago
+    </p>
+    <%= button_to "Re-analyze", stocks_analyze_ticker_path(ticker),
+          method: :post,
+          class: "mt-1 text-xs font-medium text-indigo-500 hover:text-indigo-700 bg-transparent border-0 p-0 cursor-pointer" %>
+  </div>
+```
+
+The timestamp is shown as a human-readable relative string (e.g. "3 days ago") directly below the badge. No custom JS tooltip — plain HTML `title` attribute provides the hover tooltip as a fallback with the same text, keeping the implementation simple.
+
+**No Gemini key** — unchanged `Configure AI` link.
 
 ## Callers of `_fundamentals_table` partial
 
@@ -104,5 +121,5 @@ No changes. The job already accepts an array of tickers; passing `[ticker]` work
 
 ## Out of Scope
 
-- Re-analyze button when analysis already exists
 - Rate-limit feedback to the user (job errors are logged server-side)
+- Custom CSS tooltip (native `title` attribute is sufficient)
