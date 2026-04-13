@@ -1,5 +1,21 @@
 <div>
-  <%= render PageHeaderComponent.new(title: "Trades") %>
+  <%= render PageHeaderComponent.new(title: "Trades") do |c| %>
+    <% if @exchange_accounts.size == 1 %>
+      <% c.with_actions { link_to "Add manual trade", new_exchange_account_manual_trade_path(@exchange_accounts.first), class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" } %>
+    <% elsif @exchange_accounts.size > 1 %>
+      <% c.with_actions do %>
+        <details class="relative">
+          <summary class="cursor-pointer list-none rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500">Add manual trade ▾</summary>
+          <div class="absolute right-0 top-full z-10 mt-1 w-52 rounded-md border border-slate-200 bg-white py-1 shadow-lg">
+            <% @exchange_accounts.each do |acct| %>
+              <%= link_to acct.provider_type.to_s.capitalize, new_exchange_account_manual_trade_path(acct),
+                    class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" %>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
+    <% end %>
+  <% end %>
 
   <nav class="mb-6 flex gap-1 border-b border-slate-200" aria-label="Tabs">
     <%= link_to "History", trades_path(trades_index_filter_params.merge("view" => "history")), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'history' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}" %>

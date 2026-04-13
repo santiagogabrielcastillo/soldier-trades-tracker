@@ -74,12 +74,17 @@
                 ["Stocks",            stocks_path,            "/stocks"],
                 ["Companies",         companies_path,         "/companies"],
                 ["Allocation",        allocation_path,        "/allocation"],
-                ["Portfolios",        portfolios_path,        "/portfolios"],
               ].each do |label, path, match| %>
                 <% active = match == root_path ? current_page?(root_path) : request.path.start_with?(match) %>
                 <%= link_to label, path,
                       class: "flex items-center rounded-md px-3 py-2 text-sm transition-colors duration-150 #{active ? 'bg-slate-700 font-medium text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}",
                       data: { action: "nav#close" } %>
+                <% if label == "Trades" %>
+                  <% portfolios_active = request.path.start_with?("/portfolios") %>
+                  <%= link_to "Portfolios", portfolios_path,
+                        class: "flex items-center rounded-md pl-7 pr-3 py-1.5 text-sm transition-colors duration-150 #{portfolios_active ? 'bg-slate-700 font-medium text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}",
+                        data: { action: "nav#close" } %>
+                <% end %>
               <% end %>
             </div>
             <div class="space-y-0.5 border-t border-slate-800 px-3 py-4">
@@ -147,11 +152,15 @@
                 ["Stocks",            stocks_path,            "/stocks"],
                 ["Companies",         companies_path,         "/companies"],
                 ["Allocation",        allocation_path,        "/allocation"],
-                ["Portfolios",        portfolios_path,        "/portfolios"],
               ].each do |label, path, match| %>
                 <% active = match == root_path ? current_page?(root_path) : request.path.start_with?(match) %>
                 <%= link_to label, path,
                       class: "flex items-center rounded-md px-3 py-2 text-sm transition-colors duration-150 #{active ? 'bg-slate-700 font-medium text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}" %>
+                <% if label == "Trades" %>
+                  <% portfolios_active = request.path.start_with?("/portfolios") %>
+                  <%= link_to "Portfolios", portfolios_path,
+                        class: "flex items-center rounded-md pl-7 pr-3 py-1.5 text-sm transition-colors duration-150 #{portfolios_active ? 'bg-slate-700 font-medium text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}" %>
+                <% end %>
               <% end %>
             </div>
             <div class="space-y-0.5 border-t border-slate-800 px-3 py-4">
