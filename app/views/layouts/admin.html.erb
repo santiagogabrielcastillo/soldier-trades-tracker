@@ -28,6 +28,7 @@
           <% [
             ["Dashboard",   admin_root_path,         "/admin"],
             ["Students",    admin_students_path,      "/admin/students"],
+            ["Admins",      admin_admins_path,        "/admin/admins"],
             ["Invite Code", admin_invite_code_path,   "/admin/invite_code"],
           ].each do |label, path, match| %>
             <% active = match == "/admin" ? current_page?(admin_root_path) : request.path.start_with?(match) %>
@@ -50,6 +51,7 @@
       <div class="flex gap-3 text-sm">
         <%= link_to "Dashboard", admin_root_path, class: "text-slate-600 hover:text-slate-900" %>
         <%= link_to "Students", admin_students_path, class: "text-slate-600 hover:text-slate-900" %>
+        <%= link_to "Admins", admin_admins_path, class: "text-slate-600 hover:text-slate-900" %>
         <%= link_to "Invite", admin_invite_code_path, class: "text-slate-600 hover:text-slate-900" %>
       </div>
     </header>

@@ -24,6 +24,10 @@
                 toggle_active_admin_student_path(id),
                 method: :patch,
                 class: "text-xs font-medium #{active ? 'text-red-500 hover:text-red-700' : 'text-emerald-600 hover:text-emerald-800'} bg-transparent border-0 p-0 cursor-pointer" %>
+          <%= button_to "Promote",
+                promote_admin_student_path(id),
+                method: :patch,
+                class: "ml-4 text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-transparent border-0 p-0 cursor-pointer" %>
           <%= link_to "View", admin_student_path(id), class: "ml-4 text-xs text-slate-500 hover:text-slate-800" %>
         </td>
       <% end %>
