@@ -61,7 +61,7 @@ class ExchangeAccountsController < ApplicationController
   end
 
   def historic_sync
-    unless current_user.admin?
+    unless current_user.admin? || current_user.super_admin?
       redirect_to exchange_accounts_path, alert: "Not authorized."
       return
     end
