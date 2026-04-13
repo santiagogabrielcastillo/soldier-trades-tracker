@@ -1,11 +1,23 @@
 <div>
-  <div class="mb-6 flex items-center justify-between">
+  <div class="mb-6 flex items-start justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-semibold text-slate-900"><%= @company.ticker %> — Comparison</h1>
-      <p class="mt-1 text-sm text-slate-500"><%= @company.name %></p>
+      <p class="flex items-center gap-1.5 text-sm text-slate-500">
+        <%= link_to @company.ticker, company_path(@company),
+              class: "font-mono font-semibold text-slate-700 hover:text-indigo-600 transition-colors duration-100" %>
+        <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+        </svg>
+        Comparison
+      </p>
+      <h1 class="mt-0.5 text-2xl font-semibold text-slate-900"><%= @company.name %></h1>
     </div>
-    <%= link_to "← Back to profile", company_path(@company),
-          class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+    <%= link_to company_path(@company),
+          class: "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors duration-100" do %>
+      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+      </svg>
+      Back to profile
+    <% end %>
   </div>
 
   <% if @reports.none? %>
@@ -18,18 +30,26 @@
       <table class="min-w-full divide-y divide-slate-200 text-sm">
         <thead class="bg-slate-50">
           <tr>
-            <th class="px-6 py-3 text-left font-medium text-slate-600 whitespace-nowrap">Metric</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">Metric</th>
             <% @reports.each do |report| %>
-              <th class="px-6 py-3 text-right font-medium text-slate-600 whitespace-nowrap">
-                <%= report.period_label %>
+              <th class="px-6 py-3 text-right whitespace-nowrap">
+                <span class="text-sm font-semibold text-slate-800"><%= report.period_label %></span>
+                <% if report.reported_on.present? %>
+                  <p class="mt-0.5 text-xs font-normal text-slate-400"><%= report.reported_on.strftime("%b %d, %Y") %></p>
+                <% end %>
               </th>
             <% end %>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-200">
-          <%# Standard metrics %>
+        <tbody class="divide-y divide-slate-100">
+          <%# Standard metrics — subtle section label %>
+          <tr class="bg-slate-50/50">
+            <td colspan="<%= @reports.size + 1 %>" class="px-6 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Core financials
+            </td>
+          </tr>
           <% [["Revenue", :revenue], ["Net Income", :net_income], ["EPS", :eps]].each do |label, attr| %>
-            <tr class="hover:bg-slate-50">
+            <tr class="hover:bg-slate-50 transition-colors duration-75">
               <td class="px-6 py-3 font-medium text-slate-700 whitespace-nowrap"><%= label %></td>
               <% @reports.each do |report| %>
                 <td class="px-6 py-3 text-right text-slate-900 tabular-nums whitespace-nowrap">
@@ -39,20 +59,27 @@
             </tr>
           <% end %>
 
-          <%# Custom metrics %>
-          <% @definitions.each do |defn| %>
-            <tr class="hover:bg-slate-50">
-              <td class="px-6 py-3 font-medium text-slate-700 whitespace-nowrap">
-                <%= defn.name %>
-                <span class="ml-1 text-xs font-normal text-slate-400">(<%= defn.data_type %>)</span>
+          <%# Custom metrics — only show section label if there are any %>
+          <% if @definitions.any? %>
+            <tr class="bg-slate-50/50">
+              <td colspan="<%= @reports.size + 1 %>" class="px-6 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Custom metrics
               </td>
-              <% @reports.each do |report| %>
-                <td class="px-6 py-3 text-right text-slate-900 tabular-nums whitespace-nowrap">
-                  <% val = @values_by_report.dig(report.id, defn.id) %>
-                  <%= val&.formatted_value || "—" %>
-                </td>
-              <% end %>
             </tr>
+            <% @definitions.each do |defn| %>
+              <tr class="hover:bg-slate-50 transition-colors duration-75">
+                <td class="px-6 py-3 font-medium text-slate-700 whitespace-nowrap">
+                  <%= defn.name %>
+                  <span class="ml-1.5 inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-xs font-normal text-slate-400"><%= defn.data_type %></span>
+                </td>
+                <% @reports.each do |report| %>
+                  <td class="px-6 py-3 text-right text-slate-900 tabular-nums whitespace-nowrap">
+                    <% val = @values_by_report.dig(report.id, defn.id) %>
+                    <%= val&.formatted_value || "—" %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
           <% end %>
         </tbody>
       </table>

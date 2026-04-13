@@ -6,24 +6,39 @@
 
   <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
     <% if @companies.any? %>
-      <ul class="divide-y divide-slate-200">
+      <ul class="divide-y divide-slate-100">
         <% @companies.each do |company| %>
-          <li class="flex items-center justify-between px-6 py-4">
-            <div>
-              <%= link_to company_path(company), class: "font-medium text-slate-900 hover:text-indigo-600" do %>
-                <%= company.ticker %>
+          <li class="flex items-center justify-between px-6 py-4 hover:bg-slate-50/50 transition-colors duration-100">
+            <div class="flex items-center gap-3 min-w-0">
+              <%= link_to company_path(company), class: "shrink-0" do %>
+                <span class="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 font-mono text-sm font-semibold text-slate-800 hover:bg-indigo-100 hover:text-indigo-700 transition-colors duration-100">
+                  <%= company.ticker %>
+                </span>
               <% end %>
-              <span class="ml-2 text-sm text-slate-500"><%= company.name %></span>
-              <% if company.sector.present? %>
-                <span class="ml-2 text-xs text-slate-400">· <%= company.sector %></span>
-              <% end %>
+              <div class="min-w-0">
+                <%= link_to company.name, company_path(company),
+                      class: "truncate text-sm font-medium text-slate-700 hover:text-slate-900" %>
+                <% if company.sector.present? %>
+                  <span class="ml-2 inline-flex items-center rounded-full bg-slate-50 px-2 py-0.5 text-xs text-slate-500 ring-1 ring-slate-200">
+                    <%= company.sector %>
+                  </span>
+                <% end %>
+              </div>
             </div>
-            <div class="flex items-center gap-3">
-              <%= link_to "Compare", comparison_company_path(company), class: "text-sm text-indigo-600 hover:text-indigo-800" %>
-              <%= link_to "Edit", edit_company_path(company), class: "text-sm text-slate-600 hover:text-slate-900" %>
+            <div class="flex items-center gap-1 shrink-0 ml-4">
+              <%= link_to comparison_company_path(company),
+                    class: "inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors duration-100",
+                    title: "Compare quarters" do %>
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
+                </svg>
+                Compare
+              <% end %>
+              <%= link_to "Edit", edit_company_path(company),
+                    class: "inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors duration-100" %>
               <%= button_to "Remove", company_path(company), method: :delete,
                     data: { turbo_confirm: "Remove #{company.ticker} and all its earnings reports?" },
-                    class: "text-sm text-slate-600 hover:text-red-600" %>
+                    class: "inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-400 hover:text-red-600 hover:bg-red-50 bg-transparent border-0 cursor-pointer transition-colors duration-100" %>
             </div>
           </li>
         <% end %>
