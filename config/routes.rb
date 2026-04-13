@@ -69,7 +69,16 @@ Rails.application.routes.draw do
   namespace :admin do
     root "dashboard#show"
     resources :students, only: %i[index show] do
-      member { patch :toggle_active }
+      member do
+        patch :toggle_active
+        patch :promote
+      end
+    end
+    resources :admins, only: %i[index show] do
+      member do
+        patch :toggle_active
+        patch :demote
+      end
     end
     resource :invite_code, only: %i[show create], controller: "invite_code"
   end
