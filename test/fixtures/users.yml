@@ -5,23 +5,29 @@ one:
   password_digest: MyString
   sync_interval: daily
   active: true
-  admin: false
+  role: user
 
 two:
   email: two@example.com
   password_digest: MyString
   sync_interval: daily
   active: true
-  admin: false
+  role: user
 
 admin:
   email: admin@example.com
   password_digest: MyString
   active: true
-  admin: true
+  role: admin
+
+super_admin:
+  email: super_admin@example.com
+  password_digest: MyString
+  active: true
+  role: super_admin
 
 inactive:
   email: inactive@example.com
   password_digest: MyString
   active: false
-  admin: false
+  role: user
