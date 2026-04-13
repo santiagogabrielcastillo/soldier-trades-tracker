@@ -82,14 +82,14 @@ module Stocks
 
       return nil if metrics.empty?
 
-      Rails.logger.info("[Stocks::FundamentalsFetcher] #{ticker} metrics: #{metrics.slice('P/E', 'Fwd P/E', 'PEG', 'P/S', 'P/FCF', 'Profit Margin', 'ROE', 'ROIC', 'Debt/Eq', 'Sales Y/Y TTM', 'Sales Q/Q', 'EV/EBITDA')}")
+      Rails.logger.info("[Stocks::FundamentalsFetcher] #{ticker} metrics: #{metrics.slice('P/E', 'Forward P/E', 'PEG', 'P/S', 'P/FCF', 'Profit Margin', 'ROE', 'ROIC', 'Debt/Eq', 'Sales Y/Y TTM', 'Sales Q/Q', 'EV/EBITDA')}")
 
       sector_link   = doc.at_css("a[href*='f=sec_']")
       industry_link = doc.at_css("a[href*='f=ind_']")
 
       FundamentalsData.new(
         pe:         decimal(metrics["P/E"]),
-        fwd_pe:     decimal(metrics["Fwd P/E"]),
+        fwd_pe:     decimal(metrics["Forward P/E"]),
         peg:        decimal(metrics["PEG"]),
         ps:         decimal(metrics["P/S"]),
         pfcf:       decimal(metrics["P/FCF"]),
