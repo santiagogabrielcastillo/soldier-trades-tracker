@@ -8,7 +8,7 @@ module Admin
       Position
         .joins(exchange_account: :user)
         .where(open: false)
-        .where(users: { admin: false })
+        .where(users: { role: "user" })
         .group("users.id")
         .sum(:net_pl)
         .transform_values(&:to_f)
@@ -17,7 +17,7 @@ module Admin
     # Returns array of { user_id:, email:, realized_pl:, active: } sorted by descending P&L.
     # Uses pluck to avoid loading full User objects into memory.
     def self.leaderboard(pl_by_user)
-      User.where(admin: false)
+      User.where(role: "user")
           .pluck(:id, :email, :active)
           .map { |id, email, active| { user_id: id, email: email, realized_pl: pl_by_user.fetch(id, 0.0), active: active } }
           .sort_by { |r| -r[:realized_pl] }
