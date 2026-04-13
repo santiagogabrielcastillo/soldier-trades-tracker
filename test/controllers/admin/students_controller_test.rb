@@ -11,7 +11,7 @@ class Admin::StudentsControllerTest < ActionDispatch::IntegrationTest
     @student = users(:one)
   end
 
-  test "index lists non-admin students" do
+  test "index lists role=user students" do
     get admin_students_url
     assert_response :success
   end
@@ -37,9 +37,29 @@ class Admin::StudentsControllerTest < ActionDispatch::IntegrationTest
     assert @student.reload.active?
   end
 
-  test "set_student scopes to non-admins only" do
-    # Admin user cannot be accessed via the students endpoint (scoped to admin: false)
-    get admin_student_url(@admin)
+  test "set_student scopes to role=user only" do
+    get admin_student_url(users(:admin))
     assert_response :not_found
+  end
+
+  test "promote sets student role to admin" do
+    patch promote_admin_student_url(@student)
+    assert_redirected_to admin_students_url
+    assert_equal "admin", @student.reload.role
+  ensure
+    @student.update_columns(role: "user")
+  end
+
+  test "super_admin can also promote students" do
+    super_admin = users(:super_admin)
+    super_admin.update!(password: "password", password_confirmation: "password")
+    post login_url, params: { email: super_admin.email, password: "password" }
+
+    other_student = users(:two)
+    patch promote_admin_student_url(other_student)
+    assert_redirected_to admin_students_url
+    assert_equal "admin", other_student.reload.role
+  ensure
+    users(:two).update_columns(role: "user")
   end
 end

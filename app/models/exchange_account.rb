@@ -38,7 +38,7 @@ class ExchangeAccount < ApplicationRecord
   end
 
   def can_sync?
-    user.admin? || sync_runs_today_count < 2
+    user.admin? || user.super_admin? || sync_runs_today_count < 2
   end
 
   private

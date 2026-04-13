@@ -3,9 +3,9 @@
 require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
-  test "admin defaults to false" do
+  test "role defaults to user" do
     user = User.new(email: "test@example.com", password: "password")
-    assert_equal false, user.admin
+    assert_predicate user, :user?
   end
 
   test "active defaults to true" do
@@ -31,29 +31,47 @@ class UserTest < ActiveSupport::TestCase
     assert_not_includes scoped, inactive_user
   end
 
-  test "last active admin cannot be deactivated" do
-    admin = users(:admin)
-    admin.update!(password: "password", password_confirmation: "password")
-
-    result = admin.update(active: false)
-    assert_not result
-    assert_includes admin.errors[:active], "cannot deactivate the last active admin"
-    assert admin.reload.active?, "Admin should still be active in DB"
+  test "admin? returns true for admin role" do
+    assert_predicate users(:admin), :admin?
   end
 
-  test "admin can be deactivated when another active admin exists" do
+  test "super_admin? returns true for super_admin role" do
+    assert_predicate users(:super_admin), :super_admin?
+  end
+
+  test "last active super_admin cannot be deactivated" do
+    super_admin = users(:super_admin)
+    super_admin.update!(password: "password", password_confirmation: "password")
+
+    result = super_admin.update(active: false)
+    assert_not result
+    assert_includes super_admin.errors[:active], "cannot deactivate the last active super admin"
+    assert_predicate super_admin.reload, :active?
+  end
+
+  test "super_admin can be deactivated when another active super_admin exists" do
+    super_admin = users(:super_admin)
+    super_admin.update!(password: "password", password_confirmation: "password")
+
+    second = User.create!(email: "second_sa@example.com", password: "password",
+                          password_confirmation: "password", role: "super_admin", active: true)
+
+    result = super_admin.update(active: false)
+    assert result, "Should allow deactivating when another active super_admin exists"
+    assert_not super_admin.reload.active?
+  ensure
+    second.destroy
+    super_admin.update_columns(active: true)
+  end
+
+  test "admin can be deactivated freely" do
     admin = users(:admin)
     admin.update!(password: "password", password_confirmation: "password")
 
-    # Create a second admin
-    second_admin = User.create!(email: "second_admin@example.com", password: "password",
-                                password_confirmation: "password", admin: true, active: true)
-
     result = admin.update(active: false)
-    assert result, "Should allow deactivating an admin when another active admin exists"
-    assert_not admin.reload.active?
-
-    second_admin.destroy
+    assert result, "Admins should be deactivatable regardless of other admins"
+  ensure
+    admin.update_columns(active: true)
   end
 
   test "gemini_api_key_configured? returns false when key is nil" do

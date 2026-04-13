@@ -8,12 +8,22 @@ class Admin::BaseControllerTest < ActionDispatch::IntegrationTest
   setup do
     @admin = users(:admin)
     @admin.update!(password: "password", password_confirmation: "password")
+
+    @super_admin = users(:super_admin)
+    @super_admin.update!(password: "password", password_confirmation: "password")
+
     @student = users(:one)
     @student.update!(password: "password", password_confirmation: "password")
   end
 
   test "admin can access admin dashboard" do
     post login_url, params: { email: @admin.email, password: "password" }
+    get admin_root_url
+    assert_response :success
+  end
+
+  test "super_admin can access admin dashboard" do
+    post login_url, params: { email: @super_admin.email, password: "password" }
     get admin_root_url
     assert_response :success
   end

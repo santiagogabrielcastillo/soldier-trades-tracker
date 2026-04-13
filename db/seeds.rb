@@ -5,13 +5,13 @@
 # be executed at any point in every environment.
 # Run with: bin/rails db:seed
 
-if User.where(admin: true).none?
+if User.super_admin.none?
   User.create!(
     email: ENV.fetch("ADMIN_EMAIL") { raise "Set ADMIN_EMAIL env var before seeding" },
     password: ENV.fetch("ADMIN_PASSWORD") { raise "Set ADMIN_PASSWORD env var before seeding" },
     password_confirmation: ENV.fetch("ADMIN_PASSWORD"),
-    admin: true,
+    role: "super_admin",
     active: true
   )
-  puts "Admin user created: #{ENV["ADMIN_EMAIL"]}"
+  puts "Super admin user created: #{ENV["ADMIN_EMAIL"]}"
 end

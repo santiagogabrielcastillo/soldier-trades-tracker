@@ -11,8 +11,10 @@ class User < ApplicationRecord
 
   SYNC_INTERVALS = %w[hourly daily twice_daily].freeze
 
+  enum :role, { user: "user", admin: "admin", super_admin: "super_admin" }, default: "user"
+
   before_validation { self.email = email.to_s.strip.downcase }
-  before_update :prevent_last_admin_deactivation
+  before_update :prevent_last_super_admin_deactivation
 
   validates :email, presence: true, uniqueness: true
   validates :sync_interval, inclusion: { in: SYNC_INTERVALS }, allow_nil: true
@@ -47,12 +49,12 @@ class User < ApplicationRecord
 
   private
 
-  def prevent_last_admin_deactivation
-    return unless admin? && will_save_change_to_active?(to: false)
+  def prevent_last_super_admin_deactivation
+    return unless super_admin? && will_save_change_to_active?(to: false)
 
-    remaining = User.where(admin: true, active: true).where.not(id: id).count
+    remaining = User.super_admin.where(active: true).where.not(id: id).count
     if remaining.zero?
-      errors.add(:active, "cannot deactivate the last active admin")
+      errors.add(:active, "cannot deactivate the last active super admin")
       throw :abort
     end
   end

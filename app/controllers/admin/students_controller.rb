@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 class Admin::StudentsController < Admin::BaseController
-  before_action :set_student, only: %i[show toggle_active]
+  before_action :set_student, only: %i[show toggle_active promote]
 
   def index
-    @students   = User.where(admin: false).order(:email).pluck(:id, :email, :active)
+    @students   = User.where(role: "user").order(:email).pluck(:id, :email, :active)
     @pl_by_user = Admin::StudentStats.realized_pl_by_user
   end
 
@@ -30,9 +30,17 @@ class Admin::StudentsController < Admin::BaseController
     end
   end
 
+  def promote
+    if @student.update(role: "admin")
+      redirect_to admin_students_path, notice: "#{@student.email} promoted to admin."
+    else
+      redirect_to admin_students_path, alert: @student.errors.full_messages.to_sentence
+    end
+  end
+
   private
 
   def set_student
-    @student = User.where(admin: false).find(params[:id])
+    @student = User.where(role: "user").find(params[:id])
   end
 end
