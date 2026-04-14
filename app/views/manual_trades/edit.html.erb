@@ -1,4 +1,9 @@
 <div class="mx-auto max-w-lg">
+  <%= render BreadcrumbComponent.new(items: [
+    { label: "Trades", url: trades_path },
+    { label: @account.provider_type.to_s.capitalize, url: nil },
+    { label: "Edit Trade", url: nil }
+  ]) %>
   <h1 class="mb-6 text-2xl font-semibold text-slate-900">Edit Manual Trade</h1>
   <%= render "form" %>
 </div>
