@@ -1,14 +1,11 @@
 <div>
+  <%= render BreadcrumbComponent.new(items: [
+    { label: "Companies", url: companies_path },
+    { label: @company.ticker, url: company_path(@company) },
+    { label: "Comparison", url: nil }
+  ]) %>
   <div class="mb-6 flex items-start justify-between gap-4">
     <div>
-      <p class="flex items-center gap-1.5 text-sm text-slate-500">
-        <%= link_to @company.ticker, company_path(@company),
-              class: "font-mono font-semibold text-slate-700 hover:text-indigo-600 transition-colors duration-100" %>
-        <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-        </svg>
-        Comparison
-      </p>
       <h1 class="mt-0.5 text-2xl font-semibold text-slate-900"><%= @company.name %></h1>
     </div>
     <%= link_to company_path(@company),

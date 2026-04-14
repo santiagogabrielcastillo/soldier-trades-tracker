@@ -1,9 +1,11 @@
 <div class="max-w-2xl">
+  <%= render BreadcrumbComponent.new(items: [
+    { label: "Companies", url: companies_path },
+    { label: @company.ticker, url: company_path(@company) },
+    { label: @report.period_label, url: company_earnings_report_path(@company, @report) },
+    { label: "Edit", url: nil }
+  ]) %>
   <div class="mb-6">
-    <p class="text-sm text-slate-500">
-      <%= link_to @company.ticker, company_path(@company), class: "hover:text-slate-700" %> /
-      <%= link_to @report.period_label, company_earnings_report_path(@company, @report), class: "hover:text-slate-700" %>
-    </p>
     <h1 class="text-2xl font-semibold text-slate-900">Edit <%= @report.period_label %></h1>
   </div>
   <%= render "form" %>
