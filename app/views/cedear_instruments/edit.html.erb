@@ -1,11 +1,9 @@
-<div>
+<div class="mx-auto max-w-4xl">
   <%= render BreadcrumbComponent.new(items: [
     { label: "Stocks", url: stocks_path },
     { label: "CEDEAR instruments", url: cedear_instruments_path },
     { label: "Edit", url: nil }
   ]) %>
   <h1 class="mb-6 text-2xl font-semibold text-slate-900">Edit CEDEAR instrument</h1>
-  <div class="max-w-2xl">
-    <%= render "form" %>
-  </div>
+  <%= render "form" %>
 </div>
