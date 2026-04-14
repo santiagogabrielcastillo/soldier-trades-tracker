@@ -1,11 +1,11 @@
 <div>
-  <div class="mb-6 flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-semibold text-slate-900">CEDEAR instruments</h1>
-      <p class="mt-1 text-sm text-slate-500">Manage the CEDEAR tickers you trade, including their ratio to the underlying US stock.</p>
-    </div>
-    <%= render ButtonComponent.new(label: "Add instrument", href: new_cedear_instrument_path) %>
-  </div>
+  <%= render BreadcrumbComponent.new(items: [
+    { label: "Stocks", url: stocks_path },
+    { label: "CEDEAR instruments", url: nil }
+  ]) %>
+  <%= render PageHeaderComponent.new(title: "CEDEAR instruments", subtitle: "Manage the CEDEAR tickers you trade, including their ratio to the underlying US stock.") do |c| %>
+    <% c.with_actions { render ButtonComponent.new(label: "Add instrument", href: new_cedear_instrument_path) } %>
+  <% end %>
 
   <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
     <% if @cedear_instruments.any? %>

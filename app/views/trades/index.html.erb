@@ -1,9 +1,10 @@
 <div>
   <%= render PageHeaderComponent.new(title: "Trades") do |c| %>
-    <% if @exchange_accounts.size == 1 %>
-      <% c.with_actions { link_to "Add manual trade", new_exchange_account_manual_trade_path(@exchange_accounts.first), class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" } %>
-    <% elsif @exchange_accounts.size > 1 %>
-      <% c.with_actions do %>
+    <% c.with_actions do %>
+      <%= link_to "Manage portfolios", portfolios_path, class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+      <% if @exchange_accounts.size == 1 %>
+        <%= link_to "Add manual trade", new_exchange_account_manual_trade_path(@exchange_accounts.first), class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+      <% elsif @exchange_accounts.size > 1 %>
         <details class="relative">
           <summary class="cursor-pointer list-none rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500">Add manual trade ▾</summary>
           <div class="absolute right-0 top-full z-10 mt-1 w-52 rounded-md border border-slate-200 bg-white py-1 shadow-lg">

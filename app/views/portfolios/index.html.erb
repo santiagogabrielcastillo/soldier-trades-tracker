@@ -1,8 +1,11 @@
 <div>
-  <div class="mb-6 flex items-center justify-between">
-    <h1 class="text-2xl font-semibold text-slate-900">Portfolios</h1>
-    <%= render ButtonComponent.new(label: "New portfolio", href: new_portfolio_path) %>
-  </div>
+  <%= render BreadcrumbComponent.new(items: [
+    { label: "Trades", url: trades_path },
+    { label: "Portfolios", url: nil }
+  ]) %>
+  <%= render PageHeaderComponent.new(title: "Portfolios") do |c| %>
+    <% c.with_actions { render ButtonComponent.new(label: "New portfolio", href: new_portfolio_path) } %>
+  <% end %>
 
   <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
     <% if @portfolios.any? %>

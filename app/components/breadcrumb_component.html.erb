@@ -1,0 +1,13 @@
+<nav class="mb-4 flex items-center gap-1.5 text-sm text-slate-500" aria-label="Breadcrumb">
+  <% @crumbs.each_with_index do |crumb, i| %>
+    <% last = i == @crumbs.size - 1 %>
+    <% if last %>
+      <span class="font-medium text-slate-700"><%= crumb.label %></span>
+    <% else %>
+      <%= link_to crumb.label, crumb.url, class: "hover:text-slate-800 transition-colors duration-150" %>
+      <svg class="h-3.5 w-3.5 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    <% end %>
+  <% end %>
+</nav>
