@@ -1,4 +1,4 @@
-<div class="max-w-2xl">
+<div>
   <%= render BreadcrumbComponent.new(items: [
     { label: "Companies", url: companies_path },
     { label: @company.ticker, url: company_path(@company) },
@@ -7,5 +7,7 @@
   <div class="mb-6">
     <h1 class="text-2xl font-semibold text-slate-900">Add Earnings Report</h1>
   </div>
-  <%= render "form" %>
+  <div class="max-w-2xl">
+    <%= render "form" %>
+  </div>
 </div>
