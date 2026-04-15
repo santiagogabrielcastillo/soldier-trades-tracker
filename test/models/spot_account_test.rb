@@ -57,4 +57,45 @@ class SpotAccountTest < ActiveSupport::TestCase
     account = @user.spot_accounts.create!(name: "Default", default: true)
     assert_equal 0, account.cash_balance.to_i
   end
+
+  test "cash_balance subtracts buy total_value_usd" do
+    account = @user.spot_accounts.create!(name: "Test", default: false)
+    account.spot_transactions.create!(
+      executed_at: Time.current, token: "AAVE", side: "buy",
+      price_usd: 100, amount: 10, total_value_usd: 1000,
+      row_signature: SecureRandom.hex(32)
+    )
+    assert_equal(-1000, account.cash_balance.to_i)
+  end
+
+  test "cash_balance adds sell total_value_usd" do
+    account = @user.spot_accounts.create!(name: "Test", default: false)
+    account.spot_transactions.create!(
+      executed_at: Time.current, token: "AAVE", side: "sell",
+      price_usd: 120, amount: 10, total_value_usd: 1200,
+      row_signature: SecureRandom.hex(32)
+    )
+    assert_equal 1200, account.cash_balance.to_i
+  end
+
+  test "cash_balance combines deposits, withdrawals, buys and sells" do
+    account = @user.spot_accounts.create!(name: "Test", default: false)
+    account.spot_transactions.create!(
+      executed_at: 1.day.ago, token: "USDT", side: "deposit",
+      price_usd: 1, amount: 2000, total_value_usd: 2000,
+      row_signature: "cash|#{1.day.ago.to_i}|a"
+    )
+    account.spot_transactions.create!(
+      executed_at: 2.hours.ago, token: "AAVE", side: "buy",
+      price_usd: 100, amount: 10, total_value_usd: 1000,
+      row_signature: SecureRandom.hex(32)
+    )
+    account.spot_transactions.create!(
+      executed_at: 1.hour.ago, token: "AAVE", side: "sell",
+      price_usd: 120, amount: 5, total_value_usd: 600,
+      row_signature: SecureRandom.hex(32)
+    )
+    # 2000 deposit - 1000 buy + 600 sell = 1600
+    assert_equal 1600, account.cash_balance.to_i
+  end
 end

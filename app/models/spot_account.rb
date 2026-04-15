@@ -27,9 +27,11 @@ class SpotAccount < ApplicationRecord
   end
 
   def cash_balance
-    deposit_sum = spot_transactions.where(side: "deposit").sum(:amount)
+    deposit_sum  = spot_transactions.where(side: "deposit").sum(:amount)
     withdraw_sum = spot_transactions.where(side: "withdraw").sum(:amount)
-    (deposit_sum.to_d - withdraw_sum.to_d)
+    sell_sum     = spot_transactions.where(side: "sell").sum(:total_value_usd)
+    buy_sum      = spot_transactions.where(side: "buy").sum(:total_value_usd)
+    (deposit_sum.to_d - withdraw_sum.to_d + sell_sum.to_d - buy_sum.to_d)
   end
 
   private
