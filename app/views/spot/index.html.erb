@@ -153,7 +153,8 @@
         { label: "Side", classes: "text-left" },
         { label: "Amount", classes: "text-right" },
         { label: "Price (USD)", classes: "text-right" },
-        { label: "Total value (USD)", classes: "text-right" }
+        { label: "Total value (USD)", classes: "text-right" },
+        { label: "", classes: "text-right" }
       ]) do |table| %>
         <% @transactions.each do |tx| %>
           <% deposit_or_buy = tx.side == "buy" || tx.side == "deposit" %>
@@ -164,6 +165,14 @@
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_delimiter(tx.amount, delimiter: ",", precision: 8) %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= tx.side.in?(%w[deposit withdraw]) ? "—" : format_money(tx.price_usd) %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= format_money(tx.total_value_usd) %></td>
+            <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
+              <%= link_to "Edit", edit_spot_transaction_path(tx),
+                  data: { turbo_frame: "spot-transaction-edit-frame" },
+                  class: "mr-3 text-slate-500 underline hover:text-slate-800" %>
+              <%= link_to "Delete", confirm_destroy_spot_transaction_path(tx),
+                  data: { turbo_frame: "spot-transaction-delete-frame" },
+                  class: "text-red-500 underline hover:text-red-700" %>
+            </td>
           <% end %>
         <% end %>
       <% end %>
@@ -172,6 +181,28 @@
           <%== @pagy.series_nav %>
         </div>
       <% end %>
+
+      <%# Shared edit modal — content loaded on demand via Turbo Frame %>
+      <div data-controller="turbo-modal">
+        <dialog data-turbo-modal-target="dialog"
+                class="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-xl backdrop:bg-slate-900/20">
+          <turbo-frame id="spot-transaction-edit-frame"
+                       data-turbo-modal-target="frame"
+                       data-action="turbo:frame-load->turbo-modal#open">
+          </turbo-frame>
+        </dialog>
+      </div>
+
+      <%# Shared delete confirm modal — content loaded on demand via Turbo Frame %>
+      <div data-controller="turbo-modal">
+        <dialog data-turbo-modal-target="dialog"
+                class="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-xl backdrop:bg-slate-900/20">
+          <turbo-frame id="spot-transaction-delete-frame"
+                       data-turbo-modal-target="frame"
+                       data-action="turbo:frame-load->turbo-modal#open">
+          </turbo-frame>
+        </dialog>
+      </div>
     <% else %>
       <%= render EmptyStateComponent.new(message: "No spot transactions yet.") %>
     <% end %>
