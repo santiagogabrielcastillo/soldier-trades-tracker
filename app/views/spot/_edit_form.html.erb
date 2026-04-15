@@ -38,7 +38,7 @@
 
       <div>
         <%= f.label :executed_at, "Date & time", class: "block text-sm font-medium text-slate-700" %>
-        <%= f.datetime_local_field :executed_at, value: transaction.executed_at.strftime("%Y-%m-%dT%H:%M"), class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+        <%= f.datetime_local_field :executed_at, value: transaction.executed_at&.strftime("%Y-%m-%dT%H:%M"), class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
         <p class="mt-1 text-xs text-slate-500">Interpreted in <%= Time.zone.name %> and stored in UTC.</p>
         <% if transaction.errors[:executed_at].any? %>
           <p class="mt-1 text-sm text-red-600"><%= transaction.errors[:executed_at].first %></p>
