@@ -14,6 +14,7 @@ export default class extends Controller {
       this.dialogTarget.close()
     }
     if (this.hasFrameTarget) {
+      this.frameTarget.removeAttribute("src")
       this.frameTarget.innerHTML = ""
     }
   }
