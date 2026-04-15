@@ -48,6 +48,8 @@ Rails.application.routes.draw do
        constraints: { ticker: /[A-Z0-9.\-]{1,10}/ }
   post "stocks/watchlist",         to: "stocks#add_to_watchlist",  as: :stocks_watchlist
   delete "stocks/watchlist/:id",   to: "stocks#remove_from_watchlist", as: :stocks_watchlist_item
+  get "stocks/analysis/:ticker",   to: "stocks/analysis#show",     as: :stocks_analysis,
+      constraints: { ticker: /[A-Z0-9.\-]{1,10}/ }
 
   resources :stock_portfolios, only: %i[index new create edit update]
 

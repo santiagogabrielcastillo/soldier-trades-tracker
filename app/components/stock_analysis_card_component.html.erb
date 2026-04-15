@@ -1,0 +1,260 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+  .sac-display { font-family: 'DM Serif Display', Georgia, serif; }
+  .sac-mono    { font-family: 'IBM Plex Mono', 'Courier New', monospace; }
+  .sac-body    { font-family: 'DM Sans', system-ui, sans-serif; }
+  .sac-prose   { font-family: 'DM Sans', system-ui, sans-serif; line-height: 1.75; color: #334155; }
+  .sac-reveal  { animation: sacReveal 0.4s ease both; }
+  @keyframes sacReveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .sac-bar-track { background: #f1f5f9; border-radius: 2px; overflow: hidden; }
+  details summary { cursor: pointer; list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details[open] .sac-chevron { transform: rotate(180deg); }
+  .sac-chevron { transition: transform 0.2s ease; }
+</style>
+
+<article class="sac-body sac-reveal">
+
+  <%# ── Header ─────────────────────────────────────────────────────────────── %>
+  <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <p class="sac-mono text-xs font-medium uppercase tracking-widest text-slate-400 mb-1"><%= @analysis.ticker %> · <%= analyzed_at_formatted %></p>
+      <h1 class="sac-display text-3xl text-slate-900 leading-tight"><%= company_name %></h1>
+    </div>
+    <div class="flex flex-col items-end gap-2">
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500 sac-mono">
+        <span class="h-1.5 w-1.5 rounded-full bg-violet-400"></span>
+        <%= provider_badge %>
+      </span>
+      <% if turnaround_mode? %>
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+          ⚠ Turnaround — <%= turnaround_label %>
+        </span>
+      <% end %>
+    </div>
+  </div>
+
+  <%# ── Verdict banner ─────────────────────────────────────────────────────── %>
+  <div class="rounded-xl <%= verdict_banner_css %> px-6 py-5 mb-8 flex items-center justify-between" style="animation-delay:0.05s">
+    <div class="flex items-center gap-3">
+      <span class="h-3 w-3 rounded-full <%= verdict_dot_css %>"></span>
+      <span class="sac-display text-2xl italic"><%= verdict.upcase %></span>
+    </div>
+    <p class="text-sm font-medium opacity-90 text-right max-w-xs"><%= verdict_label %></p>
+  </div>
+
+  <% if deep? %>
+
+    <%# ── Key metrics grid ────────────────────────────────────────────────────── %>
+    <% unless metrics.empty? %>
+      <section class="mb-8" style="animation-delay:0.1s">
+        <h2 class="sac-mono text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4 pb-2 border-b border-slate-100">Key Metrics</h2>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <% METRIC_LABELS.each do |key, label| %>
+            <% metric = metrics[key] %>
+            <% next unless metric %>
+            <div class="rounded-lg border border-slate-100 bg-white p-4 shadow-sm">
+              <p class="text-xs font-medium text-slate-400 mb-1.5"><%= label %></p>
+              <p class="sac-mono text-lg font-semibold leading-tight <%= metric_status_css(metric['status']) %>">
+                <%= metric["value"] || "—" %>
+              </p>
+              <% if metric["subtitle"].present? %>
+                <p class="mt-1 text-xs text-slate-400 leading-tight"><%= metric["subtitle"] %></p>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+    <%# ── Two-column: Moat + Asset/Tags ──────────────────────────────────────── %>
+    <div class="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2" style="animation-delay:0.15s">
+
+      <%# Moat scorecard %>
+      <% unless moat.empty? %>
+        <div class="rounded-lg border border-slate-100 bg-white p-5 shadow-sm">
+          <div class="flex items-baseline justify-between mb-4">
+            <h2 class="sac-mono text-xs font-semibold uppercase tracking-widest text-slate-400">Economic Moat</h2>
+            <span class="sac-display italic text-base <%= moat_overall_css %>"><%= moat["overall"]&.capitalize || "—" %></span>
+          </div>
+          <div class="space-y-3">
+            <% (moat["scores"] || {}).each do |key, data| %>
+              <% score = data["score"].to_i; max = data["max"].to_i.then { |m| m.zero? ? 5 : m } %>
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm text-slate-600"><%= MOAT_LABELS[key] || key.humanize %></span>
+                  <span class="sac-mono text-xs text-slate-400"><%= score %>/<%= max %></span>
+                </div>
+                <div class="flex gap-1">
+                  <% max.times do |i| %>
+                    <% filled = i < score %>
+                    <div class="h-2 flex-1 rounded-sm <%= filled ? 'bg-slate-800' : 'bg-slate-100' %>"></div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          <% if moat["primary_threat"].present? %>
+            <p class="mt-4 text-xs text-slate-500 border-t border-slate-100 pt-3 leading-relaxed">
+              <span class="font-medium text-slate-600">Primary threat:</span> <%= moat["primary_threat"] %>
+            </p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <%# Asset classification + tags %>
+      <div class="flex flex-col gap-4">
+        <div class="rounded-lg border border-slate-100 bg-white p-5 shadow-sm">
+          <h2 class="sac-mono text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Classification</h2>
+          <div class="flex flex-wrap gap-2">
+            <span class="inline-flex items-center rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white sac-mono">
+              Asset <%= asset_classification.capitalize %>
+            </span>
+            <% if risk_reward_rating.present? %>
+              <span class="inline-flex items-center rounded-md bg-slate-50 px-3 py-1.5 text-sm text-slate-600 ring-1 ring-slate-200">
+                <%= risk_reward_rating.split("—").first&.strip || risk_reward_rating %>
+              </span>
+            <% end %>
+          </div>
+        </div>
+
+        <% unless tags.empty? %>
+          <div class="rounded-lg border border-slate-100 bg-white p-5 shadow-sm">
+            <h2 class="sac-mono text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Signal Tags</h2>
+            <div class="flex flex-wrap gap-2">
+              <% tags.each do |tag| %>
+                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium <%= tag_css(tag['color']) %>">
+                  <%= tag["label"] %>
+                </span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# ── Revenue vs FCF chart ─────────────────────────────────────────────── %>
+    <% unless revenue_trend.empty? %>
+      <section class="mb-8 rounded-lg border border-slate-100 bg-white p-5 shadow-sm" style="animation-delay:0.2s">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="sac-mono text-xs font-semibold uppercase tracking-widest text-slate-400">Revenue vs Free Cash Flow</h2>
+          <div class="flex items-center gap-4 text-xs text-slate-400">
+            <span class="flex items-center gap-1.5"><span class="h-2 w-3 rounded-sm bg-slate-700 inline-block"></span>Revenue</span>
+            <span class="flex items-center gap-1.5"><span class="h-2 w-3 rounded-sm bg-teal-500 inline-block"></span>FCF</span>
+            <span class="sac-mono">(<%= revenue_unit %>)</span>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <% revenue_trend.each do |row| %>
+            <% rev = row["revenue"].to_f; fcf = row["fcf"].to_f %>
+            <% rev_pct = revenue_max > 0 ? (rev / revenue_max * 100).round(1) : 0 %>
+            <% fcf_pct = revenue_max > 0 ? (fcf / revenue_max * 100).round(1) : 0 %>
+            <div class="flex items-center gap-3">
+              <span class="sac-mono text-xs text-slate-400 w-10 shrink-0 text-right"><%= row["year"] %></span>
+              <div class="flex-1 space-y-1">
+                <div class="sac-bar-track h-4">
+                  <div class="h-4 bg-slate-700 rounded-sm transition-all duration-500"
+                       style="width: <%= rev_pct %>%"></div>
+                </div>
+                <% if fcf > 0 %>
+                  <div class="sac-bar-track h-2.5">
+                    <div class="h-2.5 bg-teal-500 rounded-sm transition-all duration-500"
+                         style="width: <%= fcf_pct %>%"></div>
+                  </div>
+                <% end %>
+              </div>
+              <div class="text-right w-20 shrink-0">
+                <span class="sac-mono text-xs font-medium text-slate-700"><%= number_with_precision(rev, precision: 1) %></span>
+                <% if fcf > 0 %>
+                  <span class="sac-mono text-xs text-teal-600 block"><%= number_with_precision(fcf, precision: 1) %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+  <% end %>
+
+  <%# ── Prose sections ──────────────────────────────────────────────────────── %>
+  <div class="space-y-3" style="animation-delay:0.25s">
+
+    <% if executive_summary.present? %>
+      <details open class="rounded-lg border border-slate-100 bg-white shadow-sm overflow-hidden">
+        <summary class="flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors">
+          <span class="sac-mono text-xs font-semibold uppercase tracking-widest text-slate-500">Executive Summary</span>
+          <svg class="sac-chevron h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/>
+          </svg>
+        </summary>
+        <div class="px-5 pb-5 pt-2">
+          <p class="sac-prose text-sm"><%= executive_summary %></p>
+        </div>
+      </details>
+    <% end %>
+
+    <% if thesis_breakdown.present? %>
+      <details class="rounded-lg border border-slate-100 bg-white shadow-sm overflow-hidden">
+        <summary class="flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors">
+          <span class="sac-mono text-xs font-semibold uppercase tracking-widest text-slate-500">Thesis Breakdown</span>
+          <svg class="sac-chevron h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/>
+          </svg>
+        </summary>
+        <div class="px-5 pb-5 pt-2">
+          <p class="sac-prose text-sm whitespace-pre-line"><%= thesis_breakdown %></p>
+        </div>
+      </details>
+    <% end %>
+
+    <% if red_flags.present? %>
+      <details class="rounded-lg border border-red-100 bg-red-50/30 shadow-sm overflow-hidden">
+        <summary class="flex items-center justify-between px-5 py-4 hover:bg-red-50 transition-colors">
+          <span class="sac-mono text-xs font-semibold uppercase tracking-widest text-red-500">Red Flags</span>
+          <svg class="sac-chevron h-4 w-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/>
+          </svg>
+        </summary>
+        <div class="px-5 pb-5 pt-2">
+          <p class="sac-prose text-sm whitespace-pre-line text-red-800"><%= red_flags %></p>
+        </div>
+      </details>
+    <% end %>
+
+    <% if what_to_watch.present? %>
+      <details class="rounded-lg border border-amber-100 bg-amber-50/30 shadow-sm overflow-hidden">
+        <summary class="flex items-center justify-between px-5 py-4 hover:bg-amber-50 transition-colors">
+          <span class="sac-mono text-xs font-semibold uppercase tracking-widest text-amber-600">What to Watch</span>
+          <svg class="sac-chevron h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/>
+          </svg>
+        </summary>
+        <div class="px-5 pb-5 pt-2">
+          <p class="sac-prose text-sm whitespace-pre-line"><%= what_to_watch %></p>
+        </div>
+      </details>
+    <% end %>
+
+  </div>
+
+  <%# ── Sources ─────────────────────────────────────────────────────────────── %>
+  <% unless sources.empty? %>
+    <section class="mt-8 pt-6 border-t border-slate-100" style="animation-delay:0.3s">
+      <h2 class="sac-mono text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Sources</h2>
+      <ul class="space-y-1">
+        <% sources.each do |url| %>
+          <li>
+            <a href="<%= url %>" target="_blank" rel="noopener noreferrer"
+               class="sac-mono text-xs text-indigo-600 hover:text-indigo-800 hover:underline break-all">
+              <%= url %>
+            </a>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <p class="mt-8 text-xs text-slate-400 sac-mono">Not investment advice. Verify all figures before acting.</p>
+
+</article>

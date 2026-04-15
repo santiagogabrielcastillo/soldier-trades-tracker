@@ -1,0 +1,8 @@
+<%= render BreadcrumbComponent.new(items: [
+  { label: "Stocks", url: stocks_path(view: "watchlist") },
+  { label: @analysis.ticker }
+]) %>
+
+<div class="mx-auto max-w-4xl">
+  <%= render StockAnalysisCardComponent.new(analysis: @analysis, fundamental: @fundamental) %>
+</div>

@@ -95,7 +95,7 @@ class CompaniesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@user)
     get comparison_company_path(@company)
     assert_response :success
-    assert_select "h1", text: /AAPL/
+    assert_select "h1", text: /Apple Inc\./
   end
 
   test "comparison shows standard metric rows" do

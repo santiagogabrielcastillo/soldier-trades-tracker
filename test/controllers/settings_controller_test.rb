@@ -51,10 +51,48 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :redirect
   end
 
+  # ── Deep Analysis (Claude) card ───────────────────────────────────────────
+
+  test "shows Deep Analysis card as active when platform anthropic key configured" do
+    with_anthropic_key("sk-ant-platform") do
+      get settings_path
+      assert_response :success
+      assert_select "span", text: /Active · Powered by Claude/
+    end
+  end
+
+  test "shows Deep Analysis card as inactive when no platform anthropic key" do
+    with_no_anthropic_key do
+      get settings_path
+      assert_response :success
+      assert_select "span", text: "Deep Analysis"
+      assert_match /not\s+currently\s+enabled/, response.body
+    end
+  end
+
+  test "Deep Analysis card always renders regardless of Gemini key status" do
+    @user.update!(gemini_api_key: nil)
+    with_no_anthropic_key do
+      get settings_path
+      assert_response :success
+      assert_select "span", text: "Deep Analysis"
+    end
+  end
+
   private
 
   def sign_in_as(user)
     post login_path, params: { email: user.email, password: "password" }
     follow_redirect!
+  end
+
+  def with_anthropic_key(key)
+    Rails.application.credentials.stub(:dig, ->(*args) {
+      args == [ :anthropic, :api_key ] ? key : nil
+    }) { yield }
+  end
+
+  def with_no_anthropic_key
+    Rails.application.credentials.stub(:dig, ->(*_args) { nil }) { yield }
   end
 end

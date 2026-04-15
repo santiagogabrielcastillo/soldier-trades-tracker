@@ -48,7 +48,7 @@ class ManualTradesControllerTest < ActionDispatch::IntegrationTest
         post exchange_account_manual_trades_path(@account), params: { manual_trade: valid_params }
       end
     end
-    assert_redirected_to exchange_accounts_path
+    assert_redirected_to trades_path
     assert_match(/Trade added/, flash[:notice])
   end
 
@@ -130,7 +130,7 @@ class ManualTradesControllerTest < ActionDispatch::IntegrationTest
         delete exchange_account_manual_trade_path(@account, trade)
       end
     end
-    assert_redirected_to exchange_accounts_path
+    assert_redirected_to trades_path
     assert_match(/Trade deleted/, flash[:notice])
   end
 
@@ -144,7 +144,7 @@ class ManualTradesControllerTest < ActionDispatch::IntegrationTest
       executed_at: 1.day.ago
     )
     delete exchange_account_manual_trade_path(@account, non_manual)
-    assert_redirected_to exchange_accounts_path
+    assert_redirected_to trades_path
     assert_match(/Only manually-entered trades/, flash[:alert])
     assert Trade.exists?(non_manual.id)
   end
@@ -159,7 +159,7 @@ class ManualTradesControllerTest < ActionDispatch::IntegrationTest
         manual_trade: valid_params.merge(price: "99999.0")
       }
     end
-    assert_redirected_to exchange_accounts_path
+    assert_redirected_to trades_path
     assert_match(/Trade updated/, flash[:notice])
     assert_equal "99999.0", trade.reload.raw_payload["avgPrice"]
   end
@@ -176,7 +176,7 @@ class ManualTradesControllerTest < ActionDispatch::IntegrationTest
     patch exchange_account_manual_trade_path(@account, non_manual), params: {
       manual_trade: valid_params
     }
-    assert_redirected_to exchange_accounts_path
+    assert_redirected_to trades_path
     assert_match(/Only manually-entered trades/, flash[:alert])
   end
 
