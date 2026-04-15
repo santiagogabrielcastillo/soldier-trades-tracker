@@ -4,7 +4,7 @@
   <p class="mb-6 text-sm text-slate-600">
     Are you sure you want to delete this
     <span class="font-medium capitalize"><%= transaction.token %> <%= transaction.side %></span>
-    of <span class="font-medium"><%= number_with_delimiter(transaction.amount.to_f, delimiter: ",") %></span>
+    of <span class="font-medium"><%= number_with_delimiter(transaction.amount, delimiter: ",") %></span>
     on <span class="font-medium"><%= transaction.executed_at.strftime("%b %d, %Y") %></span><% unless transaction.side.in?(%w[deposit withdraw]) %> at <span class="font-medium"><%= format_money(transaction.price_usd) %></span><% end %>?
     <br><span class="font-medium text-red-600">This cannot be undone.</span>
   </p>
