@@ -116,6 +116,51 @@ class SpotController < ApplicationController
     redirect_to spot_path, notice: "Prices updated."
   end
 
+  def edit
+    @spot_account = SpotAccount.find_or_create_default_for(current_user)
+    @transaction = @spot_account.spot_transactions.find(params[:id])
+    render partial: "edit_form", locals: { transaction: @transaction }
+  rescue ActiveRecord::RecordNotFound
+    render plain: "Not found", status: :not_found
+  end
+
+  def update
+    @spot_account = SpotAccount.find_or_create_default_for(current_user)
+    @transaction = @spot_account.spot_transactions.find(params[:id])
+
+    permitted = spot_transaction_params
+    executed_at = parse_executed_at(permitted[:executed_at])
+    amount = parse_decimal_param(permitted[:amount])
+
+    attrs = build_update_attrs(@transaction, permitted, executed_at, amount)
+
+    if attrs && @transaction.update(attrs)
+      redirect_to spot_path(view: "transactions"), notice: "Transaction updated."
+    else
+      @transaction.errors.add(:base, "Invalid parameters.") if attrs.nil?
+      render partial: "edit_form", locals: { transaction: @transaction }, status: :unprocessable_entity
+    end
+  rescue ActiveRecord::RecordNotFound
+    render plain: "Not found", status: :not_found
+  end
+
+  def destroy
+    @spot_account = SpotAccount.find_or_create_default_for(current_user)
+    @transaction = @spot_account.spot_transactions.find(params[:id])
+    @transaction.destroy!
+    redirect_to spot_path(view: "transactions"), notice: "Transaction deleted."
+  rescue ActiveRecord::RecordNotFound
+    render plain: "Not found", status: :not_found
+  end
+
+  def confirm_destroy
+    @spot_account = SpotAccount.find_or_create_default_for(current_user)
+    @transaction = @spot_account.spot_transactions.find(params[:id])
+    render partial: "delete_confirm", locals: { transaction: @transaction }
+  rescue ActiveRecord::RecordNotFound
+    render plain: "Not found", status: :not_found
+  end
+
   private
 
   def parse_executed_at(value)
@@ -192,6 +237,24 @@ class SpotController < ApplicationController
 
   def spot_transaction_params
     params.permit(:token, :side, :amount, :price_usd, :executed_at)
+  end
+
+  def build_update_attrs(transaction, permitted, executed_at, amount)
+    return nil unless executed_at && amount && amount.positive?
+
+    if transaction.side.in?(%w[deposit withdraw])
+      total_value_usd = amount
+      row_signature = "cash|#{executed_at.to_i}|#{transaction.id}"
+      { amount: amount, executed_at: executed_at, total_value_usd: total_value_usd, row_signature: row_signature }
+    else
+      token = permitted[:token].to_s.strip.upcase.presence
+      price_usd = parse_decimal_param(permitted[:price_usd])
+      return nil unless token && price_usd && price_usd >= 0
+
+      total_value_usd = amount * price_usd
+      row_signature = Spot::CsvRowParser.row_signature(executed_at, token, transaction.side, price_usd, amount)
+      { token: token, price_usd: price_usd, amount: amount, executed_at: executed_at, total_value_usd: total_value_usd, row_signature: row_signature }
+    end
   end
 
   def tokens_for_select_for(spot_account)

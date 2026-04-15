@@ -2,7 +2,7 @@
 
 class SettingsController < ApplicationController
   def show
-    # Single settings page; sync_interval is the main setting for MVP
+    @ai_provider = Ai::ProviderForUser.new(current_user)
   end
 
   def update

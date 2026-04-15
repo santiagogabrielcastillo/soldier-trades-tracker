@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_13_133355) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_15_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -325,9 +325,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_13_133355) do
     t.datetime "analyzed_at", null: false
     t.datetime "created_at", null: false
     t.text "executive_summary"
+    t.string "provider", default: "gemini"
     t.string "rating", null: false
     t.text "red_flags"
     t.string "risk_reward_rating"
+    t.jsonb "structured_data"
     t.text "thesis_breakdown"
     t.string "ticker", null: false
     t.datetime "updated_at", null: false

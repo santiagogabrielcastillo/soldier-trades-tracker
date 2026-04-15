@@ -37,6 +37,10 @@ Rails.application.routes.draw do
   post "spot/import", to: "spot#import", as: :spot_import
   post "spot/transactions", to: "spot#create", as: :spot_transactions
   post "spot/sync_prices", to: "spot#sync_prices", as: :spot_sync_prices
+  get    "spot/transactions/:id/edit",    to: "spot#edit",            as: :edit_spot_transaction
+  get    "spot/transactions/:id/confirm", to: "spot#confirm_destroy", as: :confirm_destroy_spot_transaction
+  patch  "spot/transactions/:id",         to: "spot#update",          as: :spot_transaction
+  delete "spot/transactions/:id",         to: "spot#destroy",         as: :destroy_spot_transaction
 
   get "stocks", to: "stocks#index", as: :stocks
   post "stocks/trades", to: "stocks#create", as: :stocks_trades
@@ -48,6 +52,8 @@ Rails.application.routes.draw do
        constraints: { ticker: /[A-Z0-9.\-]{1,10}/ }
   post "stocks/watchlist",         to: "stocks#add_to_watchlist",  as: :stocks_watchlist
   delete "stocks/watchlist/:id",   to: "stocks#remove_from_watchlist", as: :stocks_watchlist_item
+  get "stocks/analysis/:ticker",   to: "stocks/analysis#show",     as: :stocks_analysis,
+      constraints: { ticker: /[A-Z0-9.\-]{1,10}/ }
 
   resources :stock_portfolios, only: %i[index new create edit update]
 
