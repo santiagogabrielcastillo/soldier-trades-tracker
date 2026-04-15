@@ -120,6 +120,8 @@ class SpotController < ApplicationController
     @spot_account = SpotAccount.find_or_create_default_for(current_user)
     @transaction = @spot_account.spot_transactions.find(params[:id])
     render partial: "edit_form", locals: { transaction: @transaction }
+  rescue ActiveRecord::RecordNotFound
+    render plain: "Not found", status: :not_found
   end
 
   def destroy
@@ -127,6 +129,8 @@ class SpotController < ApplicationController
     @transaction = @spot_account.spot_transactions.find(params[:id])
     @transaction.destroy!
     redirect_to spot_path(view: "transactions"), notice: "Transaction deleted."
+  rescue ActiveRecord::RecordNotFound
+    render plain: "Not found", status: :not_found
   end
 
   private
