@@ -133,6 +133,14 @@ class SpotController < ApplicationController
     render plain: "Not found", status: :not_found
   end
 
+  def confirm_destroy
+    @spot_account = SpotAccount.find_or_create_default_for(current_user)
+    @transaction = @spot_account.spot_transactions.find(params[:id])
+    render partial: "delete_confirm", locals: { transaction: @transaction }
+  rescue ActiveRecord::RecordNotFound
+    render plain: "Not found", status: :not_found
+  end
+
   private
 
   def parse_executed_at(value)

@@ -219,6 +219,33 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "confirm_destroy returns delete confirm partial for own transaction" do
+    sign_in_as(@user)
+    account = SpotAccount.find_or_create_default_for(@user)
+    tx = account.spot_transactions.create!(
+      token: "BTC", side: "buy", amount: 1, price_usd: 50_000, total_value_usd: 50_000,
+      executed_at: 1.day.ago, row_signature: SecureRandom.hex(32)
+    )
+    get confirm_destroy_spot_transaction_path(tx)
+    assert_response :success
+    assert_match(/BTC/, response.body)
+    assert_match(/spot-transaction-delete-frame/, response.body)
+    assert_match(/Confirm delete/, response.body)
+  end
+
+  test "confirm_destroy returns 404 for another user's transaction" do
+    sign_in_as(@user)
+    other_user = users(:two)
+    other_user.update!(password: "password", password_confirmation: "password")
+    other_account = SpotAccount.find_or_create_default_for(other_user)
+    tx = other_account.spot_transactions.create!(
+      token: "ETH", side: "buy", amount: 1, price_usd: 3_000, total_value_usd: 3_000,
+      executed_at: 1.day.ago, row_signature: SecureRandom.hex(32)
+    )
+    get confirm_destroy_spot_transaction_path(tx)
+    assert_response :not_found
+  end
+
   def sign_in_as(user)
     post login_path, params: { email: user.email, password: "password" }
     follow_redirect!
