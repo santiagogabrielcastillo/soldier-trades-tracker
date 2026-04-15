@@ -116,6 +116,13 @@ class SpotController < ApplicationController
     redirect_to spot_path, notice: "Prices updated."
   end
 
+  def destroy
+    @spot_account = SpotAccount.find_or_create_default_for(current_user)
+    @transaction = @spot_account.spot_transactions.find(params[:id])
+    @transaction.destroy!
+    redirect_to spot_path(view: "transactions"), notice: "Transaction deleted."
+  end
+
   private
 
   def parse_executed_at(value)
