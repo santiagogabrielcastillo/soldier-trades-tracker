@@ -192,6 +192,33 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "edit returns the edit form partial for own transaction" do
+    sign_in_as(@user)
+    account = SpotAccount.find_or_create_default_for(@user)
+    tx = account.spot_transactions.create!(
+      token: "BTC", side: "buy", amount: 1, price_usd: 50_000, total_value_usd: 50_000,
+      executed_at: 1.day.ago, row_signature: SecureRandom.hex(32)
+    )
+    get edit_spot_transaction_path(tx)
+    assert_response :success
+    assert_match(/BTC/, response.body)
+    assert_match(/50000/, response.body)
+    assert_match(/spot-transaction-edit-frame/, response.body)
+  end
+
+  test "edit returns 404 for another user's transaction" do
+    sign_in_as(@user)
+    other_user = users(:two)
+    other_user.update!(password: "password", password_confirmation: "password")
+    other_account = SpotAccount.find_or_create_default_for(other_user)
+    tx = other_account.spot_transactions.create!(
+      token: "ETH", side: "buy", amount: 1, price_usd: 3_000, total_value_usd: 3_000,
+      executed_at: 1.day.ago, row_signature: SecureRandom.hex(32)
+    )
+    get edit_spot_transaction_path(tx)
+    assert_response :not_found
+  end
+
   def sign_in_as(user)
     post login_path, params: { email: user.email, password: "password" }
     follow_redirect!

@@ -1,0 +1,58 @@
+<%= turbo_frame_tag "spot-transaction-edit-frame" do %>
+  <h2 class="mb-4 text-lg font-semibold text-slate-900">Edit transaction</h2>
+
+  <%= form_with url: spot_transaction_path(transaction), method: :patch do |f| %>
+    <div class="space-y-4">
+      <div>
+        <span class="block text-sm font-medium text-slate-700">Side</span>
+        <p class="mt-1 text-sm capitalize text-slate-900"><%= transaction.side %></p>
+      </div>
+
+      <% if transaction.side.in?(%w[buy sell]) %>
+        <div>
+          <%= f.label :token, "Token", class: "block text-sm font-medium text-slate-700" %>
+          <%= f.text_field :token, value: transaction.token, class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+          <% if transaction.errors[:token].any? %>
+            <p class="mt-1 text-sm text-red-600"><%= transaction.errors[:token].first %></p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div>
+        <%= f.label :amount, "Amount", class: "block text-sm font-medium text-slate-700" %>
+        <%= f.number_field :amount, value: transaction.amount, step: :any, min: 0, placeholder: "0", class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+        <% if transaction.errors[:amount].any? %>
+          <p class="mt-1 text-sm text-red-600"><%= transaction.errors[:amount].first %></p>
+        <% end %>
+      </div>
+
+      <% if transaction.side.in?(%w[buy sell]) %>
+        <div>
+          <%= f.label :price_usd, "Price (USD)", class: "block text-sm font-medium text-slate-700" %>
+          <%= f.number_field :price_usd, value: transaction.price_usd, step: :any, min: 0, placeholder: "0", class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+          <% if transaction.errors[:price_usd].any? %>
+            <p class="mt-1 text-sm text-red-600"><%= transaction.errors[:price_usd].first %></p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div>
+        <%= f.label :executed_at, "Date & time", class: "block text-sm font-medium text-slate-700" %>
+        <%= f.datetime_local_field :executed_at, value: transaction.executed_at.strftime("%Y-%m-%dT%H:%M"), class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
+        <p class="mt-1 text-xs text-slate-500">Interpreted in <%= Time.zone.name %> and stored in UTC.</p>
+        <% if transaction.errors[:executed_at].any? %>
+          <p class="mt-1 text-sm text-red-600"><%= transaction.errors[:executed_at].first %></p>
+        <% end %>
+      </div>
+
+      <% if transaction.errors[:base].any? %>
+        <p class="text-sm text-red-600"><%= transaction.errors[:base].first %></p>
+      <% end %>
+    </div>
+
+    <div class="mt-6 flex gap-2">
+      <%= f.submit "Save changes", class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+      <button type="button" data-action="click->turbo-modal#close" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Cancel</button>
+    </div>
+  <% end %>
+<% end %>

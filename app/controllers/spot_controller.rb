@@ -116,6 +116,12 @@ class SpotController < ApplicationController
     redirect_to spot_path, notice: "Prices updated."
   end
 
+  def edit
+    @spot_account = SpotAccount.find_or_create_default_for(current_user)
+    @transaction = @spot_account.spot_transactions.find(params[:id])
+    render partial: "edit_form", locals: { transaction: @transaction }
+  end
+
   def destroy
     @spot_account = SpotAccount.find_or_create_default_for(current_user)
     @transaction = @spot_account.spot_transactions.find(params[:id])
