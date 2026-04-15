@@ -246,6 +246,85 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "update with valid params corrects price and recalculates total_value_usd and row_signature" do
+    sign_in_as(@user)
+    account = SpotAccount.find_or_create_default_for(@user)
+    tx = account.spot_transactions.create!(
+      token: "BTC", side: "buy", amount: BigDecimal("2"), price_usd: BigDecimal("50000"),
+      total_value_usd: BigDecimal("100000"), executed_at: Time.zone.parse("2026-01-10 12:00"),
+      row_signature: SecureRandom.hex(32)
+    )
+    old_sig = tx.row_signature
+
+    patch spot_transaction_path(tx), params: {
+      token: "BTC", price_usd: "55000", amount: "2", executed_at: "2026-01-10T12:00"
+    }
+
+    assert_redirected_to spot_path(view: "transactions")
+    assert_equal "Transaction updated.", flash[:notice]
+    tx.reload
+    assert_equal BigDecimal("55000"), tx.price_usd
+    assert_equal BigDecimal("110000"), tx.total_value_usd
+    assert_not_equal old_sig, tx.row_signature
+  end
+
+  test "update with duplicate values shows validation error and re-renders form" do
+    sign_in_as(@user)
+    account = SpotAccount.find_or_create_default_for(@user)
+    existing = account.spot_transactions.create!(
+      token: "BTC", side: "buy", amount: BigDecimal("1"), price_usd: BigDecimal("60000"),
+      total_value_usd: BigDecimal("60000"), executed_at: Time.zone.parse("2026-01-10 12:00"),
+      row_signature: Spot::CsvRowParser.row_signature(Time.zone.parse("2026-01-10 12:00"), "BTC", "buy", BigDecimal("60000"), BigDecimal("1"))
+    )
+    tx = account.spot_transactions.create!(
+      token: "BTC", side: "buy", amount: BigDecimal("2"), price_usd: BigDecimal("50000"),
+      total_value_usd: BigDecimal("100000"), executed_at: Time.zone.parse("2026-01-11 12:00"),
+      row_signature: SecureRandom.hex(32)
+    )
+
+    # Attempt to update tx so its values collide with existing
+    patch spot_transaction_path(tx), params: {
+      token: "BTC", price_usd: "60000", amount: "1", executed_at: "2026-01-10T12:00"
+    }
+
+    assert_response :unprocessable_entity
+    assert_match(/spot-transaction-edit-frame/, response.body)
+  end
+
+  test "update cannot update another user's transaction" do
+    sign_in_as(@user)
+    other_user = users(:two)
+    other_user.update!(password: "password", password_confirmation: "password")
+    other_account = SpotAccount.find_or_create_default_for(other_user)
+    tx = other_account.spot_transactions.create!(
+      token: "ETH", side: "buy", amount: 1, price_usd: 3_000, total_value_usd: 3_000,
+      executed_at: 1.day.ago, row_signature: SecureRandom.hex(32)
+    )
+    patch spot_transaction_path(tx), params: {
+      token: "ETH", price_usd: "4000", amount: "1", executed_at: 1.day.ago.strftime("%Y-%m-%dT%H:%M")
+    }
+    assert_response :not_found
+    tx.reload
+    assert_equal BigDecimal("3000"), tx.price_usd
+  end
+
+  test "update deposit transaction changes amount and recalculates total_value_usd" do
+    sign_in_as(@user)
+    account = SpotAccount.find_or_create_default_for(@user)
+    tx = account.spot_transactions.create!(
+      token: "USDT", side: "deposit", amount: BigDecimal("100"), price_usd: BigDecimal("1"),
+      total_value_usd: BigDecimal("100"), executed_at: Time.zone.parse("2026-01-10 12:00"),
+      row_signature: "cash|#{Time.zone.parse("2026-01-10 12:00").to_i}|abc123"
+    )
+    patch spot_transaction_path(tx), params: {
+      amount: "250", executed_at: "2026-01-10T12:00"
+    }
+    assert_redirected_to spot_path(view: "transactions")
+    tx.reload
+    assert_equal BigDecimal("250"), tx.amount
+    assert_equal BigDecimal("250"), tx.total_value_usd
+  end
+
   def sign_in_as(user)
     post login_path, params: { email: user.email, password: "password" }
     follow_redirect!
