@@ -123,6 +123,8 @@
   <% else %>
     <%= render EmptyStateComponent.new(message: "No spot positions yet. Upload a transaction history CSV above to get started.") %>
   <% end %>
+
+  <%= render "scenario_calculator" %>
   <% end %>
 
   <% if @view == "transactions" %>

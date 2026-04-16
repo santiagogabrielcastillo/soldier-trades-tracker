@@ -1,0 +1,178 @@
+<%# Scenario calculator — collapsible panel, all calc logic in spot_scenario_controller.js %>
+<div
+  data-controller="spot-scenario"
+  data-spot-scenario-positions-value="<%= @scenario_positions_json.html_safe %>"
+  data-spot-scenario-cash-balance-value="<%= @cash_balance.to_f %>"
+  data-spot-scenario-spot-value-value="<%= @spot_value.to_f %>"
+  data-spot-scenario-total-portfolio-value="<%= @total_portfolio.to_f %>"
+  class="mt-4"
+>
+  <%# Toggle header %>
+  <button
+    type="button"
+    data-action="click->spot-scenario#toggle"
+    class="flex w-full items-center gap-2 border-l-4 border-indigo-500 bg-indigo-50 px-4 py-3 text-left hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+  >
+    <span data-spot-scenario-target="toggleIcon" class="text-indigo-600 font-mono text-sm">▶</span>
+    <span class="font-semibold text-indigo-700 text-sm">Scenario calculator</span>
+    <span class="ml-1 rounded-full bg-indigo-100 px-2 py-0.5 text-xs text-indigo-500">ephemeral · resets on close</span>
+  </button>
+
+  <%# Collapsible content (hidden by default) %>
+  <div data-spot-scenario-target="panel" class="hidden border border-t-0 border-indigo-100 bg-indigo-50/30 p-5">
+
+    <%# ── Cash budget section ── %>
+    <div class="mb-5 flex flex-wrap items-end gap-5 rounded-lg border border-indigo-100 bg-white p-4">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-500">Current cash</p>
+        <p class="mt-1 text-lg font-bold text-slate-900"><%= format_money(@cash_balance) %></p>
+        <p class="text-xs text-slate-400"><%= @cash_pct ? "#{@cash_pct}% of portfolio" : "—" %></p>
+      </div>
+
+      <span class="pb-1 text-slate-300 text-xl">→</span>
+
+      <div>
+        <label class="text-xs font-semibold uppercase tracking-wide text-indigo-500" for="scenario-cash-pct">
+          Target cash %
+        </label>
+        <div class="mt-1 flex items-center gap-1">
+          <input
+            id="scenario-cash-pct"
+            type="number" min="0" max="100" step="0.1"
+            data-spot-scenario-target="targetCashPct"
+            data-action="input->spot-scenario#onTargetCashPctInput"
+            class="w-20 rounded-md border border-indigo-200 px-2 py-1.5 text-right text-sm text-slate-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          />
+          <span class="text-sm text-slate-500">%</span>
+        </div>
+      </div>
+
+      <span class="pb-1 text-slate-300">↔</span>
+
+      <div>
+        <label class="text-xs font-semibold uppercase tracking-wide text-indigo-500" for="scenario-budget">
+          Budget to invest
+        </label>
+        <div class="mt-1 flex items-center gap-1">
+          <span class="text-sm text-slate-500">$</span>
+          <input
+            id="scenario-budget"
+            type="number" min="0" step="0.01"
+            data-spot-scenario-target="budgetAmount"
+            data-action="input->spot-scenario#onBudgetAmountInput"
+            class="w-28 rounded-md border border-indigo-200 px-2 py-1.5 text-sm text-slate-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          />
+        </div>
+      </div>
+
+      <p data-spot-scenario-target="afterInvestSummary" class="ml-auto self-end pb-1 text-xs text-slate-400"></p>
+    </div>
+
+    <%# ── Mode tab switcher ── %>
+    <div class="mb-4 flex w-fit overflow-hidden rounded-lg border border-indigo-200">
+      <button
+        type="button"
+        data-spot-scenario-target="manualTab"
+        data-action="click->spot-scenario#switchToManual"
+        class="px-5 py-2 text-sm font-semibold"
+      >Manual</button>
+      <button
+        type="button"
+        data-spot-scenario-target="optimizeTab"
+        data-action="click->spot-scenario#switchToOptimize"
+        class="border-l border-indigo-200 px-5 py-2 text-sm font-medium"
+      >Optimize</button>
+    </div>
+
+    <%# ── Manual mode content ── %>
+    <div data-spot-scenario-target="manualContent">
+      <div class="overflow-hidden rounded-lg border border-indigo-100 bg-white">
+        <table class="w-full border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-indigo-100 bg-indigo-50/60">
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-indigo-500">Token</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-indigo-500">Breakeven</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-indigo-500">Current ROI</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-indigo-500 min-w-[180px]">Inject</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-indigo-500">Inject $</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-indigo-500">New ROI</th>
+            </tr>
+          </thead>
+          <tbody data-spot-scenario-target="sliderBody">
+            <%# Rows rendered dynamically by spot_scenario_controller.js %>
+          </tbody>
+        </table>
+
+        <%# Budget progress bar %>
+        <div class="flex items-center gap-3 border-t border-indigo-100 bg-indigo-50/60 px-4 py-2.5">
+          <span class="text-xs font-semibold text-indigo-600" data-spot-scenario-target="budgetAllocated">Allocated: $0</span>
+          <div class="flex-1 h-1.5 overflow-hidden rounded-full bg-indigo-100">
+            <div data-spot-scenario-target="budgetBar" class="h-full rounded-full bg-indigo-500 transition-all" style="width:0%"></div>
+          </div>
+          <span class="text-xs text-slate-400" data-spot-scenario-target="budgetRemaining">$0 remaining</span>
+        </div>
+      </div>
+    </div>
+
+    <%# ── Optimize mode content (hidden initially) ── %>
+    <div data-spot-scenario-target="optimizeContent" class="hidden">
+
+      <%# Config row %>
+      <div class="mb-4 flex flex-wrap items-end gap-6 rounded-lg border border-indigo-100 bg-white p-4">
+
+        <%# Optimizer mode toggle %>
+        <div>
+          <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-500">Optimizer mode</p>
+          <div class="flex overflow-hidden rounded-md border border-indigo-200 text-sm">
+            <button
+              type="button"
+              data-spot-scenario-target="optimizerModeFixed"
+              data-action="click->spot-scenario#setModeFixed"
+              class="px-4 py-1.5 font-semibold"
+            >Fixed target ROI</button>
+            <button
+              type="button"
+              data-spot-scenario-target="optimizerModeFloor"
+              data-action="click->spot-scenario#setModeFloor"
+              class="border-l border-indigo-200 px-4 py-1.5"
+            >Best achievable floor</button>
+          </div>
+        </div>
+
+        <%# Target ROI input (fixed mode only) %>
+        <div data-spot-scenario-target="targetRoiWrapper">
+          <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-indigo-500">Target ROI</label>
+          <div class="flex items-center gap-1">
+            <input
+              type="number" step="0.1"
+              value="-30"
+              data-spot-scenario-target="targetRoi"
+              class="w-20 rounded-md border border-indigo-200 px-2 py-1.5 text-right text-sm text-slate-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+            />
+            <span class="text-sm text-slate-500">%</span>
+          </div>
+        </div>
+
+        <%# Position checkboxes (rendered dynamically) %>
+        <div>
+          <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-500">Apply to positions</p>
+          <div data-spot-scenario-target="checkboxContainer" class="flex flex-wrap gap-3"></div>
+        </div>
+
+        <%# Optimize button %>
+        <div class="ml-auto">
+          <button
+            type="button"
+            data-spot-scenario-target="optimizeBtn"
+            data-action="click->spot-scenario#runOptimizer"
+            class="rounded-md bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >Optimize ✦</button>
+        </div>
+      </div>
+
+      <%# Results area (populated by controller) %>
+      <div data-spot-scenario-target="optimizeResults"></div>
+    </div>
+
+  </div>
+</div>
