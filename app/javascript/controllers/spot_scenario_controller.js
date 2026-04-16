@@ -188,7 +188,18 @@ export default class extends Controller {
     this._updateBudgetBar()
   }
 
-  _renderCheckboxes() { /* implemented in Task 5 */ }
+  _renderCheckboxes() {
+    const eligible = this.positionsValue.filter(p => p.current_price && !this._isRiskFree(p))
+    this.checkboxContainerTarget.innerHTML = eligible.map(pos => `
+      <label class="flex cursor-pointer items-center gap-1.5 rounded-md border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-sm hover:bg-indigo-100">
+        <input type="checkbox" checked
+               data-token="${this._escapeAttr(pos.token)}"
+               class="rounded accent-indigo-600"
+               style="accent-color:#6366f1" />
+        <span class="font-medium text-slate-800">${this._escapeAttr(pos.token)}</span>
+      </label>
+    `).join("")
+  }
 
   _renderSliderRows() {
     const budget = this.budget
@@ -290,5 +301,136 @@ export default class extends Controller {
     }
   }
 
-  runOptimizer() { /* implemented in Tasks 5–6 */ }
+  runOptimizer() {
+    const budget = this.budget
+    if (budget <= 0) return
+
+    const selectedTokens = new Set(
+      [...this.checkboxContainerTarget.querySelectorAll("input[type=checkbox]:checked")]
+        .map(cb => cb.dataset.token)
+    )
+    const allPositions = this.positionsValue.filter(p => p.current_price && !this._isRiskFree(p))
+    const selected = allPositions.filter(p => selectedTokens.has(p.token))
+    const unselected = allPositions.filter(p => !selectedTokens.has(p.token))
+
+    let results
+    if (this._optimizerMode === "fixed") {
+      results = this._runFixedTargetOptimizer(selected, budget)
+    } else {
+      results = this._runBestFloorOptimizer(selected, budget)
+    }
+
+    // Merge unselected positions as $0/no-badge rows
+    const unselectedResults = unselected.map(pos => ({
+      pos,
+      injection: 0,
+      newRoi: this._calcCurrentRoi(pos),
+      status: null,
+      selected: false,
+    }))
+
+    this._renderOptimizeResults([...results, ...unselectedResults], budget)
+  }
+
+  _runFixedTargetOptimizer(positions, budget) {
+    const targetRoi = parseFloat(this.targetRoiTarget.value) || -30
+
+    // Compute needed injection for each; skip positions already past target
+    const needs = positions.map(pos => {
+      const currentRoi = this._calcCurrentRoi(pos)
+      if (currentRoi !== null && currentRoi >= targetRoi) {
+        return { pos, needed: 0, alreadyPast: true }
+      }
+      return { pos, needed: this._calcInjectionNeeded(pos, targetRoi), alreadyPast: false }
+    })
+
+    // Prioritize deepest (most needed) first
+    needs.sort((a, b) => b.needed - a.needed)
+
+    let remaining = budget
+    return needs.map(({ pos, needed, alreadyPast }) => {
+      if (alreadyPast) {
+        return { pos, injection: 0, newRoi: this._calcCurrentRoi(pos), status: "past", selected: true }
+      }
+      const injection = Math.min(needed, remaining)
+      remaining = Math.max(0, remaining - injection)
+      const newRoi = this._calcProjectedRoi(pos, injection)
+      const metTarget = Math.abs(injection - needed) < 0.01
+      const status = metTarget ? "met" : "exhausted"
+      return { pos, injection, newRoi, status, selected: true }
+    })
+  }
+
+  _runBestFloorOptimizer(positions, budget) { /* implemented in Task 6 */ return [] }
+
+  _renderOptimizeResults(results, budget) {
+    const totalInjected = results.reduce((s, r) => s + r.injection, 0)
+    const metCount = results.filter(r => r.status === "met" || r.status === "equalized").length
+    const selectedCount = results.filter(r => r.selected).length
+
+    const badgeHtml = (status) => {
+      if (!status) return ""
+      const map = {
+        met:       ["bg-amber-100 text-amber-700",   "Target met"],
+        past:      ["bg-emerald-100 text-emerald-700","Already past target"],
+        exhausted: ["bg-orange-100 text-orange-700",  "Budget exhausted"],
+        equalized: ["bg-indigo-100 text-indigo-700",  "Equalized"],
+      }
+      const [cls, label] = map[status] || ["bg-slate-100 text-slate-500", status]
+      return `<span class="rounded-full px-2 py-0.5 text-xs font-semibold ${cls}">${label}</span>`
+    }
+
+    const rows = results.map(({ pos, injection, newRoi, status, selected }) => {
+      const currentRoi = this._calcCurrentRoi(pos)
+      const isRiskFree = this._isRiskFree(pos)
+      const rowClass = selected ? "" : "opacity-40"
+      const injectStr = injection > 0 ? this._formatMoney(injection) : "$0"
+      const injectClass = injection > 0 ? "font-semibold text-indigo-600" : "text-slate-400"
+      const currentPrice = parseFloat(pos.current_price)
+      const newBalance = parseFloat(pos.balance) + injection / currentPrice
+      const newBreakeven = (parseFloat(pos.net_usd_invested) + injection) / newBalance
+      const newBreakevenStr = injection > 0 ? this._formatMoney(newBreakeven) : "—"
+      const newRoiStr = this._formatRoi(newRoi, isRiskFree)
+      const newRoiClass = this._newRoiColorClass(currentRoi, newRoi, isRiskFree)
+
+      return `
+        <tr class="border-b border-slate-100 ${rowClass}">
+          <td class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">${this._escapeAttr(pos.token)}</td>
+          <td class="whitespace-nowrap px-4 py-3 text-right font-semibold ${this._roiColorClass(currentRoi, isRiskFree)}">${this._formatRoi(currentRoi, isRiskFree)}</td>
+          <td class="whitespace-nowrap px-4 py-3 text-right ${injectClass}">${injectStr}</td>
+          <td class="whitespace-nowrap px-4 py-3 text-right text-slate-600">${newBreakevenStr}</td>
+          <td class="whitespace-nowrap px-4 py-3 text-right font-semibold ${newRoiClass}">${newRoiStr}</td>
+          <td class="whitespace-nowrap px-4 py-3 text-right">${badgeHtml(status)}</td>
+        </tr>
+      `
+    }).join("")
+
+    this.optimizeResultsTarget.innerHTML = `
+      <div class="overflow-hidden rounded-lg border border-indigo-100 bg-white">
+        <div class="border-b border-indigo-100 bg-indigo-50/60 px-4 py-2 text-xs font-semibold text-indigo-600">
+          Result — ${this._optimizerMode === "fixed"
+            ? `Fixed target ${this.targetRoiTarget.value}%`
+            : "Best achievable floor"} · Budget ${this._formatMoney(budget)} · ${selectedCount} position${selectedCount !== 1 ? "s" : ""} selected
+        </div>
+        <table class="w-full border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-indigo-100 bg-indigo-50/30">
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-indigo-500">Token</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-indigo-500">Current ROI</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-indigo-500">Inject $</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-indigo-500">New breakeven</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-indigo-500">New ROI</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-indigo-500">Status</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="flex items-center gap-3 border-t border-indigo-100 bg-indigo-50/60 px-4 py-2.5 text-xs">
+          <span class="font-semibold text-indigo-600">Total injected: ${this._formatMoney(totalInjected)}</span>
+          <span class="text-slate-400">·</span>
+          <span class="text-slate-500">${metCount} of ${selectedCount} position${selectedCount !== 1 ? "s" : ""} reached target</span>
+        </div>
+      </div>
+    `
+  }
 }
