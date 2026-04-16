@@ -371,7 +371,47 @@ export default class extends Controller {
     })
   }
 
-  _runBestFloorOptimizer(positions, budget) { /* implemented in Task 6 */ return [] }
+  _runBestFloorOptimizer(positions, budget) {
+    if (positions.length === 0) return []
+
+    // Find the worst current ROI as lower bound
+    const rois = positions.map(p => this._calcCurrentRoi(p)).filter(r => r !== null)
+    let low = Math.min(...rois, -99)
+    let high = Math.max(...rois.map(r => Math.min(r, 0)), -0.01) // floor ≤ 0
+
+    // Binary search for highest floor r* where total injection ≤ budget
+    for (let i = 0; i < 60; i++) {
+      const mid = (low + high) / 2
+      const totalNeeded = positions.reduce((sum, pos) => {
+        const currentRoi = this._calcCurrentRoi(pos)
+        if (currentRoi !== null && currentRoi >= mid) return sum // already past this floor
+        return sum + this._calcInjectionNeeded(pos, mid)
+      }, 0)
+
+      if (totalNeeded <= budget) {
+        low = mid // achievable, try a better floor
+      } else {
+        high = mid // too expensive, lower the floor
+      }
+
+      if (high - low < 0.01) break // converged
+    }
+
+    const floorRoi = low
+    // Allocate exactly, respecting budget
+    let remaining = budget
+    return positions.map(pos => {
+      const currentRoi = this._calcCurrentRoi(pos)
+      if (currentRoi !== null && currentRoi >= floorRoi) {
+        return { pos, injection: 0, newRoi: currentRoi, status: "past", selected: true }
+      }
+      const needed = this._calcInjectionNeeded(pos, floorRoi)
+      const injection = Math.min(needed, remaining)
+      remaining = Math.max(0, remaining - injection)
+      const newRoi = this._calcProjectedRoi(pos, injection)
+      return { pos, injection, newRoi, status: "equalized", selected: true }
+    })
+  }
 
   _renderOptimizeResults(results, budget) {
     const totalInjected = results.reduce((s, r) => s + r.injection, 0)
