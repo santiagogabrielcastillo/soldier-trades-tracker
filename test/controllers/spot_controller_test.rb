@@ -338,9 +338,8 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
 
     get spot_path
     assert_response :success
-    # Controller assigns @scenario_positions_json — verified via assigns helper.
-    # The data-spot-scenario-* HTML attributes and assert_match on JSON in body
-    # will be testable once Task 2 adds the _scenario_calculator partial.
+    # Partial not yet rendered (Task 2), so we verify the assign directly.
+    # HTML attribute assertions are covered in the system test (Task 7).
     assert_not_nil @controller.view_assigns["scenario_positions_json"]
     parsed = JSON.parse(@controller.view_assigns["scenario_positions_json"])
     btc = parsed.find { |p| p["token"] == "BTC" }
