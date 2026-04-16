@@ -159,6 +159,16 @@ export default class extends Controller {
     return parseFloat(pos.net_usd_invested) < 0
   }
 
+  _calcNewBreakeven(pos, injection) {
+    const balance = parseFloat(pos.balance)
+    const netUsd = parseFloat(pos.net_usd_invested)
+    const currentPrice = parseFloat(pos.current_price)
+    if (!currentPrice) return null
+    const newBalance = balance + injection / currentPrice
+    if (!newBalance) return null
+    return (netUsd + injection) / newBalance
+  }
+
   _calcProjectedRoi(pos, injection) {
     const balance = parseFloat(pos.balance)
     const netUsd = parseFloat(pos.net_usd_invested)
@@ -355,8 +365,8 @@ export default class extends Controller {
       const injection = Math.min(needed, remaining)
       remaining = Math.max(0, remaining - injection)
       const newRoi = this._calcProjectedRoi(pos, injection)
-      const metTarget = Math.abs(injection - needed) < 0.01
-      const status = metTarget ? "met" : "exhausted"
+      const metTarget = needed > 0 && Math.abs(injection - needed) < 0.01
+      const status = needed === 0 ? "past" : (metTarget ? "met" : "exhausted")
       return { pos, injection, newRoi, status, selected: true }
     })
   }
@@ -386,10 +396,8 @@ export default class extends Controller {
       const rowClass = selected ? "" : "opacity-40"
       const injectStr = injection > 0 ? this._formatMoney(injection) : "$0"
       const injectClass = injection > 0 ? "font-semibold text-indigo-600" : "text-slate-400"
-      const currentPrice = parseFloat(pos.current_price)
-      const newBalance = parseFloat(pos.balance) + injection / currentPrice
-      const newBreakeven = (parseFloat(pos.net_usd_invested) + injection) / newBalance
-      const newBreakevenStr = injection > 0 ? this._formatMoney(newBreakeven) : "—"
+      const newBreakevenRaw = injection > 0 ? this._calcNewBreakeven(pos, injection) : null
+      const newBreakevenStr = newBreakevenRaw != null ? this._formatMoney(newBreakevenRaw) : "—"
       const newRoiStr = this._formatRoi(newRoi, isRiskFree)
       const newRoiClass = this._newRoiColorClass(currentRoi, newRoi, isRiskFree)
 
