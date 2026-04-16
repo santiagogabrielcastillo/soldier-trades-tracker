@@ -1,2 +1,85 @@
-<p>placeholder</p>
-<input type="hidden" name="fwd_eps" value="<%= @fwd_eps %>">
+<%= render BreadcrumbComponent.new(items: [
+  { label: "Stocks", url: stocks_path(view: "valuations") },
+  { label: @ticker.present? ? "Sanity Check — #{@ticker}" : "Sanity Check" }
+]) %>
+
+<div class="mx-auto max-w-2xl">
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-200 px-6 py-4">
+      <h1 class="text-base font-semibold text-slate-900">Valuation Sanity Check</h1>
+      <p class="mt-0.5 text-sm text-slate-500">What does the P/E look like in 1–5 years if the price stays flat?</p>
+    </div>
+
+    <div class="px-6 py-5"
+         data-controller="valuation-check"
+         data-valuation-check-price-value="<%= @price&.to_f || '' %>"
+         data-valuation-check-fwd-eps-value="<%= @fwd_eps&.to_f || '' %>">
+
+      <%# Inputs %>
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Current Price ($)</label>
+          <input type="number"
+                 step="0.01"
+                 min="0.01"
+                 name="price"
+                 placeholder="e.g. 160"
+                 value="<%= @price&.to_f %>"
+                 data-valuation-check-target="priceInput"
+                 data-action="input->valuation-check#calculate"
+                 class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Forward EPS ($)</label>
+          <input type="number"
+                 step="0.01"
+                 min="0.01"
+                 name="fwd_eps"
+                 placeholder="e.g. 5.00"
+                 value="<%= @fwd_eps&.to_f %>"
+                 data-valuation-check-target="fwdEpsInput"
+                 data-action="input->valuation-check#calculate"
+                 class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Annual EPS Growth (%)</label>
+          <input type="number"
+                 step="0.1"
+                 name="growth"
+                 placeholder="e.g. 40"
+                 value=""
+                 data-valuation-check-target="growthInput"
+                 data-action="input->valuation-check#calculate"
+                 class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
+        </div>
+      </div>
+
+      <%# Error message %>
+      <p data-valuation-check-target="errorMessage"
+         class="hidden text-sm text-red-600 mb-4">Enter valid inputs (price and EPS must be positive).</p>
+
+      <%# Projection table %>
+      <div data-valuation-check-target="tableWrapper" class="hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-200">
+              <th class="py-2 pr-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wide">Year</th>
+              <th class="py-2 pr-4 text-right text-xs font-medium text-slate-500 uppercase tracking-wide">Projected EPS</th>
+              <th class="py-2 text-right text-xs font-medium text-slate-500 uppercase tracking-wide">P/E at current price</th>
+            </tr>
+          </thead>
+          <tbody data-valuation-check-target="tableBody">
+          </tbody>
+        </table>
+
+        <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
+          <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-red-100"></span> &gt; 30x expensive</span>
+          <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-yellow-100"></span> 15–30x fair</span>
+          <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-green-100"></span> &lt; 15x attractive</span>
+          <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-200"></span> &lt; 10x gift</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
