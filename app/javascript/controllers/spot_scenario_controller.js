@@ -376,6 +376,7 @@ export default class extends Controller {
 
     // Find the worst current ROI as lower bound
     const rois = positions.map(p => this._calcCurrentRoi(p)).filter(r => r !== null)
+    if (rois.length === 0) return []
     let low = Math.min(...rois, -99)
     let high = Math.max(...rois.map(r => Math.min(r, 0)), -0.01) // floor ≤ 0
 
@@ -409,7 +410,8 @@ export default class extends Controller {
       const injection = Math.min(needed, remaining)
       remaining = Math.max(0, remaining - injection)
       const newRoi = this._calcProjectedRoi(pos, injection)
-      return { pos, injection, newRoi, status: "equalized", selected: true }
+      const status = injection >= needed - 0.01 ? "equalized" : "exhausted"
+      return { pos, injection, newRoi, status, selected: true }
     })
   }
 
