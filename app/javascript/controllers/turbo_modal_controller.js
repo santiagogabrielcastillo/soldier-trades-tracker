@@ -4,7 +4,7 @@ export default class extends Controller {
   static targets = ["dialog", "frame"]
 
   open() {
-    if (this.hasDialogTarget) {
+    if (this.hasDialogTarget && this.hasFrameTarget && this.frameTarget.innerHTML.trim() !== "") {
       this.dialogTarget.showModal()
     }
   }
