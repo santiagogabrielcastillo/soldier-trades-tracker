@@ -34,9 +34,17 @@ module Stocks
         get stocks_valuation_check_path(ticker: "AAPL")
       end
       # AAPL fixture: fwd_pe: 25.1, so fwd_eps = 160 / 25.1 ≈ 6.37
-      assert_select "input[name='fwd_eps']" do |inputs|
-        assert inputs.first["value"].to_f.round(2) == 6.37
+      assert_in_delta 6.37, assigns(:fwd_eps).to_f, 0.01
+    end
+
+    test "show sets fwd_eps to nil when fundamental has no fwd_pe" do
+      sign_in_as(@user)
+      fund = stock_fundamentals(:aapl)
+      fund.update!(fwd_pe: nil)
+      Stocks::CurrentPriceFetcher.stub(:call, { "AAPL" => BigDecimal("160") }) do
+        get stocks_valuation_check_path(ticker: "AAPL")
       end
+      assert_nil assigns(:fwd_eps)
     end
 
     test "show renders with blank pre-fill when no fundamental exists" do

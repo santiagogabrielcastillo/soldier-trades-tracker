@@ -4,8 +4,6 @@ module Stocks
   class ValuationCheckController < ApplicationController
     def show
       @ticker = params[:ticker].to_s.strip.upcase.presence
-      @price = nil
-      @fwd_eps = nil
 
       if @ticker
         fundamental = StockFundamental.find_by(ticker: @ticker)
