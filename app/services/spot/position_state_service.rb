@@ -9,6 +9,7 @@ module Spot
       :balance,
       :net_usd_invested,
       :breakeven,
+      :gross_avg_price,
       :realized_pnl,
       :open?,
       :opened_at,
@@ -46,6 +47,8 @@ module Spot
       balance = BigDecimal("0")
       net_usd = BigDecimal("0")
       realized_pnl = BigDecimal("0")
+      gross_buy_usd = BigDecimal("0")
+      gross_tokens_bought = BigDecimal("0")
       lots = [] # FIFO: [ [qty, price_usd], ... ]
       epoch_start = nil
 
@@ -55,10 +58,14 @@ module Spot
             epoch_start = tx.executed_at
             net_usd = BigDecimal("0")
             realized_pnl = BigDecimal("0")
+            gross_buy_usd = BigDecimal("0")
+            gross_tokens_bought = BigDecimal("0")
             lots = []
           end
           balance += tx.amount
           net_usd += tx.total_value_usd.to_d
+          gross_buy_usd += tx.total_value_usd.to_d
+          gross_tokens_bought += tx.amount.to_d
           lots << [ tx.amount.to_d, tx.price_usd.to_d ]
         else
           # sell
@@ -84,6 +91,7 @@ module Spot
               balance: BigDecimal("0"),
               net_usd_invested: net_usd,
               breakeven: nil,
+              gross_avg_price: nil,
               realized_pnl: realized_pnl,
               open?: false,
               opened_at: epoch_start,
@@ -96,11 +104,13 @@ module Spot
       if balance.positive?
         breakeven = (net_usd / balance).round(8)
         breakeven = BigDecimal("0") if breakeven.negative? # risk-free
+        gross_avg = gross_tokens_bought.positive? ? (gross_buy_usd / gross_tokens_bought).round(8) : nil
         summaries << PositionSummary.new(
           token: token,
           balance: balance,
           net_usd_invested: net_usd,
           breakeven: breakeven,
+          gross_avg_price: gross_avg,
           realized_pnl: realized_pnl,
           open?: true,
           opened_at: epoch_start,

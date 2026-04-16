@@ -139,6 +139,37 @@ module Spot
       assert_equal BigDecimal("1.5"), open_pos.breakeven
     end
 
+    test "gross_avg_price is unaffected by sells while net breakeven worsens on loss" do
+      # Buy 1000 tokens at $1.00 => gross avg $1.00, net breakeven $1.00
+      @spot_account.spot_transactions.create!(
+        executed_at: Time.utc(2026, 1, 14, 10, 0),
+        token: "ONDO",
+        side: "buy",
+        price_usd: 1.0,
+        amount: 1000,
+        total_value_usd: 1000,
+        row_signature: "sig1"
+      )
+      # Sell 500 at $0.70 (at a loss)
+      @spot_account.spot_transactions.create!(
+        executed_at: Time.utc(2026, 1, 15, 10, 0),
+        token: "ONDO",
+        side: "sell",
+        price_usd: 0.70,
+        amount: 500,
+        total_value_usd: 350,
+        row_signature: "sig2"
+      )
+      result = PositionStateService.call(spot_account: @spot_account)
+      pos = result.find { |p| p.open? }
+      assert pos
+      assert_equal BigDecimal("500"), pos.balance
+      # gross_avg_price is still the original buy price — sells don't affect it
+      assert_equal BigDecimal("1.0").round(8), pos.gross_avg_price
+      # net breakeven worsens: (1000 - 350) / 500 = 1.30
+      assert_equal BigDecimal("1.3").round(8), pos.breakeven
+    end
+
     test "ignores deposit and withdraw transactions for positions" do
       @spot_account.spot_transactions.create!(
         executed_at: Time.utc(2026, 1, 14, 10, 0),

@@ -87,27 +87,32 @@
   <% if @positions.any? %>
     <%= render DataTableComponent.new(columns: [
       { label: "Token", classes: "text-left" },
-      { label: "Avg buy price", classes: "text-right" },
+      { label: "Net breakeven", classes: "text-right" },
+      { label: "Gross avg price", classes: "text-right" },
       { label: "Current qty", classes: "text-right" },
       { label: "Current price", classes: "text-right" },
       { label: "Current net value", classes: "text-right" },
       { label: "Unrealized PnL", classes: "text-right" },
-      { label: "Unrealized ROI", classes: "text-right" },
+      { label: "ROI (net)", classes: "text-right" },
+      { label: "ROI (avg)", classes: "text-right" },
       { label: "Status", classes: "text-left" }
     ]) do |table| %>
       <% @positions.each do |pos| %>
         <% current_price = @current_prices[pos.token] %>
         <% unrealized = pos.open? && current_price ? (current_price - pos.breakeven.to_d) * pos.balance : nil %>
         <% current_net_value = pos.open? && current_price ? (current_price.to_d * pos.balance) : nil %>
-        <% unrealized_roi = unrealized && pos.net_usd_invested.to_d.positive? ? (unrealized / pos.net_usd_invested.to_d * 100) : nil %>
+        <% unrealized_roi_net = unrealized && pos.net_usd_invested.to_d.positive? ? (unrealized / pos.net_usd_invested.to_d * 100) : nil %>
+        <% unrealized_roi_avg = pos.open? && current_price && pos.gross_avg_price&.positive? ? ((current_price.to_d - pos.gross_avg_price) / pos.gross_avg_price * 100) : nil %>
         <% table.with_row do %>
           <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900"><%= pos.token %></td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= pos.breakeven ? format_money(pos.breakeven) : "—" %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= pos.gross_avg_price ? format_money(pos.gross_avg_price) : "—" %></td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_delimiter(pos.balance, delimiter: ",", precision: 8) %></td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_price ? format_money(current_price) : "—" %></td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= current_net_value ? format_money(current_net_value) : "—" %></td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized.nil? ? 'text-slate-500' : (unrealized >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized.nil? ? "—" : format_money(unrealized) %></td>
-          <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized_roi.nil? ? 'text-slate-500' : (unrealized_roi >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized_roi.nil? ? "—" : number_to_percentage(unrealized_roi, precision: 2) %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized_roi_net.nil? ? 'text-slate-500' : (unrealized_roi_net >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized_roi_net.nil? ? "—" : number_to_percentage(unrealized_roi_net, precision: 2) %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized_roi_avg.nil? ? 'text-slate-500' : (unrealized_roi_avg >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized_roi_avg.nil? ? "—" : number_to_percentage(unrealized_roi_avg, precision: 2) %></td>
           <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600"><%= pos.open? ? "Open" : "Closed" %></td>
         <% end %>
       <% end %>
