@@ -236,7 +236,11 @@ class SpotController < ApplicationController
   end
 
   def spot_transaction_params
-    params.permit(:token, :side, :amount, :price_usd, :executed_at)
+    if params[:spot_transaction].present?
+      params.require(:spot_transaction).permit(:token, :side, :amount, :price_usd, :executed_at)
+    else
+      params.permit(:token, :side, :amount, :price_usd, :executed_at)
+    end
   end
 
   def build_update_attrs(transaction, permitted, executed_at, amount)

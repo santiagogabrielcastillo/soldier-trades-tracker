@@ -257,7 +257,7 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
     old_sig = tx.row_signature
 
     patch spot_transaction_path(tx), params: {
-      token: "BTC", price_usd: "55000", amount: "2", executed_at: "2026-01-10T12:00"
+      spot_transaction: { token: "BTC", price_usd: "55000", amount: "2", executed_at: "2026-01-10T12:00" }
     }
 
     assert_redirected_to spot_path(view: "transactions")
@@ -284,7 +284,7 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
 
     # Attempt to update tx so its values collide with existing
     patch spot_transaction_path(tx), params: {
-      token: "BTC", price_usd: "60000", amount: "1", executed_at: "2026-01-10T12:00"
+      spot_transaction: { token: "BTC", price_usd: "60000", amount: "1", executed_at: "2026-01-10T12:00" }
     }
 
     assert_response :unprocessable_entity
@@ -301,7 +301,7 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
       executed_at: 1.day.ago, row_signature: SecureRandom.hex(32)
     )
     patch spot_transaction_path(tx), params: {
-      token: "ETH", price_usd: "4000", amount: "1", executed_at: 1.day.ago.strftime("%Y-%m-%dT%H:%M")
+      spot_transaction: { token: "ETH", price_usd: "4000", amount: "1", executed_at: 1.day.ago.strftime("%Y-%m-%dT%H:%M") }
     }
     assert_response :not_found
     tx.reload
@@ -317,7 +317,7 @@ class SpotControllerTest < ActionDispatch::IntegrationTest
       row_signature: "cash|#{Time.zone.parse("2026-01-10 12:00").to_i}|abc123"
     )
     patch spot_transaction_path(tx), params: {
-      amount: "250", executed_at: "2026-01-10T12:00"
+      spot_transaction: { amount: "250", executed_at: "2026-01-10T12:00" }
     }
     assert_redirected_to spot_path(view: "transactions")
     tx.reload
