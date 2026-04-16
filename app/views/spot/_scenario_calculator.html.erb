@@ -80,7 +80,7 @@
         type="button"
         data-spot-scenario-target="optimizeTab"
         data-action="click->spot-scenario#switchToOptimize"
-        class="border-l border-indigo-200 px-5 py-2 text-sm font-medium"
+        class="border-l border-indigo-200 px-5 py-2 text-sm font-semibold"
       >Optimize</button>
     </div>
 
@@ -134,16 +134,17 @@
               type="button"
               data-spot-scenario-target="optimizerModeFloor"
               data-action="click->spot-scenario#setModeFloor"
-              class="border-l border-indigo-200 px-4 py-1.5"
+              class="border-l border-indigo-200 px-4 py-1.5 font-semibold"
             >Best achievable floor</button>
           </div>
         </div>
 
         <%# Target ROI input (fixed mode only) %>
         <div data-spot-scenario-target="targetRoiWrapper">
-          <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-indigo-500">Target ROI</label>
+          <label for="scenario-target-roi" class="mb-2 block text-xs font-semibold uppercase tracking-wide text-indigo-500">Target ROI</label>
           <div class="flex items-center gap-1">
             <input
+              id="scenario-target-roi"
               type="number" step="0.1"
               value="-30"
               data-spot-scenario-target="targetRoi"
