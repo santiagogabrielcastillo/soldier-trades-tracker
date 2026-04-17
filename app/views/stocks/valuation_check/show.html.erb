@@ -47,7 +47,7 @@
                  step="0.1"
                  name="growth"
                  placeholder="e.g. 40"
-                 value=""
+                 value="<%= @growth&.to_f %>"
                  data-valuation-check-target="growthInput"
                  data-action="input->valuation-check#calculate"
                  class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
@@ -77,6 +77,12 @@
           <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-yellow-100"></span> 15–30x fair</span>
           <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-green-100"></span> &lt; 15x attractive</span>
           <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-200"></span> &lt; 10x gift</span>
+        </div>
+
+        <%# P/E trajectory chart %>
+        <div class="mt-6 rounded-lg border border-slate-100 bg-slate-50 p-4">
+          <p class="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">P/E trajectory</p>
+          <canvas data-valuation-check-target="chartCanvas" height="180"></canvas>
         </div>
       </div>
 

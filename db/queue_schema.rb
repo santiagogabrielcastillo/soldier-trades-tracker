@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_15_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_17_121843) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -341,6 +341,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_120000) do
   create_table "stock_fundamentals", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.decimal "debt_eq", precision: 12, scale: 4
+    t.decimal "eps_next_y", precision: 12, scale: 4
+    t.decimal "eps_next_y_pct", precision: 12, scale: 4
     t.decimal "ev_ebitda", precision: 12, scale: 4
     t.datetime "fetched_at", null: false
     t.decimal "fwd_pe", precision: 12, scale: 4

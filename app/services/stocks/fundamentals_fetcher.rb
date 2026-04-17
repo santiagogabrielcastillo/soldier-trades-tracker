@@ -16,6 +16,7 @@ module Stocks
     FundamentalsData = Struct.new(
       :pe, :fwd_pe, :peg, :ps, :pfcf, :net_margin, :roe, :roic,
       :debt_eq, :sales_5y, :sales_qq, :sector, :industry, :ev_ebitda,
+      :eps_next_y, :eps_next_y_pct,
       keyword_init: true
     )
 
@@ -72,36 +73,50 @@ module Stocks
 
       # Look up each metric by finding its label TD and reading the next sibling TD.
       # This is robust against extra/header cells that would break each_slice(2).
+      # "EPS next Y" appears twice (dollar value and % growth), so collect both separately.
       metrics = {}
+      eps_next_y_values = []
       table.css("td").each do |td|
         label = td.text.strip
         next if label.empty?
         next_td = td.next_element
-        metrics[label] = next_td.text.strip if next_td&.name == "td"
+        next unless next_td&.name == "td"
+        val = next_td.text.strip
+        if label == "EPS next Y"
+          eps_next_y_values << val
+        else
+          metrics[label] = val
+        end
       end
 
       return nil if metrics.empty?
 
-      Rails.logger.info("[Stocks::FundamentalsFetcher] #{ticker} metrics: #{metrics.slice('P/E', 'Forward P/E', 'PEG', 'P/S', 'P/FCF', 'Profit Margin', 'ROE', 'ROIC', 'Debt/Eq', 'Sales Y/Y TTM', 'Sales Q/Q', 'EV/EBITDA')}")
+      # Classify EPS next Y values by format: percentage values end with "%"
+      eps_next_y_dollar = eps_next_y_values.reject { |v| v.end_with?("%") }.first
+      eps_next_y_pct    = eps_next_y_values.find    { |v| v.end_with?("%") }
+
+      Rails.logger.info("[Stocks::FundamentalsFetcher] #{ticker} metrics: #{metrics.slice('P/E', 'Forward P/E', 'PEG', 'P/S', 'P/FCF', 'Profit Margin', 'ROE', 'ROIC', 'Debt/Eq', 'Sales Y/Y TTM', 'Sales Q/Q', 'EV/EBITDA')} eps_next_y=#{eps_next_y_dollar} eps_next_y_pct=#{eps_next_y_pct}")
 
       sector_link   = doc.at_css("a[href*='f=sec_']")
       industry_link = doc.at_css("a[href*='f=ind_']")
 
       FundamentalsData.new(
-        pe:         decimal(metrics["P/E"]),
-        fwd_pe:     decimal(metrics["Forward P/E"]),
-        peg:        decimal(metrics["PEG"]),
-        ps:         decimal(metrics["P/S"]),
-        pfcf:       decimal(metrics["P/FCF"]),
-        net_margin: pct(metrics["Profit Margin"]),
-        roe:        pct(metrics["ROE"]),
-        roic:       pct(metrics["ROIC"]),
-        debt_eq:    decimal(metrics["Debt/Eq"]),
-        sales_5y:   pct(metrics["Sales Y/Y TTM"]),
-        sales_qq:   pct(metrics["Sales Q/Q"]),
-        ev_ebitda:  decimal(metrics["EV/EBITDA"]),
-        sector:     sector_link&.text&.strip.presence,
-        industry:   industry_link&.text&.strip.presence
+        pe:           decimal(metrics["P/E"]),
+        fwd_pe:       decimal(metrics["Forward P/E"]),
+        peg:          decimal(metrics["PEG"]),
+        ps:           decimal(metrics["P/S"]),
+        pfcf:         decimal(metrics["P/FCF"]),
+        net_margin:   pct(metrics["Profit Margin"]),
+        roe:          pct(metrics["ROE"]),
+        roic:         pct(metrics["ROIC"]),
+        debt_eq:      decimal(metrics["Debt/Eq"]),
+        sales_5y:     pct(metrics["Sales Y/Y TTM"]),
+        sales_qq:     pct(metrics["Sales Q/Q"]),
+        ev_ebitda:    decimal(metrics["EV/EBITDA"]),
+        sector:       sector_link&.text&.strip.presence,
+        industry:     industry_link&.text&.strip.presence,
+        eps_next_y:   decimal(eps_next_y_dollar),
+        eps_next_y_pct: pct(eps_next_y_pct)
       )
     end
 
