@@ -44,9 +44,21 @@ class UserApiKeyTest < ActiveSupport::TestCase
 
   test "key is encrypted at rest" do
     row = @user.user_api_keys.create!(provider: "finnhub", key: "secret_key")
-    raw = ActiveRecord::Base.connection.select_value(
-      "SELECT key FROM user_api_keys WHERE id = #{row.id}"
-    )
+    sql = ActiveRecord::Base.sanitize_sql_array([ "SELECT key FROM user_api_keys WHERE id = ?", row.id ])
+    raw = ActiveRecord::Base.connection.select_value(sql)
     assert_not_equal "secret_key", raw
+  end
+
+  test "rejects invalid provider" do
+    record = @user.user_api_keys.build(provider: "unknown_service", key: "abc")
+    assert_not record.valid?
+    assert_includes record.errors[:provider], "is not included in the list"
+  end
+
+  test "two different users can hold the same provider" do
+    user2 = users(:two)
+    @user.user_api_keys.create!(provider: "finnhub", key: "key1")
+    record = user2.user_api_keys.build(provider: "finnhub", key: "key2")
+    assert record.valid?
   end
 end
