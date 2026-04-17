@@ -31,6 +31,7 @@
   { label: "Debt/Eq",    classes: "text-right" },
   { label: "Sales Y/Y",  classes: "text-right" },
   { label: "Sales Q/Q",  classes: "text-right" },
+  { label: "",           classes: "text-right" },
   *(watchlist_items ? [{ label: "", classes: "text-right" }] : [])
 ]) do |table| %>
   <% tickers.each do |ticker| %>
@@ -126,6 +127,10 @@
       </td>
       <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= f&.sales_qq ? (f.sales_qq >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-500' %>">
         <%= f&.sales_qq ? number_to_percentage(f.sales_qq, precision: 1) : "—" %>
+      </td>
+      <td class="whitespace-nowrap px-6 py-4 text-right">
+        <%= link_to "Sanity Check", stocks_valuation_check_path(ticker: ticker),
+              class: "text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline" %>
       </td>
       <% if watchlist_items %>
         <td class="whitespace-nowrap px-6 py-4 text-right">
