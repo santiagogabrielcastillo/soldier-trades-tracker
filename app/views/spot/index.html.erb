@@ -74,6 +74,14 @@
       <span class="text-sm text-slate-500">Cash % of portfolio</span>
       <p class="text-xl font-semibold text-slate-900"><%= @cash_pct.nil? ? "—" : "#{number_with_precision(@cash_pct, precision: 2)}%" %></p>
     </div>
+    <div>
+      <span class="text-sm text-slate-500">Crypto value</span>
+      <p class="text-xl font-semibold text-slate-900"><%= @spot_value&.positive? ? format_money(@spot_value) : "—" %></p>
+    </div>
+    <div>
+      <span class="text-sm text-slate-500">Total (crypto + cash)</span>
+      <p class="text-xl font-semibold text-slate-900"><%= @total_portfolio&.positive? ? format_money(@total_portfolio) : "—" %></p>
+    </div>
   </div>
 
   <div class="mb-6">
@@ -119,6 +127,20 @@
     <% end %>
     <% if current_user.exchange_accounts.empty? %>
       <p class="mt-4 text-sm text-slate-500">Connect an <%= link_to "exchange account", exchange_accounts_path, class: "text-slate-700 underline" %> to see live prices, current net value, and unrealized PnL/ROI.</p>
+    <% end %>
+
+    <% if @spot_pie_data&.any? %>
+      <%= content_tag :div,
+            class: "mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2",
+            data: { controller: "spot-charts", "spot-charts-pie-value": @spot_pie_data.to_json } do %>
+        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="mb-3 text-sm font-medium text-slate-700">Crypto allocation</p>
+          <div class="h-52">
+            <canvas data-spot-charts-target="pieCanvas"></canvas>
+            <p class="hidden text-sm text-slate-500" data-spot-charts-target="pieEmpty">No price data available.</p>
+          </div>
+        </div>
+      <% end %>
     <% end %>
   <% else %>
     <%= render EmptyStateComponent.new(message: "No spot positions yet. Upload a transaction history CSV above to get started.") %>

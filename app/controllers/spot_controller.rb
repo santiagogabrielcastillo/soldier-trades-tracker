@@ -233,6 +233,11 @@ class SpotController < ApplicationController
     @spot_value = open_positions.sum(BigDecimal("0")) { |pos| (@current_prices[pos.token] || 0).to_d * pos.balance }
     @total_portfolio = @spot_value + @cash_balance
     @cash_pct = @total_portfolio.positive? ? (@cash_balance / @total_portfolio * 100).round(2) : nil
+    @spot_pie_data = @spot_value.positive? ? @positions.filter_map { |pos|
+      val = (@current_prices[pos.token] || 0).to_d * pos.balance
+      next if val.zero?
+      { token: pos.token, pct: (val / @spot_value * 100).round(2) }
+    } : []
     @scenario_positions_json = @positions.map do |pos|
       {
         token: pos.token,
