@@ -33,6 +33,11 @@ class User < ApplicationRecord
   has_many :allocation_buckets, dependent: :destroy
   has_many :allocation_manual_entries, dependent: :destroy
   has_many :companies, dependent: :destroy
+  has_many :user_api_keys, dependent: :destroy
+
+  def api_key_for(provider)
+    user_api_keys.find_by(provider: provider.to_s)
+  end
 
   def default_portfolio
     portfolios.find_by(default: true)
