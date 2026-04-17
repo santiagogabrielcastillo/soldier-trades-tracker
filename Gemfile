@@ -72,4 +72,5 @@ group :test do
   gem "minitest", "~> 6.0"
   # Minitest 6 extracted mock/stub; keep require "minitest/mock" working in tests.
   gem "minitest-mock"
+  gem "rails-controller-testing"
 end
