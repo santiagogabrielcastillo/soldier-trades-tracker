@@ -1,8 +1,6 @@
 class User < ApplicationRecord
   has_secure_password
 
-  encrypts :gemini_api_key
-
   generates_token_for :password_reset, expires_in: 2.hours do
     # Embedding part of password_digest means this token auto-invalidates
     # the moment the password changes — true one-time use.
@@ -41,15 +39,6 @@ class User < ApplicationRecord
 
   def default_portfolio
     portfolios.find_by(default: true)
-  end
-
-  def gemini_api_key_configured?
-    gemini_api_key.present?
-  end
-
-  def gemini_api_key_masked
-    return nil unless gemini_api_key.present? && gemini_api_key.length >= 8
-    "#{gemini_api_key[0..3]}...#{gemini_api_key[-4..]}"
   end
 
   private

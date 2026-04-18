@@ -74,26 +74,15 @@ class UserTest < ActiveSupport::TestCase
     admin.update_columns(active: true)
   end
 
-  test "gemini_api_key_configured? returns false when key is nil" do
-    user = User.new(email: "ai@example.com", password: "password")
-    assert_equal false, user.gemini_api_key_configured?
-  end
-
-  test "gemini_api_key_configured? returns true when key is set" do
+  test "api_key_for returns nil when no key for provider" do
     user = users(:one)
-    user.gemini_api_key = "AIzaSyTestKey12345678"
-    assert_equal true, user.gemini_api_key_configured?
+    assert_nil user.api_key_for(:gemini)
   end
 
-  test "gemini_api_key_masked returns nil when key is blank" do
-    user = User.new(email: "ai@example.com", password: "password")
-    assert_nil user.gemini_api_key_masked
-  end
-
-  test "gemini_api_key_masked returns masked string when key is set" do
+  test "api_key_for returns the UserApiKey record when present" do
     user = users(:one)
-    user.gemini_api_key = "AIzaSyTestKey12345678"
-    assert_equal "AIza...5678", user.gemini_api_key_masked
+    user.user_api_keys.create!(provider: "gemini", key: "AIzaSyTestKey12345678")
+    assert_not_nil user.api_key_for(:gemini)
   end
 
   test "generates a password reset token" do

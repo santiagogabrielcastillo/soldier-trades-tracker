@@ -18,7 +18,7 @@ class AiControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "chat returns no_api_key error when user has no Gemini key" do
-    @user.update!(gemini_api_key: nil)
+    @user.user_api_keys.destroy_all
     post ai_chat_path, params: { message: "Analyze my portfolio" }, as: :json
     assert_response :unprocessable_entity
     json = JSON.parse(response.body)
@@ -26,7 +26,7 @@ class AiControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "chat returns AI response on success" do
-    @user.update!(gemini_api_key: "AIzaFakeKey12345678")
+    @user.user_api_keys.find_or_create_by!(provider: "gemini") { |r| r.key = "AIzaFakeKey12345678" }
     Ai::PortfolioContextBuilder.stub(:new, ->(_opts) {
       ctx = Object.new
       ctx.define_singleton_method(:call) { "Portfolio context here" }
@@ -46,7 +46,7 @@ class AiControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "chat returns rate_limited error on Ai::RateLimitError" do
-    @user.update!(gemini_api_key: "AIzaFakeKey12345678")
+    @user.user_api_keys.find_or_create_by!(provider: "gemini") { |r| r.key = "AIzaFakeKey12345678" }
     Ai::PortfolioContextBuilder.stub(:new, ->(_opts) {
       ctx = Object.new; ctx.define_singleton_method(:call) { "" }; ctx
     }) do
@@ -64,7 +64,7 @@ class AiControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "chat returns invalid_key error on Ai::InvalidKeyError" do
-    @user.update!(gemini_api_key: "AIzaBadKey")
+    @user.user_api_keys.find_or_create_by!(provider: "gemini") { |r| r.key = "AIzaBadKey" }
     Ai::PortfolioContextBuilder.stub(:new, ->(_opts) {
       ctx = Object.new; ctx.define_singleton_method(:call) { "" }; ctx
     }) do
@@ -138,7 +138,7 @@ class AiControllerTest < ActionDispatch::IntegrationTest
   # --- /ai/test_saved_key ---
 
   test "test_saved_key returns ok when stored key works" do
-    @user.update!(gemini_api_key: "AIzaStoredKey12345678")
+    @user.user_api_keys.find_or_create_by!(provider: "gemini") { |r| r.key = "AIzaStoredKey12345678" }
     Ai::GeminiService.stub(:new, ->(_opts) {
       svc = Object.new
       svc.define_singleton_method(:generate) { |_opts| "OK" }
@@ -152,7 +152,7 @@ class AiControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "test_saved_key returns no_api_key when no key configured" do
-    @user.update!(gemini_api_key: nil)
+    @user.user_api_keys.destroy_all
     post ai_test_saved_key_path, as: :json
     assert_response :unprocessable_entity
     json = JSON.parse(response.body)

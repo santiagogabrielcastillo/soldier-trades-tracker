@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_17_181508) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_18_104844) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -457,7 +457,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_181508) do
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.string "email"
-    t.text "gemini_api_key"
     t.string "password_digest"
     t.string "role", default: "user", null: false
     t.string "sync_interval"

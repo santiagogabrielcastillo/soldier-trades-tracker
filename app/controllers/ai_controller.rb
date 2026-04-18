@@ -13,7 +13,8 @@ class AiController < ApplicationController
   PROMPT
 
   def chat
-    unless current_user.gemini_api_key_configured?
+    provider = Ai::ProviderForUser.new(current_user)
+    unless provider.configured?
       return render json: {
         error: "no_api_key",
         message: "Please add your Gemini API key in Settings to use the AI assistant."
@@ -26,7 +27,7 @@ class AiController < ApplicationController
     with_ai_errors(invalid_key_message: "Your API key appears to be invalid. Please check it in Settings.") do
       context = Ai::PortfolioContextBuilder.new(user: current_user).call
       prompt = "#{SYSTEM_PROMPT}Today's date: #{Date.today}.\n\n#{context}\n\nUser question: #{message}"
-      response_text = Ai::GeminiService.new(api_key: current_user.gemini_api_key).generate(prompt: prompt)
+      response_text = provider.client.generate(prompt: prompt)
       render json: { response: response_text }
     end
   end
@@ -42,12 +43,13 @@ class AiController < ApplicationController
   end
 
   def test_saved_key
-    unless current_user.gemini_api_key_configured?
+    provider = Ai::ProviderForUser.new(current_user)
+    unless provider.configured?
       return render json: { error: "no_api_key", message: "No key configured." }, status: :unprocessable_entity
     end
 
     with_key_test_errors do
-      Ai::GeminiService.new(api_key: current_user.gemini_api_key).generate(prompt: "Say OK")
+      provider.client.generate(prompt: "Say OK")
       render json: { ok: true }
     end
   end

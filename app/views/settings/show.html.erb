@@ -55,10 +55,12 @@
         <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-slate-800 underline underline-offset-2 hover:text-slate-600">Get a free key at aistudio.google.com</a>
       </p>
 
-      <% if current_user.gemini_api_key_configured? %>
+      <% gemini_key = current_user.api_key_for(:gemini) %>
+      <% if gemini_key.present? %>
         <div data-controller="ai-settings" data-ai-settings-test-url-value="<%= ai_test_saved_key_path %>">
           <div class="flex items-center gap-3 mb-3">
-            <span class="flex-1 rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-sm font-mono text-slate-700"><%= current_user.gemini_api_key_masked %></span>
+            <% masked = gemini_key.key.length >= 8 ? "#{gemini_key.key[0..3]}...#{gemini_key.key[-4..]}" : "••••••••" %>
+            <span class="flex-1 rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-sm font-mono text-slate-700"><%= masked %></span>
             <div class="flex items-center gap-1.5 shrink-0">
               <span class="inline-block w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
               <span class="text-xs font-medium text-emerald-700">Active</span>

@@ -15,19 +15,22 @@ class SettingsController < ApplicationController
 
   def update_ai_key
     api_key = params[:api_key].to_s.strip.presence
-    if current_user.update(gemini_api_key: api_key)
-      redirect_to settings_path, notice: "API key saved."
+    if api_key
+      record = current_user.user_api_keys.find_or_initialize_by(provider: "gemini")
+      record.key = api_key
+      if record.save
+        redirect_to settings_path, notice: "API key saved."
+      else
+        redirect_to settings_path, alert: "Could not save API key."
+      end
     else
       redirect_to settings_path, alert: "Could not save API key."
     end
   end
 
   def remove_ai_key
-    if current_user.update(gemini_api_key: nil)
-      redirect_to settings_path, notice: "AI Assistant key removed."
-    else
-      redirect_to settings_path, alert: "Could not remove API key."
-    end
+    current_user.user_api_keys.where(provider: "gemini").destroy_all
+    redirect_to settings_path, notice: "AI Assistant key removed."
   end
 
   private

@@ -2,101 +2,40 @@
 
 require "test_helper"
 
-class Ai::ProviderForUserTest < ActiveSupport::TestCase
-  setup do
-    @user = users(:one)
-    @user.update!(gemini_api_key: nil)
-  end
-
-  # ── client resolution ──────────────────────────────────────────────────────
-
-  test "returns ClaudeService when platform anthropic key is configured" do
-    with_anthropic_key("sk-ant-platform-key") do
-      client = Ai::ProviderForUser.new(@user).client
-      assert_instance_of Ai::ClaudeService, client
+module Ai
+  class ProviderForUserTest < ActiveSupport::TestCase
+    setup do
+      @user = users(:one)
     end
-  end
 
-  test "returns GeminiService when no anthropic key but gemini key is configured" do
-    @user.update!(gemini_api_key: "AIzaGeminiKey")
-    with_no_anthropic_key do
-      client = Ai::ProviderForUser.new(@user).client
-      assert_instance_of Ai::GeminiService, client
+    test "uses user anthropic key when configured" do
+      @user.user_api_keys.create!(provider: "anthropic", key: "sk-ant-test")
+      provider = ProviderForUser.new(@user)
+      assert provider.claude?
+      assert_not provider.gemini?
+      assert provider.configured?
     end
-  end
 
-  test "returns nil when neither key is configured" do
-    with_no_anthropic_key do
-      client = Ai::ProviderForUser.new(@user).client
-      assert_nil client
+    test "falls back to gemini key when no anthropic key" do
+      @user.user_api_keys.create!(provider: "gemini", key: "AIza-test")
+      provider = ProviderForUser.new(@user)
+      assert_not provider.claude?
+      assert provider.gemini?
+      assert provider.configured?
     end
-  end
 
-  test "prefers Claude over Gemini when both are available" do
-    @user.update!(gemini_api_key: "AIzaGeminiKey")
-    with_anthropic_key("sk-ant-platform-key") do
-      client = Ai::ProviderForUser.new(@user).client
-      assert_instance_of Ai::ClaudeService, client
+    test "not configured when neither key present" do
+      provider = ProviderForUser.new(@user)
+      assert_not provider.configured?
+      assert_nil provider.client
     end
-  end
 
-  # ── predicates ────────────────────────────────────────────────────────────
-
-  test "claude? is true when anthropic key is present" do
-    with_anthropic_key("sk-ant-platform-key") do
-      assert Ai::ProviderForUser.new(@user).claude?
+    test "anthropic takes priority over gemini" do
+      @user.user_api_keys.create!(provider: "anthropic", key: "sk-ant-test")
+      @user.user_api_keys.create!(provider: "gemini", key: "AIza-test")
+      provider = ProviderForUser.new(@user)
+      assert provider.claude?
+      assert_not provider.gemini?
     end
-  end
-
-  test "claude? is false when no anthropic key" do
-    with_no_anthropic_key do
-      refute Ai::ProviderForUser.new(@user).claude?
-    end
-  end
-
-  test "gemini? is true when gemini key present and no anthropic key" do
-    @user.update!(gemini_api_key: "AIzaGeminiKey")
-    with_no_anthropic_key do
-      assert Ai::ProviderForUser.new(@user).gemini?
-    end
-  end
-
-  test "gemini? is false when anthropic key takes precedence" do
-    @user.update!(gemini_api_key: "AIzaGeminiKey")
-    with_anthropic_key("sk-ant-platform-key") do
-      refute Ai::ProviderForUser.new(@user).gemini?
-    end
-  end
-
-  test "configured? is true when claude available" do
-    with_anthropic_key("sk-ant-platform-key") do
-      assert Ai::ProviderForUser.new(@user).configured?
-    end
-  end
-
-  test "configured? is true when gemini available" do
-    @user.update!(gemini_api_key: "AIzaGeminiKey")
-    with_no_anthropic_key do
-      assert Ai::ProviderForUser.new(@user).configured?
-    end
-  end
-
-  test "configured? is false when neither key present" do
-    with_no_anthropic_key do
-      refute Ai::ProviderForUser.new(@user).configured?
-    end
-  end
-
-  private
-
-  def with_anthropic_key(key)
-    credentials_stub = { anthropic: { api_key: key } }
-    Rails.application.credentials.stub(:dig, ->(section, field) {
-      credentials_stub.dig(section, field)
-    }) { yield }
-  end
-
-  def with_no_anthropic_key
-    Rails.application.credentials.stub(:dig, ->(*_args) { nil }) { yield }
   end
 end

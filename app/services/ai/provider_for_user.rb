@@ -1,17 +1,12 @@
 # frozen_string_literal: true
 
 module Ai
-  # Returns the appropriate AI client for a user.
+  # Returns the appropriate AI client for a user based on their stored BYOK keys.
   #
   # Resolution order:
-  #   1. Platform Anthropic key in credentials → ClaudeService (deep analysis, web search)
+  #   1. User's own Anthropic key → ClaudeService (deep analysis, web search)
   #   2. User's own Gemini key → GeminiService (standard analysis)
   #   3. Neither configured → nil
-  #
-  # Usage:
-  #   provider = Ai::ProviderForUser.new(user)
-  #   provider.client     # → Ai::ClaudeService | Ai::GeminiService | nil
-  #   provider.claude?    # → true if Claude will be used
   class ProviderForUser
     def initialize(user)
       @user = user
@@ -20,8 +15,8 @@ module Ai
     def client
       if anthropic_api_key.present?
         Ai::ClaudeService.new(api_key: anthropic_api_key)
-      elsif @user.gemini_api_key.present?
-        Ai::GeminiService.new(api_key: @user.gemini_api_key)
+      elsif gemini_api_key.present?
+        Ai::GeminiService.new(api_key: gemini_api_key)
       end
     end
 
@@ -30,7 +25,7 @@ module Ai
     end
 
     def gemini?
-      !claude? && @user.gemini_api_key.present?
+      !claude? && gemini_api_key.present?
     end
 
     def configured?
@@ -40,7 +35,11 @@ module Ai
     private
 
     def anthropic_api_key
-      @anthropic_api_key ||= Rails.application.credentials.dig(:anthropic, :api_key).presence
+      @anthropic_api_key ||= UserApiKey.key_for(@user, :anthropic)
+    end
+
+    def gemini_api_key
+      @gemini_api_key ||= UserApiKey.key_for(@user, :gemini)
     end
   end
 end
