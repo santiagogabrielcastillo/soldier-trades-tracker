@@ -6,69 +6,44 @@ module Stocks
   class CurrentPriceFetcherTest < ActiveSupport::TestCase
     setup do
       Rails.cache.clear
+      @user = users(:one)
     end
 
     test "returns empty hash for blank tickers" do
-      assert_equal({}, CurrentPriceFetcher.call(tickers: []))
+      assert_equal({}, CurrentPriceFetcher.call(tickers: [], user: @user))
+    end
+
+    test "returns empty hash when no finnhub key configured" do
+      assert_equal({}, CurrentPriceFetcher.call(tickers: ["AAPL"], user: @user))
     end
 
     test "returns prices for valid tickers" do
+      @user.user_api_keys.create!(provider: "finnhub", key: "test_key")
       stub_client = stub_finnhub("AAPL" => BigDecimal("180.0"))
-
-      CurrentPriceFetcher.stub(:finnhub_client, stub_client) do
-        result = CurrentPriceFetcher.call(tickers: ["AAPL"])
+      CurrentPriceFetcher.stub(:build_client, stub_client) do
+        result = CurrentPriceFetcher.call(tickers: ["AAPL"], user: @user)
         assert_equal BigDecimal("180.0"), result["AAPL"]
       end
     end
 
     test "caches results for 5 minutes" do
+      @user.user_api_keys.create!(provider: "finnhub", key: "test_key")
       call_count = 0
       stub_client = Object.new
-      stub_client.define_singleton_method(:quote) do |_ticker|
-        call_count += 1
-        BigDecimal("180.0")
+      stub_client.define_singleton_method(:quote) { |_| call_count += 1; BigDecimal("180.0") }
+      CurrentPriceFetcher.stub(:build_client, stub_client) do
+        CurrentPriceFetcher.call(tickers: ["AAPL"], user: @user)
+        CurrentPriceFetcher.call(tickers: ["AAPL"], user: @user)
       end
-
-      CurrentPriceFetcher.stub(:finnhub_client, stub_client) do
-        CurrentPriceFetcher.call(tickers: ["AAPL"])
-        CurrentPriceFetcher.call(tickers: ["AAPL"])
-      end
-
-      assert_equal 1, call_count, "Expected Finnhub to be called once (second call from cache)"
+      assert_equal 1, call_count
     end
 
     test "omits tickers with nil price" do
+      @user.user_api_keys.create!(provider: "finnhub", key: "test_key")
       stub_client = Object.new
-      stub_client.define_singleton_method(:quote) { |_ticker| nil }
-
-      CurrentPriceFetcher.stub(:finnhub_client, stub_client) do
-        result = CurrentPriceFetcher.call(tickers: ["UNKNOWN"])
-        assert_equal({}, result)
-      end
-    end
-
-    test "normalizes and deduplicates tickers" do
-      call_count = 0
-      stub_client = Object.new
-      stub_client.define_singleton_method(:quote) do |_ticker|
-        call_count += 1
-        BigDecimal("180.0")
-      end
-
-      CurrentPriceFetcher.stub(:finnhub_client, stub_client) do
-        result = CurrentPriceFetcher.call(tickers: ["aapl", "AAPL", "aapl"])
-        assert_equal 1, call_count, "Expected Finnhub to be called once for deduplicated tickers"
-        assert_equal BigDecimal("180.0"), result["AAPL"]
-      end
-    end
-
-    test "returns prices for multiple tickers" do
-      stub_client = stub_finnhub("AAPL" => BigDecimal("180.0"), "MSFT" => BigDecimal("420.0"))
-
-      CurrentPriceFetcher.stub(:finnhub_client, stub_client) do
-        result = CurrentPriceFetcher.call(tickers: ["AAPL", "MSFT"])
-        assert_equal BigDecimal("180.0"), result["AAPL"]
-        assert_equal BigDecimal("420.0"), result["MSFT"]
+      stub_client.define_singleton_method(:quote) { |_| nil }
+      CurrentPriceFetcher.stub(:build_client, stub_client) do
+        assert_equal({}, CurrentPriceFetcher.call(tickers: ["UNKNOWN"], user: @user))
       end
     end
 

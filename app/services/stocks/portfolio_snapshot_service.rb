@@ -34,7 +34,7 @@ module Stocks
         prices = if @stock_portfolio.argentina?
           Stocks::ArgentineCurrentPriceFetcher.call(tickers: tickers)
         else
-          Stocks::CurrentPriceFetcher.call(tickers: tickers)
+          Stocks::CurrentPriceFetcher.call(tickers: tickers, user: @stock_portfolio.user)
         end
         open_positions.sum(BigDecimal("0")) { |pos| (prices[pos.ticker] || 0).to_d * pos.shares }
       else

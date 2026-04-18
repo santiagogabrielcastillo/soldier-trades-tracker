@@ -2,21 +2,27 @@
 
 module Stocks
   # Fetches current prices for a list of stock tickers via Finnhub.
-  # Fetches all tickers in parallel threads; caches each price for 5 minutes.
-  # Returns Hash ticker => BigDecimal price; missing tickers are omitted.
+  # Requires the user to have a Finnhub API key configured in user_api_keys.
+  # Returns Hash ticker => BigDecimal; returns {} when key is missing or tickers is empty.
   class CurrentPriceFetcher
-    def self.call(tickers:)
-      new(tickers: tickers).call
+    def self.call(tickers:, user:)
+      new(tickers: tickers, user: user).call
     end
 
-    def initialize(tickers:)
+    def self.build_client(api_key)
+      FinnhubClient.new(api_key: api_key)
+    end
+
+    def initialize(tickers:, user:)
       @tickers = tickers.to_a.map { |t| t.to_s.strip.upcase }.reject(&:blank?).uniq
+      @api_key = UserApiKey.key_for(user, :finnhub)
     end
 
     def call
       return {} if @tickers.empty?
+      return {} if @api_key.blank?
 
-      client = self.class.finnhub_client
+      client = self.class.build_client(@api_key)
       mutex  = Mutex.new
       prices = {}
 
@@ -31,10 +37,6 @@ module Stocks
       threads.each(&:join)
 
       prices
-    end
-
-    def self.finnhub_client
-      FinnhubClient.new
     end
   end
 end
