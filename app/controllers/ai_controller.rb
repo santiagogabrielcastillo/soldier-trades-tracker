@@ -17,7 +17,7 @@ class AiController < ApplicationController
     unless provider.configured?
       return render json: {
         error: "no_api_key",
-        message: "Please add your Gemini API key in Settings to use the AI assistant."
+        message: "Please add an API key in Settings to use the AI assistant."
       }, status: :unprocessable_entity
     end
 
