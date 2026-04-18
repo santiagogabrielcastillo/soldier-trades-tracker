@@ -37,120 +37,12 @@
 
   <hr class="border-slate-200">
 
-  <div class="rounded-lg border border-slate-200 bg-white">
-    <%# AI Assistant Card %>
-    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-      <div class="flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-500" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-        </svg>
-        <span class="text-sm font-semibold text-slate-800">AI Assistant</span>
-      </div>
-      <span class="text-xs text-slate-400">Powered by Gemini</span>
+  <div class="rounded-lg border border-slate-200 bg-white px-4 py-4 flex items-center justify-between">
+    <div>
+      <p class="text-sm font-semibold text-slate-800">API Keys</p>
+      <p class="text-sm text-slate-500">Configure your Finnhub, CoinGecko, IOL, Anthropic, and Gemini keys.</p>
     </div>
-
-    <div class="px-4 py-4 space-y-4">
-      <p class="text-sm text-slate-600">
-        Connect your free Gemini API key to enable AI-powered portfolio analysis.
-        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-slate-800 underline underline-offset-2 hover:text-slate-600">Get a free key at aistudio.google.com</a>
-      </p>
-
-      <% gemini_key = current_user.api_key_for(:gemini) %>
-      <% if gemini_key.present? %>
-        <div data-controller="ai-settings" data-ai-settings-test-url-value="<%= ai_test_saved_key_path %>">
-          <div class="flex items-center gap-3 mb-3">
-            <% masked = gemini_key.key.length >= 8 ? "#{gemini_key.key[0..3]}...#{gemini_key.key[-4..]}" : "••••••••" %>
-            <span class="flex-1 rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-sm font-mono text-slate-700"><%= masked %></span>
-            <div class="flex items-center gap-1.5 shrink-0">
-              <span class="inline-block w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
-              <span class="text-xs font-medium text-emerald-700">Active</span>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <button type="button"
-              data-action="click->ai-settings#testConnection"
-              class="px-3 py-1.5 text-sm bg-slate-800 text-white rounded-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">
-              Test Connection
-            </button>
-            <%= button_to "Remove", remove_settings_ai_key_path, method: :delete,
-              class: "px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 focus:ring-offset-2 transition-colors" %>
-          </div>
-          <p class="mt-2 text-xs text-slate-400" data-ai-settings-target="result"></p>
-        </div>
-      <% else %>
-        <%= form_with url: settings_ai_key_path, method: :patch do |f| %>
-          <div class="flex gap-2">
-            <%= f.text_field :api_key,
-              placeholder: "AIza...",
-              autocomplete: "off",
-              class: "flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent" %>
-            <%= f.submit "Save",
-              class: "px-4 py-2 text-sm bg-slate-800 text-white rounded-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 shrink-0" %>
-          </div>
-          <p class="mt-1.5 text-xs text-slate-400">Your key is stored encrypted and never shared.</p>
-        <% end %>
-      <% end %>
-    </div>
-  </div>
-
-  <%# ── Claude Deep Analysis Card ─────────────────────────────────────────── %>
-  <div class="rounded-lg border bg-white overflow-hidden <%= @ai_provider.claude? ? 'border-violet-200' : 'border-slate-200' %>">
-    <div class="flex items-center justify-between px-4 py-3 border-b <%= @ai_provider.claude? ? 'border-violet-100 bg-violet-50/50' : 'border-slate-100' %>">
-      <div class="flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 <%= @ai_provider.claude? ? 'text-violet-500' : 'text-slate-400' %>" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
-        </svg>
-        <span class="text-sm font-semibold text-slate-800">Deep Analysis</span>
-      </div>
-      <% if @ai_provider.claude? %>
-        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-violet-700">
-          <span class="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse"></span>
-          Active · Powered by Claude
-        </span>
-      <% else %>
-        <span class="text-xs text-slate-400">Powered by Claude</span>
-      <% end %>
-    </div>
-
-    <div class="px-4 py-4 space-y-3">
-      <% if @ai_provider.claude? %>
-        <p class="text-sm text-slate-600">
-          Deep analysis is active. Claude searches the web in real time — fetching current prices,
-          recent earnings, analyst sentiment, and crisis events — then applies a rigorous
-          owner-mentality investment framework to produce a rich structured report.
-        </p>
-        <ul class="space-y-1.5 text-sm text-slate-600">
-          <li class="flex items-start gap-2">
-            <span class="mt-0.5 h-4 w-4 shrink-0 text-violet-500" aria-hidden="true">✦</span>
-            Web search for current prices, earnings, analyst ratings, and news
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="mt-0.5 h-4 w-4 shrink-0 text-violet-500" aria-hidden="true">✦</span>
-            Moat scoring, solvency check, value trap detection, turnaround classification
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="mt-0.5 h-4 w-4 shrink-0 text-violet-500" aria-hidden="true">✦</span>
-            5-year revenue trend, FCF margin, interactive detail page per ticker
-          </li>
-        </ul>
-        <p class="text-xs text-slate-400 pt-1">
-          To run a deep analysis, go to your
-          <%= link_to "Stocks → Valuations", stocks_path(view: "valuations"), class: "underline underline-offset-2 hover:text-slate-600" %>
-          or
-          <%= link_to "Watchlist", stocks_path(view: "watchlist"), class: "underline underline-offset-2 hover:text-slate-600" %>
-          view and click Analyze on any ticker.
-        </p>
-      <% else %>
-        <p class="text-sm text-slate-500">
-          Deep analysis uses Claude with live web search to produce detailed investment reports
-          with moat scoring, solvency checks, and value trap detection. This feature is not
-          currently enabled on your account.
-        </p>
-        <p class="text-xs text-slate-400">
-          Contact your administrator to enable Claude deep analysis.
-        </p>
-      <% end %>
-    </div>
+    <%= link_to "Manage API Keys", settings_api_keys_path, class: "shrink-0 px-4 py-2 text-sm bg-slate-800 text-white rounded-md hover:bg-slate-700" %>
   </div>
 
 </div>

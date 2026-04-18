@@ -1,0 +1,50 @@
+<div class="rounded-lg border border-slate-200 bg-white overflow-hidden">
+  <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+    <span class="text-sm font-semibold text-slate-800"><%= label %></span>
+    <% if row %>
+      <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+        Configured
+      </span>
+    <% else %>
+      <span class="text-xs text-slate-400">Not configured</span>
+    <% end %>
+  </div>
+
+  <div class="px-4 py-4 space-y-3">
+    <p class="text-sm text-slate-600">
+      <%= description %>
+      <a href="<%= link_url %>" target="_blank" rel="noopener noreferrer" class="text-slate-800 underline underline-offset-2 hover:text-slate-600"><%= link_text %></a>
+    </p>
+
+    <% if row %>
+      <div class="flex items-center gap-3">
+        <span class="flex-1 rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-sm font-mono text-slate-700">
+          <%= row.key.present? && row.key.length >= 8 ? "#{row.key[0..3]}...#{row.key[-4..]}" : "••••••••" %>
+        </span>
+        <%= button_to "Remove", settings_api_key_path(provider), method: :delete,
+          class: "px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors" %>
+      </div>
+    <% else %>
+      <%= form_with url: upsert_settings_api_keys_path, method: :post do |f| %>
+        <%= f.hidden_field :provider, value: provider %>
+        <div class="space-y-2">
+          <% fields.each do |field| %>
+            <div>
+              <% if field[:label] %>
+                <label class="block text-xs font-medium text-slate-600 mb-1"><%= field[:label] %></label>
+              <% end %>
+              <%= f.text_field field[:name],
+                placeholder: field[:placeholder],
+                type: field.fetch(:type, "text"),
+                autocomplete: "off",
+                class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent" %>
+            </div>
+          <% end %>
+        </div>
+        <%= f.submit "Save", class: "mt-2 px-4 py-2 text-sm bg-slate-800 text-white rounded-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+        <p class="text-xs text-slate-400">Stored encrypted. Never shared.</p>
+      <% end %>
+    <% end %>
+  </div>
+</div>

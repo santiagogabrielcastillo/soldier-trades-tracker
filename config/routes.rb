@@ -15,8 +15,11 @@ Rails.application.routes.draw do
   root "dashboards#show"
 
   resource :settings, only: %i[show update], controller: "settings"
-  patch  "settings/ai_key", to: "settings#update_ai_key", as: :settings_ai_key
-  delete "settings/ai_key", to: "settings#remove_ai_key",  as: :remove_settings_ai_key
+  namespace :settings do
+    resources :api_keys, only: %i[index destroy], param: :provider do
+      collection { post :upsert }
+    end
+  end
 
   resources :exchange_accounts, only: %i[index new create destroy edit update] do
     member do

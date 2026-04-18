@@ -1,0 +1,56 @@
+<div class="mx-auto max-w-4xl">
+  <div class="mb-6">
+    <h1 class="mb-1 text-2xl font-semibold text-slate-900">API Keys</h1>
+    <p class="text-sm text-slate-600">Your keys are stored encrypted and never shared. Each key is used only for your account.</p>
+  </div>
+
+  <div class="space-y-4">
+    <%= render "settings/api_keys/provider_card",
+      provider: "finnhub",
+      label: "Finnhub",
+      description: "Used to fetch real-time US stock prices.",
+      link_text: "Get a free key at finnhub.io",
+      link_url: "https://finnhub.io/dashboard",
+      row: @keys_by_provider["finnhub"],
+      fields: [{ name: :key, placeholder: "pk_live_..." }] %>
+
+    <%= render "settings/api_keys/provider_card",
+      provider: "coingecko",
+      label: "CoinGecko",
+      description: "Used to fetch crypto spot prices.",
+      link_text: "Get a demo key at coingecko.com",
+      link_url: "https://www.coingecko.com/en/developers/dashboard",
+      row: @keys_by_provider["coingecko"],
+      fields: [{ name: :key, placeholder: "CG-..." }] %>
+
+    <%= render "settings/api_keys/provider_card",
+      provider: "iol",
+      label: "InvertirOnline (IOL)",
+      description: "Used to fetch Argentine CEDEAR prices in ARS.",
+      link_text: "Sign up at invertironline.com",
+      link_url: "https://www.invertironline.com",
+      row: @keys_by_provider["iol"],
+      fields: [
+        { name: :key, placeholder: "your@email.com", label: "Username (email)" },
+        { name: :secret, placeholder: "••••••••", label: "Password", type: "password" }
+      ] %>
+
+    <%= render "settings/api_keys/provider_card",
+      provider: "anthropic",
+      label: "Anthropic (Claude)",
+      description: "Enables deep stock analysis with live web search.",
+      link_text: "Get an API key at console.anthropic.com",
+      link_url: "https://console.anthropic.com",
+      row: @keys_by_provider["anthropic"],
+      fields: [{ name: :key, placeholder: "sk-ant-..." }] %>
+
+    <%= render "settings/api_keys/provider_card",
+      provider: "gemini",
+      label: "Google Gemini",
+      description: "Enables AI-powered portfolio analysis.",
+      link_text: "Get a free key at aistudio.google.com",
+      link_url: "https://aistudio.google.com/app/apikey",
+      row: @keys_by_provider["gemini"],
+      fields: [{ name: :key, placeholder: "AIza..." }] %>
+  </div>
+</div>
