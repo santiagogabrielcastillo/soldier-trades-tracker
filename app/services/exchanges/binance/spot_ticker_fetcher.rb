@@ -9,7 +9,7 @@ module Exchanges
     # CoinGecko is used instead of Binance because Binance (fapi.binance.com) is geo-blocked from
     # some cloud providers such as Railway/AWS.
     #
-    # When ENV['COINGECKO_API_KEY'] is set, the x-cg-demo-api-key header is included (demo tier).
+    # When api_key is provided, the x-cg-demo-api-key header is included (demo tier).
     #
     # Symbol → CoinGecko ID mapping: common tokens are listed in SYMBOL_TO_ID; unknown tokens fall
     # back to the lowercase symbol (works for many tokens whose CoinGecko ID matches their ticker,

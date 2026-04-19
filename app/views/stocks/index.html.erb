@@ -195,9 +195,6 @@
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
         <% end %>
       <% end %>
-      <% unless Stocks::IolClient.credentials %>
-        <p class="mt-3 text-sm text-slate-500">Set <code class="rounded bg-slate-100 px-1 text-xs">IOL_USERNAME</code> and <code class="rounded bg-slate-100 px-1 text-xs">IOL_PASSWORD</code> to enable live quotes.</p>
-      <% end %>
     <% else %>
       <%# ── US stock portfolio table ── %>
       <%= render DataTableComponent.new(columns: [
@@ -252,7 +249,7 @@
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-400">—</td>
         <% end %>
       <% end %>
-      <p class="mt-3 text-sm text-slate-500">Prices via Finnhub. Set <code class="rounded bg-slate-100 px-1 text-xs">FINNHUB_API_KEY</code> to enable live quotes.</p>
+      <p class="mt-3 text-sm text-slate-500">Prices via Finnhub. Add your Finnhub API key in Settings to enable live quotes.</p>
     <% end %>
     <% if @stocks_chart_data[:pie].any? || @stocks_chart_data[:bar].any? %>
       <%= content_tag :div,
