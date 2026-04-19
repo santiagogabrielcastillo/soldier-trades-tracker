@@ -78,7 +78,7 @@ module Allocations
       end
 
       all_open_tokens = positions_by_account.values.flatten.select(&:open?).map(&:token).uniq
-      prices = all_open_tokens.any? ? Spot::CurrentPriceFetcher.call(tokens: all_open_tokens) : {}
+      prices = all_open_tokens.any? ? Spot::CurrentPriceFetcher.call(tokens: all_open_tokens, user: @user) : {}
 
       spot_accounts.to_h do |spot|
         open_positions = positions_by_account[spot].select(&:open?)

@@ -2,6 +2,10 @@
 
 class DashboardsController < ApplicationController
   def show
+    unless current_user.api_key_for(:coingecko)
+      flash.now[:alert] = "Crypto spot prices require a CoinGecko API key. #{view_context.link_to('Configure it here', settings_api_keys_path, class: 'underline')}".html_safe
+    end
+
     mep_rate = begin
       Stocks::MepRateFetcher.call
     rescue StandardError => e

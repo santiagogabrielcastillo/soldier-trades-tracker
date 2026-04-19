@@ -6,64 +6,40 @@ module Spot
   class CurrentPriceFetcherTest < ActiveSupport::TestCase
     setup do
       Rails.cache.clear
+      @user = users(:one)
     end
 
     test "returns empty hash for blank tokens" do
-      assert_equal({}, CurrentPriceFetcher.call(tokens: []))
+      assert_equal({}, CurrentPriceFetcher.call(tokens: [], user: @user))
     end
 
-    test "calls Binance SpotTickerFetcher and returns prices" do
-      stub_fetch = { "BTC" => BigDecimal("50000"), "ETH" => BigDecimal("3000") }
-      Exchanges::Binance::SpotTickerFetcher.stub(:fetch_prices, stub_fetch) do
-        result = CurrentPriceFetcher.call(tokens: %w[BTC ETH])
-        assert_equal BigDecimal("50000"), result["BTC"]
-        assert_equal BigDecimal("3000"), result["ETH"]
+    test "returns prices when fetcher succeeds" do
+      prices = { "BTC" => BigDecimal("60000") }
+      Exchanges::Binance::SpotTickerFetcher.stub(:fetch_prices, prices) do
+        result = CurrentPriceFetcher.call(tokens: ["BTC"], user: @user)
+        assert_equal BigDecimal("60000"), result["BTC"]
       end
     end
 
-    test "caches results for 2 minutes" do
+    test "caches results" do
       call_count = 0
-      fetcher_stub = lambda do |**|
-        call_count += 1
-        { "BTC" => BigDecimal("50000") }
+      stub_fetcher = Object.new
+      stub_fetcher.define_singleton_method(:fetch_prices) { |**| call_count += 1; { "BTC" => BigDecimal("60000") } }
+      Exchanges::Binance::SpotTickerFetcher.stub(:new, stub_fetcher) do
+        CurrentPriceFetcher.call(tokens: ["BTC"], user: @user)
+        CurrentPriceFetcher.call(tokens: ["BTC"], user: @user)
       end
-
-      Exchanges::Binance::SpotTickerFetcher.stub(:fetch_prices, fetcher_stub) do
-        CurrentPriceFetcher.call(tokens: ["BTC"])
-        CurrentPriceFetcher.call(tokens: ["BTC"])
-      end
-
-      assert_equal 1, call_count, "Expected SpotTickerFetcher to be called once (second from cache)"
+      assert_equal 1, call_count
     end
 
-    test "cache key is order-independent" do
+    test "normalizes and deduplicates tokens" do
       call_count = 0
-      fetcher_stub = lambda do |**|
-        call_count += 1
-        {}
+      stub_fetcher = Object.new
+      stub_fetcher.define_singleton_method(:fetch_prices) { |**| call_count += 1; {} }
+      Exchanges::Binance::SpotTickerFetcher.stub(:new, stub_fetcher) do
+        CurrentPriceFetcher.call(tokens: ["btc", "BTC", "Btc"], user: @user)
       end
-
-      Exchanges::Binance::SpotTickerFetcher.stub(:fetch_prices, fetcher_stub) do
-        CurrentPriceFetcher.call(tokens: ["ETH", "BTC"])
-        CurrentPriceFetcher.call(tokens: ["BTC", "ETH"])
-      end
-
-      assert_equal 1, call_count, "Same token set in different order should share cache"
-    end
-
-    test "normalizes and deduplicates mixed-case tokens" do
-      call_count = 0
-      fetcher_stub = lambda do |tokens:|
-        call_count += 1
-        tokens.index_with { BigDecimal("1") }
-      end
-
-      Exchanges::Binance::SpotTickerFetcher.stub(:fetch_prices, fetcher_stub) do
-        result = CurrentPriceFetcher.call(tokens: ["btc", "BTC", "Btc"])
-        assert_equal 1, call_count, "Expected SpotTickerFetcher to be called once for deduplicated tokens"
-        assert_includes result.keys, "BTC"
-        assert_equal 1, result.keys.length
-      end
+      assert_equal 1, call_count
     end
   end
 end

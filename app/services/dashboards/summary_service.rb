@@ -163,7 +163,7 @@ class Dashboards::SummaryService
     end
 
     open_tokens = open_positions.map(&:token).uniq
-    current_prices = Spot::CurrentPriceFetcher.call(tokens: open_tokens)
+    current_prices = Spot::CurrentPriceFetcher.call(tokens: open_tokens, user: @user)
     spot_value = open_positions.sum(BigDecimal("0")) { |pos| (current_prices[pos.token] || 0).to_d * pos.balance }
     spot_cost_basis = open_positions.sum(BigDecimal("0")) { |pos| pos.net_usd_invested.to_d }
     spot_unrealized_pl = open_positions.sum(BigDecimal("0")) do |pos|

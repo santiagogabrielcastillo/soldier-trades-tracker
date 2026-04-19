@@ -85,9 +85,14 @@ module Exchanges
       }.freeze
 
       # @param tokens [Array<String>] list of token symbols (e.g. ["AAVE", "BTC"])
+      # @param api_key [String, nil] optional CoinGecko demo API key (user-supplied BYOK)
       # @return [Hash<String, BigDecimal>] token => price; only includes tokens that succeeded
-      def self.fetch_prices(tokens:)
-        new.fetch_prices(tokens: tokens)
+      def self.fetch_prices(tokens:, api_key: nil)
+        new(api_key: api_key).fetch_prices(tokens: tokens)
+      end
+
+      def initialize(api_key: nil)
+        @api_key = api_key
       end
 
       def fetch_prices(tokens:)
@@ -110,7 +115,7 @@ module Exchanges
         http.read_timeout = READ_TIMEOUT
         req = Net::HTTP::Get.new(uri)
         req["Accept"] = "application/json"
-        req["x-cg-demo-api-key"] = ENV["COINGECKO_API_KEY"] if ENV["COINGECKO_API_KEY"].present?
+        req["x-cg-demo-api-key"] = @api_key if @api_key.present?
 
         res = http.request(req)
         unless res.code.to_s == "200"
