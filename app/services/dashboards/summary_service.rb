@@ -209,7 +209,7 @@ class Dashboards::SummaryService
     # For Argentina-mode portfolios, prices and P&L are in ARS.
     # We attempt to convert to USD via the MEP rate for dashboard display.
     if stock_portfolio.argentina?
-      current_prices = Stocks::ArgentineCurrentPriceFetcher.call(tickers: open_tickers)
+      current_prices = Stocks::ArgentineCurrentPriceFetcher.call(tickers: open_tickers, user: @user)
       mep_rate = @mep_rate
     else
       current_prices = Stocks::CurrentPriceFetcher.call(tickers: open_tickers, user: @user)

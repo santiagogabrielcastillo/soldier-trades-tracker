@@ -2,24 +2,28 @@
 
 module Stocks
   # Fetches current CEDEAR prices in ARS from InvertirOnline (IOL).
-  # Mirrors the Stocks::CurrentPriceFetcher interface: returns Hash<ticker, BigDecimal>.
-  # Missing tickers (price unavailable) are omitted from the result.
+  # Requires the user to have IOL credentials configured in user_api_keys
+  # (key = username/email, secret = password).
+  # Returns Hash<ticker, BigDecimal>; empty when credentials are missing.
   class ArgentineCurrentPriceFetcher
-    def self.call(tickers:)
-      new(tickers: tickers).call
+    def self.call(tickers:, user:)
+      new(tickers: tickers, user: user).call
     end
 
-    def initialize(tickers:)
+    def self.build_client(username:, password:)
+      Stocks::IolClient.new(username: username, password: password)
+    end
+
+    def initialize(tickers:, user:)
       @tickers = tickers.to_a.map { |t| t.to_s.strip.upcase }.reject(&:blank?).uniq
+      @creds   = UserApiKey.credentials_for(user, :iol)
     end
 
-    # Fetches all tickers in parallel threads and caches each price for 5 minutes.
-    # Cold load: ~1 HTTP round-trip (all tickers concurrently).
-    # Warm load: cache hit, no HTTP.
     def call
       return {} if @tickers.empty?
+      return {} if @creds.nil?
 
-      client = self.class.argentine_client
+      client = self.class.build_client(username: @creds[:key], password: @creds[:secret])
       mutex  = Mutex.new
       prices = {}
 
@@ -34,10 +38,6 @@ module Stocks
       threads.each(&:join)
 
       prices
-    end
-
-    def self.argentine_client
-      Stocks::IolClient.new
     end
   end
 end
