@@ -33,7 +33,7 @@ gem "solid_queue"
 gem "pagy"
 
 # View components
-gem "view_component", "~> 4.6"
+gem "view_component", "~> 4.7"
 
 # CSV parsing (required explicitly from Ruby 3.4)
 gem "csv"
