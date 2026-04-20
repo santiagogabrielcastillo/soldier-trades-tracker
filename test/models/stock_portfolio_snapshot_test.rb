@@ -83,6 +83,26 @@ class StockPortfolioSnapshotTest < ActiveSupport::TestCase
     assert_not snapshot.withdrawal?
   end
 
+  # --- positions_breakdown ---
+
+  test "positions_breakdown returns empty array when positions_data is empty" do
+    snapshot = build_snapshot(total_value: "100", cash_flow: "0")
+    snapshot.positions_data = []
+    assert_equal [], snapshot.positions_breakdown
+  end
+
+  test "positions_breakdown returns array of hashes with string keys" do
+    snapshot = build_snapshot(total_value: "100", cash_flow: "0")
+    snapshot.positions_data = [
+      { "ticker" => "AAPL", "value" => 6000.0, "pct_of_total" => 60.0 },
+      { "ticker" => "CASH", "value" => 4000.0, "pct_of_total" => 40.0 }
+    ]
+    result = snapshot.positions_breakdown
+    assert_equal 2, result.size
+    assert_equal "AAPL", result.first["ticker"]
+    assert_equal 60.0,   result.first["pct_of_total"]
+  end
+
   # --- ordered scope ---
 
   test "ordered scope returns snapshots by recorded_at ascending" do
