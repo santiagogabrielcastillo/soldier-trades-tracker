@@ -18,6 +18,7 @@ class StocksController < ApplicationController
     when "performance"
       @twr_series = Stocks::TwrCalculatorService.call(stock_portfolio: @stock_portfolio)
       @snapshots = @stock_portfolio.stock_portfolio_snapshots.ordered.to_a.reverse
+      @allocation_series = build_allocation_series(@snapshots)
     when "valuations"
       all_positions = Stocks::PositionStateService.call(stock_portfolio: @stock_portfolio)
       @positions    = all_positions.select(&:open?)
@@ -257,6 +258,26 @@ class StocksController < ApplicationController
     end.sort_by { |d| -d[:pct] }
 
     { pie: pie, bar: bar }
+  end
+
+  def build_allocation_series(snapshots)
+    chronological = snapshots.select { |s| s.positions_breakdown.any? }.reverse
+    return {} if chronological.size < 2
+
+    all_tickers = chronological.flat_map { |s| s.positions_breakdown.map { |p| p["ticker"] } }.uniq
+
+    {
+      labels: chronological.map { |s| s.recorded_at.strftime("%b %d, %Y") },
+      series: all_tickers.map do |ticker|
+        {
+          ticker: ticker,
+          data: chronological.map do |s|
+            entry = s.positions_breakdown.find { |p| p["ticker"] == ticker }
+            entry ? entry["pct_of_total"] : 0
+          end
+        }
+      end
+    }
   end
 
   def stock_trade_params

@@ -23,4 +23,8 @@ class StockPortfolioSnapshot < ApplicationRecord
   def snapshot_only?
     cash_flow.to_d.zero?
   end
+
+  def positions_breakdown
+    Array(positions_data)
+  end
 end
