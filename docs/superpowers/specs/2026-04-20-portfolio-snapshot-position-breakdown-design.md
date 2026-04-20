@@ -57,6 +57,11 @@ No extra API calls are needed — prices are already fetched. Both the manual "R
 - X-axis: snapshot dates; Y-axis: 0–100%
 - Only snapshots with non-empty `positions_data` are plotted
 - If fewer than 2 qualifying snapshots exist, shows an empty-state message matching the TWR chart style
+- Percentage labels rendered permanently on the chart (not only on hover), if Chart.js `datalabels` plugin supports it without significant layout cost
+
+### 3. Persistent % labels on existing allocation charts
+
+Where feasible via Chart.js config, update existing percentage-based charts (e.g. the portfolio allocation pie chart on the Stocks index) to show % labels directly on the chart at all times rather than only on hover. Gated on whether the chart type and data density allow readable labels — skip for charts where labels would overlap.
 
 ### 2. Expandable snapshot rows
 
