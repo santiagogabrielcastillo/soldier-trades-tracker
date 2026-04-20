@@ -383,9 +383,19 @@
       <% end %>
     </div>
 
-    <% twr_data = { twr: @twr_series.map { |p| { date: p.date, twr_pct: p.twr_pct } } } %>
+    <% charts_data = {
+      twr: @twr_series.map { |p| { date: p.date, twr_pct: p.twr_pct } },
+      allocation: @allocation_series
+    } %>
     <%= content_tag :div,
-          data: { controller: "stocks-charts", "stocks-charts-data-value": twr_data.to_json } do %>
+          data: { controller: "stocks-charts", "stocks-charts-data-value": charts_data.to_json } do %>
+      <div class="mb-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="mb-3 text-sm font-medium text-slate-700">Allocation over time (%)</p>
+        <div class="h-56">
+          <canvas data-stocks-charts-target="allocationCanvas"></canvas>
+          <p class="hidden text-sm text-slate-500" data-stocks-charts-target="allocationEmpty">No snapshots with position data yet. Record at least two snapshots to see the chart.</p>
+        </div>
+      </div>
       <div class="mb-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <p class="mb-3 text-sm font-medium text-slate-700">Time-Weighted Return (%)</p>
         <div class="h-56">
@@ -402,9 +412,11 @@
         { label: "Cash flow", classes: "text-right" },
         { label: "Portfolio value", classes: "text-right" },
         { label: "Source", classes: "text-left" },
+        { label: "Positions", classes: "text-left" },
         { label: "", classes: "text-right" }
       ]) do |table| %>
         <% @snapshots.each do |snap| %>
+          <% breakdown = snap.positions_breakdown %>
           <% table.with_row do %>
             <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-700"><%= snap.recorded_at.strftime("%b %d, %Y %H:%M") %></td>
             <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-700">
@@ -429,6 +441,38 @@
               <%= @stock_portfolio.argentina? ? format_ars(snap.total_value) : format_money(snap.total_value) %>
             </td>
             <td class="whitespace-nowrap px-6 py-4 text-sm capitalize text-slate-500"><%= snap.source %></td>
+            <td class="px-6 py-4 text-sm text-slate-700">
+              <% if breakdown.any? %>
+                <details class="group">
+                  <summary class="cursor-pointer list-none text-xs text-slate-500 hover:text-slate-800">
+                    <span class="group-open:hidden">&#9654; <%= breakdown.size %> positions</span>
+                    <span class="hidden group-open:inline">&#9660; hide</span>
+                  </summary>
+                  <table class="mt-2 w-full min-w-[18rem] text-xs">
+                    <thead>
+                      <tr class="text-slate-500">
+                        <th class="pb-1 text-left font-medium">Ticker</th>
+                        <th class="pb-1 text-right font-medium">Value</th>
+                        <th class="pb-1 text-right font-medium">% of total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% breakdown.sort_by { |p| -p["pct_of_total"].to_f }.each do |pos| %>
+                        <tr class="border-t border-slate-100">
+                          <td class="py-1 pr-4 font-semibold text-slate-800"><%= pos["ticker"] %></td>
+                          <td class="py-1 pr-4 text-right text-slate-700">
+                            <%= @stock_portfolio.argentina? ? format_ars(pos["value"]) : format_money(pos["value"]) %>
+                          </td>
+                          <td class="py-1 text-right text-slate-500"><%= number_to_percentage(pos["pct_of_total"], precision: 1) %></td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </details>
+              <% else %>
+                <span class="text-xs text-slate-400">—</span>
+              <% end %>
+            </td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
               <%= button_to "Delete", stocks_snapshot_path(id: snap.id, portfolio_id: @stock_portfolio.id),
                     method: :delete,
