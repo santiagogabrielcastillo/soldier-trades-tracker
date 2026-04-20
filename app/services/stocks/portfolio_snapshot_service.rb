@@ -15,11 +15,13 @@ module Stocks
     end
 
     def call
+      total_value = compute_portfolio_value
       @stock_portfolio.stock_portfolio_snapshots.create!(
-        total_value: compute_portfolio_value,
+        total_value: total_value,
         cash_flow: @cash_flow,
         recorded_at: Time.current,
-        source: @source
+        source: @source,
+        positions_data: @positions_data
       )
     end
 
@@ -28,6 +30,7 @@ module Stocks
     def compute_portfolio_value
       positions = Stocks::PositionStateService.call(stock_portfolio: @stock_portfolio)
       open_positions = positions.select(&:open?)
+      position_entries = []
 
       market_value = if open_positions.any?
         tickers = open_positions.map(&:ticker).uniq
@@ -36,13 +39,31 @@ module Stocks
         else
           Stocks::CurrentPriceFetcher.call(tickers: tickers, user: @stock_portfolio.user)
         end
-        open_positions.sum(BigDecimal("0")) { |pos| (prices[pos.ticker] || 0).to_d * pos.shares }
+        open_positions.sum(BigDecimal("0")) do |pos|
+          price = prices[pos.ticker]
+          next BigDecimal("0") unless price
+          value = price.to_d * pos.shares
+          position_entries << { "ticker" => pos.ticker, "value" => value.to_f }
+          value
+        end
       else
         BigDecimal("0")
       end
 
       cash = Stocks::CashBalanceService.call(stock_portfolio: @stock_portfolio)
-      market_value + cash
+      position_entries << { "ticker" => "CASH", "value" => cash.to_f } if cash.nonzero?
+
+      total = market_value + cash
+
+      @positions_data = if total.positive?
+        position_entries.map do |entry|
+          entry.merge("pct_of_total" => (entry["value"] / total.to_f * 100).round(2))
+        end
+      else
+        []
+      end
+
+      total
     end
   end
 end
