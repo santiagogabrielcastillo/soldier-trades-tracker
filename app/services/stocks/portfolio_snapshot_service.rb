@@ -32,9 +32,9 @@ module Stocks
       market_value = if open_positions.any?
         tickers = open_positions.map(&:ticker).uniq
         prices = if @stock_portfolio.argentina?
-          Stocks::ArgentineCurrentPriceFetcher.call(tickers: tickers)
+          Stocks::ArgentineCurrentPriceFetcher.call(tickers: tickers, user: @stock_portfolio.user)
         else
-          Stocks::CurrentPriceFetcher.call(tickers: tickers)
+          Stocks::CurrentPriceFetcher.call(tickers: tickers, user: @stock_portfolio.user)
         end
         open_positions.sum(BigDecimal("0")) { |pos| (prices[pos.ticker] || 0).to_d * pos.shares }
       else

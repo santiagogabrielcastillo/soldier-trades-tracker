@@ -207,13 +207,19 @@ class StocksController < ApplicationController
     open_tickers = open_positions.map(&:ticker).uniq
 
     if @stock_portfolio.argentina?
-      prices_thread = Thread.new { Stocks::ArgentineCurrentPriceFetcher.call(tickers: open_tickers) }
+      unless current_user.api_key_for(:iol)
+        flash.now[:alert] = "Argentine stock prices require IOL credentials. #{view_context.link_to('Configure them here', settings_api_keys_path, class: 'underline')}".html_safe
+      end
+      prices_thread = Thread.new { Stocks::ArgentineCurrentPriceFetcher.call(tickers: open_tickers, user: current_user) }
       mep_thread    = Thread.new { Stocks::MepRateFetcher.call }
       @current_prices    = prices_thread.value
       @mep_rate          = mep_thread.value
       @cedear_instruments = current_user.cedear_instruments.where(ticker: open_tickers).index_by(&:ticker)
     else
-      @current_prices = Stocks::CurrentPriceFetcher.call(tickers: open_tickers)
+      unless current_user.api_key_for(:finnhub)
+        flash.now[:alert] = "Stock prices require a Finnhub API key. #{view_context.link_to('Configure it here', settings_api_keys_path, class: 'underline')}".html_safe
+      end
+      @current_prices = Stocks::CurrentPriceFetcher.call(tickers: open_tickers, user: current_user)
       @mep_rate = nil
       @cedear_instruments = {}
     end

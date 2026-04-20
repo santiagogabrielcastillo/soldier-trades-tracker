@@ -12,71 +12,25 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
   test "show renders successfully" do
     get settings_path
     assert_response :success
-    assert_select "span", text: "AI Assistant"
+    assert_select "h1", text: "Settings"
   end
 
-  test "show displays key entry form when no API key configured" do
-    @user.update!(gemini_api_key: nil)
+  test "show displays link to manage API keys" do
     get settings_path
     assert_response :success
-    assert_select "input[name='api_key']"
+    assert_select "a", text: "Manage API Keys"
   end
 
-  test "show displays masked key and actions when API key is configured" do
-    @user.update!(gemini_api_key: "AIzaTestKey12345678")
-    get settings_path
-    assert_response :success
-    assert_match @user.gemini_api_key_masked, response.body
-    assert_select "button", text: "Test Connection"
-  end
-
-  test "update_ai_key saves the API key" do
-    patch settings_ai_key_path, params: { api_key: "AIzaNewKey12345678" }
+  test "update saves sync interval" do
+    patch settings_path, params: { user: { sync_interval: "daily" } }
     assert_redirected_to settings_path
-    @user.reload
-    assert_equal "AIzaNewKey12345678", @user.gemini_api_key
+    assert_equal "daily", @user.reload.sync_interval
   end
 
-  test "remove_ai_key clears the API key" do
-    @user.update!(gemini_api_key: "AIzaExistingKey1234")
-    delete remove_settings_ai_key_path
-    assert_redirected_to settings_path
-    @user.reload
-    assert_nil @user.gemini_api_key
-  end
-
-  test "update_ai_key requires authentication" do
+  test "update requires authentication" do
     delete logout_path
-    patch settings_ai_key_path, params: { api_key: "AIzaNewKey12345678" }
+    patch settings_path, params: { user: { sync_interval: "daily" } }
     assert_response :redirect
-  end
-
-  # ── Deep Analysis (Claude) card ───────────────────────────────────────────
-
-  test "shows Deep Analysis card as active when platform anthropic key configured" do
-    with_anthropic_key("sk-ant-platform") do
-      get settings_path
-      assert_response :success
-      assert_select "span", text: /Active · Powered by Claude/
-    end
-  end
-
-  test "shows Deep Analysis card as inactive when no platform anthropic key" do
-    with_no_anthropic_key do
-      get settings_path
-      assert_response :success
-      assert_select "span", text: "Deep Analysis"
-      assert_match /not\s+currently\s+enabled/, response.body
-    end
-  end
-
-  test "Deep Analysis card always renders regardless of Gemini key status" do
-    @user.update!(gemini_api_key: nil)
-    with_no_anthropic_key do
-      get settings_path
-      assert_response :success
-      assert_select "span", text: "Deep Analysis"
-    end
   end
 
   private
@@ -84,15 +38,5 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
   def sign_in_as(user)
     post login_path, params: { email: user.email, password: "password" }
     follow_redirect!
-  end
-
-  def with_anthropic_key(key)
-    Rails.application.credentials.stub(:dig, ->(*args) {
-      args == [ :anthropic, :api_key ] ? key : nil
-    }) { yield }
-  end
-
-  def with_no_anthropic_key
-    Rails.application.credentials.stub(:dig, ->(*_args) { nil }) { yield }
   end
 end

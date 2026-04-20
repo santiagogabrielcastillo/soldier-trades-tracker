@@ -5,15 +5,14 @@ require "test_helper"
 module Stocks
   class IolClientTest < ActiveSupport::TestCase
     setup do
-      # Reset class-level token cache before each test to avoid cross-test contamination
-      IolClient.token_cache = nil
+      Rails.cache.clear
     end
 
     # --- token fetch ---
 
-    test "quote returns nil when credentials are missing" do
-      IolClient.stub(:credentials, nil) do
-        assert_nil IolClient.new.quote("AAPL")
+    test "quote returns nil when token endpoint fails" do
+      Net::HTTP.stub(:post, mock_failure) do
+        assert_nil IolClient.new(username: "u", password: "p").quote("AAPL")
       end
     end
 
@@ -23,20 +22,9 @@ module Stocks
       http = build_http_double(quote_response)
 
       Net::HTTP.stub(:post, token_response) do
-        # stub(:start, return_value, *block_args) — block_args are passed to the caller's block
         Net::HTTP.stub(:start, quote_response, http) do
-          IolClient.stub(:credentials, { username: "u", password: "p" }) do
-            result = IolClient.new.quote("AAPL")
-            assert_equal BigDecimal("15000.0"), result
-          end
-        end
-      end
-    end
-
-    test "quote returns nil when token endpoint fails" do
-      Net::HTTP.stub(:post, mock_failure) do
-        IolClient.stub(:credentials, { username: "u", password: "p" }) do
-          assert_nil IolClient.new.quote("AAPL")
+          result = IolClient.new(username: "u", password: "p").quote("AAPL")
+          assert_equal BigDecimal("15000.0"), result
         end
       end
     end
@@ -48,9 +36,7 @@ module Stocks
 
       Net::HTTP.stub(:post, token_response) do
         Net::HTTP.stub(:start, bad_quote, http) do
-          IolClient.stub(:credentials, { username: "u", password: "p" }) do
-            assert_nil IolClient.new.quote("AAPL")
-          end
+          assert_nil IolClient.new(username: "u", password: "p").quote("AAPL")
         end
       end
     end
@@ -62,9 +48,7 @@ module Stocks
 
       Net::HTTP.stub(:post, token_response) do
         Net::HTTP.stub(:start, quote_response, http) do
-          IolClient.stub(:credentials, { username: "u", password: "p" }) do
-            assert_nil IolClient.new.quote("AAPL")
-          end
+          assert_nil IolClient.new(username: "u", password: "p").quote("AAPL")
         end
       end
     end
@@ -75,14 +59,12 @@ module Stocks
 
       Net::HTTP.stub(:post, token_response) do
         Net::HTTP.stub(:start, raise_socket_error) do
-          IolClient.stub(:credentials, { username: "u", password: "p" }) do
-            assert_nil IolClient.new.quote("AAPL")
-          end
+          assert_nil IolClient.new(username: "u", password: "p").quote("AAPL")
         end
       end
     end
 
-    test "token is cached and not re-fetched on second call" do
+    test "token is cached in Rails.cache and not re-fetched on second call" do
       token_response = mock_success('{"access_token":"tok123"}')
       quote_response = mock_success('{"ultimoPrecio":1000.0}')
       http = build_http_double(quote_response)
@@ -90,11 +72,9 @@ module Stocks
 
       Net::HTTP.stub(:post, ->(*) { post_call_count += 1; token_response }) do
         Net::HTTP.stub(:start, quote_response, http) do
-          IolClient.stub(:credentials, { username: "u", password: "p" }) do
-            client = IolClient.new
-            client.quote("AAPL")
-            client.quote("MSFT")
-          end
+          client = IolClient.new(username: "u", password: "p")
+          client.quote("AAPL")
+          client.quote("MSFT")
         end
       end
 

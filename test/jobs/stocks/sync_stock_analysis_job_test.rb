@@ -65,32 +65,32 @@ module Stocks
 
     # ── provider helpers ──────────────────────────────────────────────────────
 
-    def with_anthropic_key(key, &block)
-      Rails.application.credentials.stub(:dig, ->(*args) {
-        args == [ :anthropic, :api_key ] ? key : nil
-      }, &block)
+    def with_anthropic_key(key)
+      @user.user_api_keys.find_or_create_by!(provider: "anthropic") { |r| r.key = key }
+      yield
+    ensure
+      @user.user_api_keys.where(provider: "anthropic").destroy_all
     end
 
-    def with_no_anthropic_key(&block)
-      Rails.application.credentials.stub(:dig, ->(*_args) { nil }, &block)
+    def with_no_anthropic_key
+      @user.user_api_keys.where(provider: "anthropic").destroy_all
+      yield
     end
 
     # ── setup ─────────────────────────────────────────────────────────────────
 
     setup do
       @user = users(:two)
-      @user.update!(gemini_api_key: "AIzaTestKey123")
+      @user.user_api_keys.find_or_create_by!(provider: "gemini") { |r| r.key = "AIzaTestKey123" }
     end
 
     # ── guard: skips when no provider configured ───────────────────────────────
 
     test "skips user without any AI key configured" do
-      @user.update!(gemini_api_key: nil)
+      @user.user_api_keys.destroy_all
       call_count = 0
-      with_no_anthropic_key do
-        Net::HTTP.stub(:new, ->(*) { call_count += 1; raise "should not be called" }) do
-          Stocks::SyncStockAnalysisJob.new.perform(@user.id, [ "AAPL" ])
-        end
+      Net::HTTP.stub(:new, ->(*) { call_count += 1; raise "should not be called" }) do
+        Stocks::SyncStockAnalysisJob.new.perform(@user.id, [ "AAPL" ])
       end
       assert_equal 0, call_count
     end
@@ -152,7 +152,7 @@ module Stocks
     # ── Claude path ────────────────────────────────────────────────────────────
 
     test "upserts analysis via Claude when anthropic key configured" do
-      @user.update!(gemini_api_key: nil)
+      @user.user_api_keys.where(provider: "gemini").destroy_all
       StockFundamental.stub(:for_tickers, { "AAPL" => stock_fundamentals(:aapl) }) do
         with_anthropic_key("sk-ant-test") do
           stub_http(claude_response(JSON.generate(CLAUDE_JSON))) do
@@ -171,7 +171,7 @@ module Stocks
     end
 
     test "stores full structured_data JSON for Claude analysis" do
-      @user.update!(gemini_api_key: nil)
+      @user.user_api_keys.where(provider: "gemini").destroy_all
       StockFundamental.stub(:for_tickers, { "AAPL" => stock_fundamentals(:aapl) }) do
         with_anthropic_key("sk-ant-test") do
           stub_http(claude_response(JSON.generate(CLAUDE_JSON))) do
@@ -190,7 +190,7 @@ module Stocks
 
     test "strips markdown fences from Claude response" do
       fenced = "```json\n#{JSON.generate(CLAUDE_JSON)}\n```"
-      @user.update!(gemini_api_key: nil)
+      @user.user_api_keys.where(provider: "gemini").destroy_all
       StockFundamental.stub(:for_tickers, { "AAPL" => stock_fundamentals(:aapl) }) do
         with_anthropic_key("sk-ant-test") do
           stub_http(claude_response(fenced)) do

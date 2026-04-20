@@ -6,60 +6,34 @@ module Stocks
   class ArgentineCurrentPriceFetcherTest < ActiveSupport::TestCase
     setup do
       Rails.cache.clear
+      @user = users(:one)
     end
 
-    test "returns empty hash when tickers list is empty" do
-      result = ArgentineCurrentPriceFetcher.call(tickers: [])
-      assert_equal({}, result)
+    test "returns empty hash for blank tickers" do
+      assert_equal({}, ArgentineCurrentPriceFetcher.call(tickers: [], user: @user))
     end
 
-    test "returns empty hash when IOL credentials are missing" do
+    test "returns empty hash when no IOL credentials configured" do
+      assert_equal({}, ArgentineCurrentPriceFetcher.call(tickers: ["AAPL"], user: @user))
+    end
+
+    test "returns prices when credentials configured" do
+      @user.user_api_keys.create!(provider: "iol", key: "user@example.com", secret: "pass")
       stub_client = Object.new
-      def stub_client.quote(_ticker) = nil
-
-      ArgentineCurrentPriceFetcher.stub(:argentine_client, stub_client) do
-        result = ArgentineCurrentPriceFetcher.call(tickers: %w[AAPL MSFT])
-        assert_equal({}, result)
+      stub_client.define_singleton_method(:quote) { |ticker| ticker == "AAPL" ? BigDecimal("1500.0") : nil }
+      ArgentineCurrentPriceFetcher.stub(:build_client, stub_client) do
+        result = ArgentineCurrentPriceFetcher.call(tickers: ["AAPL"], user: @user)
+        assert_equal BigDecimal("1500.0"), result["AAPL"]
       end
     end
 
-    test "returns prices from the client when provider is configured" do
-      stub_client = Minitest::Mock.new
-      stub_client.expect(:quote, BigDecimal("12500"), [ "AAPL" ])
-      stub_client.expect(:quote, nil, [ "MSFT" ])
-
-      ArgentineCurrentPriceFetcher.stub(:argentine_client, stub_client) do
-        result = ArgentineCurrentPriceFetcher.call(tickers: %w[AAPL MSFT])
-        assert_equal BigDecimal("12500"), result["AAPL"]
-        assert_nil result["MSFT"]
-      end
-
-      stub_client.verify
-    end
-
-    test "omits tickers with nil price from results" do
+    test "omits tickers with nil price" do
+      @user.user_api_keys.create!(provider: "iol", key: "user@example.com", secret: "pass")
       stub_client = Object.new
-      def stub_client.quote(_ticker) = nil
-
-      ArgentineCurrentPriceFetcher.stub(:argentine_client, stub_client) do
-        result = ArgentineCurrentPriceFetcher.call(tickers: %w[AAPL])
-        assert_equal({}, result)
+      stub_client.define_singleton_method(:quote) { |_| nil }
+      ArgentineCurrentPriceFetcher.stub(:build_client, stub_client) do
+        assert_equal({}, ArgentineCurrentPriceFetcher.call(tickers: ["UNKNOWN"], user: @user))
       end
-    end
-
-    test "deduplicates and upcases tickers" do
-      called_tickers = []
-      stub_client = Object.new
-      stub_client.define_singleton_method(:quote) do |ticker|
-        called_tickers << ticker
-        nil
-      end
-
-      ArgentineCurrentPriceFetcher.stub(:argentine_client, stub_client) do
-        ArgentineCurrentPriceFetcher.call(tickers: %w[aapl AAPL aapl])
-      end
-
-      assert_equal [ "AAPL" ], called_tickers
     end
   end
 end

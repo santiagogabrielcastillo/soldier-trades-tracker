@@ -111,7 +111,10 @@ class SpotController < ApplicationController
     @spot_account = SpotAccount.find_or_create_default_for(current_user)
     all_positions = Spot::PositionStateService.call(spot_account: @spot_account)
     open_tokens = all_positions.select(&:open?).map(&:token).uniq
-    prices = Spot::CurrentPriceFetcher.call(tokens: open_tokens)
+    unless current_user.api_key_for(:coingecko)
+      flash.now[:alert] = "Crypto prices require a CoinGecko API key. #{view_context.link_to('Configure it here', settings_api_keys_path, class: 'underline')}".html_safe
+    end
+    prices = Spot::CurrentPriceFetcher.call(tokens: open_tokens, user: current_user)
     @spot_account.cache_prices!(prices)
     redirect_to spot_path, notice: "Prices updated."
   end

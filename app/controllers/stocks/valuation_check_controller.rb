@@ -7,7 +7,10 @@ module Stocks
 
       if @ticker
         fundamental = StockFundamental.find_by(ticker: @ticker)
-        prices = Stocks::CurrentPriceFetcher.call(tickers: [@ticker])
+        unless current_user.api_key_for(:finnhub)
+          flash.now[:alert] = "Stock prices require a Finnhub API key. #{view_context.link_to('Configure it here', settings_api_keys_path, class: 'underline')}".html_safe
+        end
+        prices = Stocks::CurrentPriceFetcher.call(tickers: [@ticker], user: current_user)
         @price = prices[@ticker]
 
         if fundamental

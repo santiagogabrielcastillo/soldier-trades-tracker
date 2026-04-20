@@ -34,7 +34,8 @@
   { label: "",           classes: "text-right" },
   *(watchlist_items ? [{ label: "", classes: "text-right" }] : [])
 ]) do |table| %>
-  <% tickers.each do |ticker| %>
+  <% ai_provider = Ai::ProviderForUser.new(current_user) %>
+<% tickers.each do |ticker| %>
     <% f        = fundamentals[ticker] %>
     <% analysis = analyses[ticker] %>
     <% table.with_row do %>
@@ -78,7 +79,7 @@
               </svg>
               <%= time_ago_in_words(analysis.analyzed_at) %> ago
             </span>
-            <% if current_user.gemini_api_key_configured? %>
+            <% if ai_provider.configured? %>
               <%= button_to stocks_analyze_ticker_path(ticker),
                     method: :post,
                     form_class: "inline",
@@ -91,7 +92,7 @@
               <% end %>
             <% end %>
           </div>
-        <% elsif current_user.gemini_api_key_configured? %>
+        <% elsif ai_provider.configured? %>
           <%= button_to stocks_analyze_ticker_path(ticker),
                 method: :post,
                 class: "inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-slate-700 transition-colors duration-100" do %>
