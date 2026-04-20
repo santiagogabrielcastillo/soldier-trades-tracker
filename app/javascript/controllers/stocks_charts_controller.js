@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 import { Chart, registerables } from "chart.js"
+import ChartDataLabels from "chartjs-plugin-datalabels"
 
-Chart.register(...registerables)
+Chart.register(...registerables, ChartDataLabels)
 
 const PALETTE = [
   "#6366f1", "#f59e0b", "#10b981", "#3b82f6", "#ef4444",
@@ -10,7 +11,7 @@ const PALETTE = [
 ]
 
 export default class extends Controller {
-  static targets = ["pieCanvas", "pieEmpty", "barCanvas", "barEmpty", "twrCanvas", "twrEmpty"]
+  static targets = ["pieCanvas", "pieEmpty", "barCanvas", "barEmpty", "twrCanvas", "twrEmpty", "allocationCanvas", "allocationEmpty"]
   static values = { data: Object }
 
   connect() {
@@ -18,6 +19,7 @@ export default class extends Controller {
     const pie = data.pie || []
     const bar = data.bar || []
     const twr = data.twr || []
+    const allocation = data.allocation || {}
 
     if (pie.length > 0 && this.hasPieCanvasTarget) {
       this.renderPie(pie)
@@ -36,12 +38,19 @@ export default class extends Controller {
     } else if (this.hasTwrEmptyTarget) {
       this.twrEmptyTarget.classList.remove("hidden")
     }
+
+    if (allocation.series?.length >= 1 && this.hasAllocationCanvasTarget) {
+      this.renderAllocation(allocation)
+    } else if (this.hasAllocationEmptyTarget) {
+      this.allocationEmptyTarget.classList.remove("hidden")
+    }
   }
 
   disconnect() {
     if (this.pieChart) this.pieChart.destroy()
     if (this.barChart) this.barChart.destroy()
     if (this.twrChart) this.twrChart.destroy()
+    if (this.allocationChart) this.allocationChart.destroy()
   }
 
   renderPie(pie) {
@@ -66,6 +75,13 @@ export default class extends Controller {
             callbacks: {
               label: (ctx) => ` ${ctx.label}: ${ctx.parsed.toFixed(1)}%`
             }
+          },
+          datalabels: {
+            color: "#fff",
+            font: { size: 10, weight: "bold" },
+            formatter: (value) => value >= 5 ? `${value.toFixed(1)}%` : "",
+            anchor: "center",
+            align: "center"
           }
         }
       }
@@ -95,7 +111,8 @@ export default class extends Controller {
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y.toFixed(2)}%` } }
+          tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y.toFixed(2)}%` } },
+          datalabels: { display: false }
         },
         scales: {
           x: { type: "category" },
@@ -128,11 +145,54 @@ export default class extends Controller {
             callbacks: {
               label: (ctx) => ` ${ctx.parsed.y.toFixed(2)}%`
             }
-          }
+          },
+          datalabels: { display: false }
         },
         scales: {
           y: {
             beginAtZero: true,
+            ticks: { callback: (v) => `${v}%` }
+          }
+        }
+      }
+    })
+  }
+
+  renderAllocation(allocation) {
+    const ctx = this.allocationCanvasTarget.getContext("2d")
+    const { labels, series } = allocation
+    this.allocationChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: series.map(({ ticker, data }, i) => ({
+          label: ticker,
+          data,
+          backgroundColor: PALETTE[i % PALETTE.length] + "50",
+          borderColor: PALETTE[i % PALETTE.length],
+          fill: true,
+          tension: 0.2,
+          pointRadius: 3
+        }))
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`
+            }
+          },
+          datalabels: { display: false }
+        },
+        scales: {
+          x: { type: "category" },
+          y: {
+            stacked: true,
+            min: 0,
+            max: 100,
             ticks: { callback: (v) => `${v}%` }
           }
         }
