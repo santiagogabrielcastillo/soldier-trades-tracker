@@ -7,24 +7,21 @@ export default class extends Controller {
   static values = { data: Object }
   static targets = ["pie", "bar"]
 
-  #pieChart
-  #barChart
-
   connect() {
-    if (this.hasPieTarget) this.#buildPie()
-    if (this.hasBarTarget) this.#buildBar()
+    if (this.hasPieTarget) this._buildPie()
+    if (this.hasBarTarget) this._buildBar()
   }
 
   disconnect() {
-    this.#pieChart?.destroy()
-    this.#barChart?.destroy()
+    this._pieChart?.destroy()
+    this._barChart?.destroy()
   }
 
-  #buildPie() {
+  _buildPie() {
     const { buckets } = this.dataValue
     if (!buckets?.length) return
 
-    this.#pieChart = new Chart(this.pieTarget, {
+    this._pieChart = new Chart(this.pieTarget, {
       type: "doughnut",
       data: {
         labels: buckets.map(b => b.name),
@@ -37,12 +34,12 @@ export default class extends Controller {
     })
   }
 
-  #buildBar() {
+  _buildBar() {
     const { buckets } = this.dataValue
     const withTargets = (buckets || []).filter(b => b.target_pct != null)
     if (!withTargets.length) return
 
-    this.#barChart = new Chart(this.barTarget, {
+    this._barChart = new Chart(this.barTarget, {
       type: "bar",
       data: {
         labels: withTargets.map(b => b.name),
