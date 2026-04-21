@@ -204,8 +204,7 @@ export default class extends Controller {
       <label class="flex cursor-pointer items-center gap-1.5 rounded-md border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-sm hover:bg-indigo-100">
         <input type="checkbox" checked
                data-token="${this._escapeAttr(pos.token)}"
-               class="rounded accent-indigo-600"
-               style="accent-color:#6366f1" />
+               class="rounded accent-indigo-600" />
         <span class="font-medium text-slate-800">${this._escapeAttr(pos.token)}</span>
       </label>
     `).join("")
@@ -243,8 +242,7 @@ export default class extends Controller {
               ${disabled ? 'disabled title="' + this._escapeAttr(tooltip) + '"' : ''}
               data-action="input->spot-scenario#onSliderInput"
               data-token="${this._escapeAttr(pos.token)}"
-              class="w-full disabled:cursor-not-allowed"
-              style="accent-color:#6366f1"
+              class="w-full accent-indigo-600 disabled:cursor-not-allowed"
             />
           </td>
           <td class="whitespace-nowrap px-4 py-3 text-right text-sm ${injectClass}"

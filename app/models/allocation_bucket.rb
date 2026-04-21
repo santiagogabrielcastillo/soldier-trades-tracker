@@ -9,7 +9,7 @@ class AllocationBucket < ApplicationRecord
   has_many :spot_accounts, foreign_key: :allocation_bucket_id, dependent: :nullify, inverse_of: :allocation_bucket
 
   validates :name, presence: true
-  validates :color, presence: true
+  validates :color, presence: true, format: { with: /\A#[0-9a-fA-F]{6}\z/, message: "must be a valid hex color (e.g. #6366f1)" }
   validates :target_pct, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }, allow_nil: true
 
   scope :ordered, -> { order(:position, :id) }

@@ -191,11 +191,7 @@
 
 <%# ── Allocation ── %>
 <% if @allocation_summary.buckets.any? %>
-  <style nonce="<%= content_security_policy_nonce %>">
-    <% @allocation_summary.buckets.each do |b| %>
-      .bc-<%= b.id %> { background: <%= b.color %>; }
-    <% end %>
-  </style>
+  <%= render "allocations/bucket_styles", buckets: @allocation_summary.buckets %>
   <%= render CardComponent.new(class: "card-accent mb-8") do %>
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Allocation</h2>

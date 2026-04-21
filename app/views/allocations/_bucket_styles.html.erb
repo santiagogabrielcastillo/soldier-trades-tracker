@@ -1,0 +1,8 @@
+<% content_for :head do %>
+  <style nonce="<%= content_security_policy_nonce %>">
+    <% buckets.each do |b| %>
+      .bc-<%= b.id %> { background: <%= b.color %>; }
+      .bl-<%= b.id %> { border-left: 4px solid <%= b.color %>; }
+    <% end %>
+  </style>
+<% end %>

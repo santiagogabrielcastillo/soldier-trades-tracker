@@ -80,7 +80,7 @@ export default class extends Controller {
           datalabels: {
             color: "#fff",
             font: { size: 10, weight: "bold" },
-            formatter: (value) => { const v = parseFloat(value); return !isNaN(v) && v >= 5 ? `${v.toFixed(1)}%` : "" },
+            formatter: (value) => { const v = parseFloat(value); return !isNaN(v) && v >= 5 ? `${v.toFixed(1)}%` : null },
             anchor: "center",
             align: "center"
           }
@@ -113,7 +113,6 @@ export default class extends Controller {
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y.toFixed(2)}%` } },
-          datalabels: { display: false }
         },
         scales: {
           x: { type: "category" },
@@ -147,7 +146,6 @@ export default class extends Controller {
               label: (ctx) => ` ${ctx.parsed.y.toFixed(2)}%`
             }
           },
-          datalabels: { display: false }
         },
         scales: {
           y: {
@@ -186,7 +184,6 @@ export default class extends Controller {
               label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`
             }
           },
-          datalabels: { display: false }
         },
         scales: {
           x: { type: "category" },

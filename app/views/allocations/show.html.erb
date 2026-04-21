@@ -1,11 +1,4 @@
-<% if @summary.buckets.any? %>
-  <style nonce="<%= content_security_policy_nonce %>">
-    <% @summary.buckets.each do |b| %>
-      .bc-<%= b.id %> { background: <%= b.color %>; }
-      .bl-<%= b.id %> { border-left: 4px solid <%= b.color %>; }
-    <% end %>
-  </style>
-<% end %>
+<%= render "allocations/bucket_styles", buckets: @summary.buckets %>
 <div>
   <%= render PageHeaderComponent.new(title: "Asset Allocation", subtitle: "Track and rebalance your net worth across asset classes.") %>
 
