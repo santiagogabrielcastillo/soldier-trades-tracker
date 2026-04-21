@@ -80,7 +80,8 @@ export default class extends Controller {
           datalabels: {
             color: "#fff",
             font: { size: 10, weight: "bold" },
-            formatter: (value) => { const v = parseFloat(value); return !isNaN(v) && v >= 5 ? `${v.toFixed(1)}%` : null },
+            display: (context) => { const v = parseFloat(context.dataset.data[context.dataIndex]); return !isNaN(v) && v >= 5 },
+            formatter: (value) => { const v = parseFloat(value); return `${v.toFixed(1)}%` },
             anchor: "center",
             align: "center"
           }
