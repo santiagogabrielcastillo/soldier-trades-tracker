@@ -1,3 +1,11 @@
+<% if @summary.buckets.any? %>
+  <style nonce="<%= content_security_policy_nonce %>">
+    <% @summary.buckets.each do |b| %>
+      .bc-<%= b.id %> { background: <%= b.color %>; }
+      .bl-<%= b.id %> { border-left: 4px solid <%= b.color %>; }
+    <% end %>
+  </style>
+<% end %>
 <div>
   <%= render PageHeaderComponent.new(title: "Asset Allocation", subtitle: "Track and rebalance your net worth across asset classes.") %>
 
@@ -56,7 +64,7 @@
                 <tr class="hover:bg-slate-50 transition-colors duration-100">
                   <td class="py-3">
                     <div class="flex items-center gap-2">
-                      <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background: <%= b.color %>"></span>
+                      <span class="bc-<%= b.id %> h-2.5 w-2.5 shrink-0 rounded-full"></span>
                       <span class="font-medium text-slate-800"><%= b.name %></span>
                     </div>
                   </td>
@@ -92,9 +100,9 @@
           <% bucket_record = @buckets.find { |r| r.id == b.id } %>
           <div class="rounded-lg border border-slate-200 overflow-hidden">
             <%# Color bar + header %>
-            <div class="flex items-center justify-between gap-4 px-4 py-3" style="border-left: 4px solid <%= b.color %>">
+            <div class="bl-<%= b.id %> flex items-center justify-between gap-4 px-4 py-3">
               <div class="flex items-center gap-3 min-w-0">
-                <span class="h-3 w-3 shrink-0 rounded-full" style="background: <%= b.color %>"></span>
+                <span class="bc-<%= b.id %> h-3 w-3 shrink-0 rounded-full"></span>
                 <span class="font-semibold text-slate-900 truncate"><%= b.name %></span>
                 <% if b.target_pct %>
                   <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">target <%= number_to_percentage(b.target_pct, precision: 1) %></span>

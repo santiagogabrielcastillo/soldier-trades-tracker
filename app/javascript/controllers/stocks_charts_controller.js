@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import { Chart, registerables } from "chart.js"
 import ChartDataLabels from "chartjs-plugin-datalabels"
 
-Chart.register(...registerables, ChartDataLabels)
+Chart.register(...registerables)
 
 const PALETTE = [
   "#6366f1", "#f59e0b", "#10b981", "#3b82f6", "#ef4444",
@@ -56,6 +56,7 @@ export default class extends Controller {
   renderPie(pie) {
     const ctx = this.pieCanvasTarget.getContext("2d")
     this.pieChart = new Chart(ctx, {
+      plugins: [ChartDataLabels],
       type: "doughnut",
       data: {
         labels: pie.map((d) => d.ticker),

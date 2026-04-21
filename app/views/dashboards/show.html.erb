@@ -191,6 +191,11 @@
 
 <%# ── Allocation ── %>
 <% if @allocation_summary.buckets.any? %>
+  <style nonce="<%= content_security_policy_nonce %>">
+    <% @allocation_summary.buckets.each do |b| %>
+      .bc-<%= b.id %> { background: <%= b.color %>; }
+    <% end %>
+  </style>
   <%= render CardComponent.new(class: "card-accent mb-8") do %>
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Allocation</h2>
@@ -208,7 +213,7 @@
     <div class="flex flex-wrap gap-3">
       <% @allocation_summary.buckets.each do |b| %>
         <div class="flex items-center gap-2">
-          <span class="h-2.5 w-2.5 rounded-full" style="background: <%= b.color %>"></span>
+          <span class="bc-<%= b.id %> h-2.5 w-2.5 rounded-full"></span>
           <span class="text-sm text-slate-700"><%= b.name %></span>
           <span class="font-numeric text-sm font-medium text-slate-900"><%= number_to_percentage(b.actual_pct, precision: 1) %></span>
         </div>
