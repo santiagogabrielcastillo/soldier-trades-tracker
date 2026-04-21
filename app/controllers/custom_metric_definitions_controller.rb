@@ -2,13 +2,25 @@
 
 class CustomMetricDefinitionsController < ApplicationController
   before_action :set_company
+  before_action :set_definition, only: %i[edit update]
 
   def create
-    @definition = @company.custom_metric_definitions.build(definition_params)
+    @definition = @company.custom_metric_definitions.build(create_params)
     if @definition.save
       redirect_to company_path(@company), notice: "#{@definition.name} metric added."
     else
       redirect_to company_path(@company), alert: @definition.errors.full_messages.to_sentence
+    end
+  end
+
+  def edit
+  end
+
+  def update
+    if @definition.update(update_params)
+      redirect_to company_path(@company), notice: "#{@definition.name} metric updated."
+    else
+      render :edit, status: :unprocessable_entity
     end
   end
 
@@ -26,7 +38,15 @@ class CustomMetricDefinitionsController < ApplicationController
     render plain: "Not found", status: :not_found
   end
 
-  def definition_params
+  def set_definition
+    @definition = @company.custom_metric_definitions.find(params[:id])
+  end
+
+  def create_params
     params.permit(:name, :data_type)
+  end
+
+  def update_params
+    params.require(:custom_metric_definition).permit(:name, :data_type)
   end
 end

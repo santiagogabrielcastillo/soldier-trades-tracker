@@ -99,6 +99,6 @@ Rails.application.routes.draw do
       get :comparison
     end
     resources :earnings_reports, only: %i[new create show edit update destroy]
-    resources :custom_metric_definitions, only: %i[create destroy]
+    resources :custom_metric_definitions, only: %i[create edit update destroy]
   end
 end
