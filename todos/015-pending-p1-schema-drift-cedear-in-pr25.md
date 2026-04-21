@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p1
 issue_id: "015"
 tags: [code-review, database, schema, migrations]

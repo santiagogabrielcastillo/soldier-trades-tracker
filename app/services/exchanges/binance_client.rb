@@ -16,8 +16,6 @@ module Exchanges
     INCOME_PATH = "/fapi/v1/income"
     USER_TRADES_PATH = "/fapi/v1/userTrades"
 
-    DEFAULT_QUOTE_CURRENCIES = Exchanges::QuoteCurrencies::DEFAULT
-
     SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
     USER_TRADES_LIMIT = 1000
     INCOME_LIMIT = 1000
@@ -25,7 +23,7 @@ module Exchanges
     INCOME_LOOKBACK_MS = 6 * 31 * 24 * 60 * 60 * 1000
 
     def initialize(api_key:, api_secret:, base_url: nil, allowed_quote_currencies: DEFAULT_QUOTE_CURRENCIES)
-      @allowed_quote_currencies = allowed_quote_currencies.presence || DEFAULT_QUOTE_CURRENCIES
+      super(allowed_quote_currencies: allowed_quote_currencies)
       @http = Binance::HttpClient.new(
         api_key: api_key,
         api_secret: api_secret,
@@ -96,16 +94,6 @@ module Exchanges
     end
 
     private
-
-    # Returns true when the symbol's quote currency is in the per-account whitelist.
-    # Symbol must be in app format (BASE-QUOTE, e.g. "BTC-USDC"). Fails closed (returns false)
-    # on a blank whitelist as a safeguard; the constructor always ensures a non-blank value.
-    def allowed_quote?(symbol)
-      return false if @allowed_quote_currencies.blank?
-      return false if symbol.blank?
-      quote = symbol.to_s.split("-").last.to_s.upcase
-      @allowed_quote_currencies.include?(quote)
-    end
 
     def discover_symbols(since_ms)
       from_positions = symbols_from_position_risk

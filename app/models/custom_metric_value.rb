@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class CustomMetricValue < ApplicationRecord
-  include ActiveSupport::NumberHelper
   belongs_to :earnings_report
   belongs_to :custom_metric_definition
 
@@ -17,9 +16,9 @@ class CustomMetricValue < ApplicationRecord
     when "text"
       text_value.to_s
     when "money"
-      decimal_value ? "$#{number_with_delimiter(decimal_value.round(2))}" : nil
+      decimal_value ? "$#{ActiveSupport::NumberHelper.number_to_delimited(decimal_value.round(2))}" : nil
     else
-      decimal_value ? number_with_delimiter(decimal_value) : nil
+      decimal_value ? decimal_value.to_s : nil
     end
   end
 

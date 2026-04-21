@@ -9,13 +9,12 @@ module Exchanges
     SWAP_V1_FULL_ORDER_PATH = "/openApi/swap/v1/trade/fullOrder"
     SWAP_USER_INCOME_PATH = "/openApi/swap/v2/user/income"
 
-    DEFAULT_QUOTE_CURRENCIES = Exchanges::QuoteCurrencies::DEFAULT
     SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
     V1_ORDER_LIMIT = 500
     FALLBACK_LOOKBACK_DAYS = 90
 
     def initialize(api_key:, api_secret:, base_url: nil, allowed_quote_currencies: DEFAULT_QUOTE_CURRENCIES)
-      @allowed_quote_currencies = allowed_quote_currencies.presence || DEFAULT_QUOTE_CURRENCIES
+      super(allowed_quote_currencies: allowed_quote_currencies)
       @http = Bingx::HttpClient.new(
         api_key: api_key,
         api_secret: api_secret,
@@ -61,16 +60,6 @@ module Exchanges
       return data if data.is_a?(Array)
       keys.each { |k| return data[k] if data[k].present? && data[k].is_a?(Array) }
       []
-    end
-
-    # Returns true when the symbol's quote currency is in the per-account whitelist.
-    # Symbol must be in app format (BASE-QUOTE, e.g. "BTC-USDC"). Fails closed (returns false)
-    # on a blank whitelist as a safeguard; the constructor always ensures a non-blank value.
-    def allowed_quote?(symbol)
-      return false if @allowed_quote_currencies.blank?
-      return false if symbol.blank?
-      quote = symbol.to_s.split("-").last.to_s.upcase
-      @allowed_quote_currencies.include?(quote)
     end
 
     def fetch_trades_from_v2_fills(since_ms, limit: 100)
