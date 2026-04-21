@@ -16,7 +16,7 @@ class CustomMetricValue < ApplicationRecord
     when "text"
       text_value.to_s
     when "money"
-      decimal_value ? ActiveSupport::NumberHelper.number_with_delimiter(decimal_value.round(2)) : nil
+      decimal_value ? "$#{ActiveSupport::NumberHelper.number_with_delimiter(decimal_value.round(2))}" : nil
     else
       decimal_value ? ActiveSupport::NumberHelper.number_with_delimiter(decimal_value) : nil
     end
