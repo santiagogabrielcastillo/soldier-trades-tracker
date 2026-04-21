@@ -15,8 +15,10 @@ class CustomMetricValue < ApplicationRecord
       decimal_value ? "#{decimal_value.round(2)}%" : nil
     when "text"
       text_value.to_s
+    when "money"
+      decimal_value ? ActiveSupport::NumberHelper.number_with_delimiter(decimal_value.round(2)) : nil
     else
-      decimal_value&.to_s
+      decimal_value ? ActiveSupport::NumberHelper.number_with_delimiter(decimal_value) : nil
     end
   end
 
@@ -26,7 +28,7 @@ class CustomMetricValue < ApplicationRecord
     return unless custom_metric_definition
 
     case custom_metric_definition.data_type
-    when "number", "percentage"
+    when "number", "percentage", "money"
       errors.add(:text_value, "must be blank for number metrics") if text_value.present?
     when "text"
       errors.add(:decimal_value, "must be blank for text metrics") if decimal_value.present?

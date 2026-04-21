@@ -76,7 +76,7 @@
         <div>
           <%= f.label :data_type, "Type", class: "block text-xs font-medium text-slate-700 mb-1" %>
           <%= f.select :data_type,
-                options_for_select([["Number", "number"], ["Percentage", "percentage"], ["Text", "text"]]),
+                options_for_select([["Number", "number"], ["Money", "money"], ["Percentage", "percentage"], ["Text", "text"]]),
                 {},
                 { class: "block rounded-md border border-slate-300 px-3 py-1.5 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" } %>
         </div>

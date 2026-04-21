@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CustomMetricDefinition < ApplicationRecord
-  DATA_TYPES = %w[number percentage text].freeze
+  DATA_TYPES = %w[number percentage text money].freeze
 
   belongs_to :company
 
