@@ -45,12 +45,13 @@
               Core financials
             </td>
           </tr>
-          <% [["Revenue", :revenue], ["Net Income", :net_income], ["EPS", :eps]].each do |label, attr| %>
+          <% [["Revenue", :revenue, true], ["Net Income", :net_income, true], ["EPS", :eps, false]].each do |label, attr, money| %>
             <tr class="hover:bg-slate-50 transition-colors duration-75">
               <td class="px-6 py-3 font-medium text-slate-700 whitespace-nowrap"><%= label %></td>
               <% @reports.each do |report| %>
                 <td class="px-6 py-3 text-right text-slate-900 tabular-nums whitespace-nowrap">
-                  <%= report.send(attr)&.to_s || "—" %>
+                  <% v = report.send(attr) %>
+                  <%= v ? (money ? number_with_delimiter(v) : v) : "—" %>
                 </td>
               <% end %>
             </tr>

@@ -46,7 +46,7 @@
     <fieldset class="rounded-lg border border-slate-200 p-4">
       <legend class="px-2 text-sm font-medium text-slate-700">Custom Metrics</legend>
       <div class="space-y-4">
-        <% f.fields_for :custom_metric_values do |v| %>
+        <%= f.fields_for :custom_metric_values do |v| %>
           <% defn = v.object.custom_metric_definition %>
           <div>
             <%= v.hidden_field :custom_metric_definition_id %>

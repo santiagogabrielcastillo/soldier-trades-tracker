@@ -28,7 +28,7 @@
 
   <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
     <%# Core financials section %>
-    <% core_metrics = [["Revenue", @report.revenue], ["Net Income", @report.net_income], ["EPS", @report.eps]].reject { |_, v| v.nil? } %>
+    <% core_metrics = [["Revenue", @report.revenue, true], ["Net Income", @report.net_income, true], ["EPS", @report.eps, false]].reject { |_, v, _| v.nil? } %>
     <% custom_values = @report.custom_metric_values.includes(:custom_metric_definition) %>
 
     <% if core_metrics.any? %>
@@ -36,10 +36,10 @@
         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Core financials</p>
       </div>
       <div class="divide-y divide-slate-100">
-        <% core_metrics.each do |label, value| %>
+        <% core_metrics.each do |label, value, money| %>
           <div class="flex items-center justify-between px-6 py-3.5">
             <span class="text-sm font-medium text-slate-600"><%= label %></span>
-            <span class="font-mono text-sm font-semibold text-slate-900 tabular-nums"><%= value %></span>
+            <span class="font-mono text-sm font-semibold text-slate-900 tabular-nums"><%= money ? number_with_delimiter(value) : value %></span>
           </div>
         <% end %>
       </div>
