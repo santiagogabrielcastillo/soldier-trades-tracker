@@ -57,7 +57,9 @@ Rails.application.routes.draw do
   delete "stocks/watchlist/:id",   to: "stocks#remove_from_watchlist", as: :stocks_watchlist_item
   get "stocks/analysis/:ticker",   to: "stocks/analysis#show",     as: :stocks_analysis,
       constraints: { ticker: /[A-Z0-9.\-]{1,10}/ }
-  get "stocks/valuation_check", to: "stocks/valuation_check#show", as: :stocks_valuation_check
+  get  "stocks/valuation_check", to: "stocks/valuation_check#show", as: :stocks_valuation_check
+  get  "stocks/sector_pe_thresholds/:sector/edit", to: "stocks/sector_pe_thresholds#edit", as: :edit_stocks_sector_pe_threshold
+  patch "stocks/sector_pe_thresholds/:sector",     to: "stocks/sector_pe_thresholds#update", as: :stocks_sector_pe_threshold
 
   resources :stock_portfolios, only: %i[index new create edit update]
 
