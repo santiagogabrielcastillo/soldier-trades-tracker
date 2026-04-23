@@ -5,6 +5,15 @@
 # be executed at any point in every environment.
 # Run with: bin/rails db:seed
 
+SectorPeThreshold::DEFAULTS.each do |sector, thresholds|
+  SectorPeThreshold.find_or_create_by!(sector: sector) do |t|
+    t.gift_max       = thresholds[:gift_max]
+    t.attractive_max = thresholds[:attractive_max]
+    t.fair_max       = thresholds[:fair_max]
+  end
+end
+puts "Seeded #{SectorPeThreshold.count} sector P/E thresholds"
+
 if User.super_admin.none?
   User.create!(
     email: ENV.fetch("ADMIN_EMAIL") { raise "Set ADMIN_EMAIL env var before seeding" },
