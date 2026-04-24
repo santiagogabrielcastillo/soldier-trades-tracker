@@ -3,22 +3,32 @@ import { Chart, registerables } from "chart.js"
 
 Chart.register(...registerables)
 
-// Threshold colours matching the table legend
 const PE_COLORS = {
-  gift:       { border: "#059669", bg: "rgba(5,150,105,0.15)" },   // emerald — < 10x
-  attractive: { border: "#16a34a", bg: "rgba(22,163,74,0.15)" },   // green   — < 15x
-  fair:       { border: "#ca8a04", bg: "rgba(202,138,4,0.15)" },   // yellow  — 15–30x
-  expensive:  { border: "#dc2626", bg: "rgba(220,38,38,0.15)" },   // red     — > 30x
+  gift:       { border: "#059669", bg: "rgba(5,150,105,0.15)" },
+  attractive: { border: "#16a34a", bg: "rgba(22,163,74,0.15)" },
+  fair:       { border: "#ca8a04", bg: "rgba(202,138,4,0.15)" },
+  expensive:  { border: "#dc2626", bg: "rgba(220,38,38,0.15)" },
 }
 
-const REFERENCE_LINES = [
-  { y: 10, color: "#059669", label: "10x" },
-  { y: 15, color: "#16a34a", label: "15x" },
-  { y: 30, color: "#dc2626", label: "30x" },
-]
+const DEFAULT_THRESHOLDS = { gift_max: 10, attractive_max: 15, fair_max: 30 }
 
 export default class extends Controller {
   static targets = ["priceInput", "fwdEpsInput", "growthInput", "tableBody", "tableWrapper", "errorMessage", "chartCanvas"]
+  static values  = { price: Number, fwdEps: Number, thresholds: Object }
+
+  get _thresholds() {
+    const t = this.thresholdsValue
+    return (t && t.gift_max) ? t : DEFAULT_THRESHOLDS
+  }
+
+  get _referenceLines() {
+    const { gift_max, attractive_max, fair_max } = this._thresholds
+    return [
+      { y: gift_max,       color: "#059669", label: `${gift_max}x` },
+      { y: attractive_max, color: "#16a34a", label: `${attractive_max}x` },
+      { y: fair_max,       color: "#dc2626", label: `${fair_max}x` },
+    ]
+  }
 
   connect() {
     this.calculate()
@@ -71,7 +81,7 @@ export default class extends Controller {
 
     const pointColors = rows.map(r => this._peColor(r.pe))
 
-    const refDatasets = REFERENCE_LINES.map(line => ({
+    const refDatasets = this._referenceLines.map(line => ({
       label:          line.label,
       data:           labels.map(() => line.y),
       borderColor:    line.color,
@@ -135,16 +145,18 @@ export default class extends Controller {
   }
 
   _peClass(pe) {
-    if (pe < 10)  return "bg-emerald-100 text-emerald-800"
-    if (pe < 15)  return "bg-green-100 text-green-800"
-    if (pe <= 30) return "bg-yellow-100 text-yellow-800"
+    const { gift_max, attractive_max, fair_max } = this._thresholds
+    if (pe < gift_max)       return "bg-emerald-100 text-emerald-800"
+    if (pe < attractive_max) return "bg-green-100 text-green-800"
+    if (pe <= fair_max)      return "bg-yellow-100 text-yellow-800"
     return "bg-red-100 text-red-800"
   }
 
   _peColor(pe) {
-    if (pe < 10)  return PE_COLORS.gift.border
-    if (pe < 15)  return PE_COLORS.attractive.border
-    if (pe <= 30) return PE_COLORS.fair.border
+    const { gift_max, attractive_max, fair_max } = this._thresholds
+    if (pe < gift_max)       return PE_COLORS.gift.border
+    if (pe < attractive_max) return PE_COLORS.attractive.border
+    if (pe <= fair_max)      return PE_COLORS.fair.border
     return PE_COLORS.expensive.border
   }
 }

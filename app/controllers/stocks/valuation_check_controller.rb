@@ -13,6 +13,9 @@ module Stocks
         prices = Stocks::CurrentPriceFetcher.call(tickers: [ @ticker ], user: current_user)
         @price = prices[@ticker]
 
+        @sector = fundamental&.sector
+        @thresholds = SectorPeThreshold.for_sector(@sector)
+
         if fundamental
           @fwd_eps = if fundamental.eps_next_y&.positive?
                        fundamental.eps_next_y.round(2)
