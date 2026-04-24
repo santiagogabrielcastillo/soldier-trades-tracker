@@ -1,15 +1,15 @@
 <div class="w-full rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-  <h1 class="mb-1 text-xl font-semibold text-slate-900">Choose a new password</h1>
-  <p class="mb-6 text-sm text-slate-500">Enter and confirm your new password below.</p>
+  <h1 class="mb-1 text-xl font-semibold text-slate-900"><%= t("password_resets.edit.title") %></h1>
+  <p class="mb-6 text-sm text-slate-500"><%= t("password_resets.edit.subtitle") %></p>
   <%= form_with url: password_reset_path, method: :patch, local: true, class: "space-y-4" do |f| %>
     <%= hidden_field_tag :token, @token %>
     <div>
-      <%= label_tag :password, "New password", class: "block text-xs font-medium uppercase tracking-wide text-slate-500" %>
+      <%= label_tag :password, t("password_resets.edit.new_password"), class: "block text-xs font-medium uppercase tracking-wide text-slate-500" %>
       <%= password_field_tag :password, nil, autocomplete: "new-password",
             class: "mt-1.5 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
     </div>
     <div>
-      <%= label_tag :password_confirmation, "Confirm new password", class: "block text-xs font-medium uppercase tracking-wide text-slate-500" %>
+      <%= label_tag :password_confirmation, t("password_resets.edit.confirm_password"), class: "block text-xs font-medium uppercase tracking-wide text-slate-500" %>
       <%= password_field_tag :password_confirmation, nil, autocomplete: "new-password",
             class: "mt-1.5 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
     </div>
@@ -20,7 +20,7 @@
         <% end %>
       </ul>
     <% end %>
-    <%= submit_tag "Update password",
+    <%= submit_tag t("password_resets.edit.submit"),
           class: "mt-2 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
   <% end %>
 </div>

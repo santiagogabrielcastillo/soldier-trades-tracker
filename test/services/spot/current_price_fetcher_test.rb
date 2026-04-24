@@ -16,7 +16,7 @@ module Spot
     test "returns prices when fetcher succeeds" do
       prices = { "BTC" => BigDecimal("60000") }
       Exchanges::Binance::SpotTickerFetcher.stub(:fetch_prices, prices) do
-        result = CurrentPriceFetcher.call(tokens: ["BTC"], user: @user)
+        result = CurrentPriceFetcher.call(tokens: [ "BTC" ], user: @user)
         assert_equal BigDecimal("60000"), result["BTC"]
       end
     end
@@ -26,8 +26,8 @@ module Spot
       stub_fetcher = Object.new
       stub_fetcher.define_singleton_method(:fetch_prices) { |**| call_count += 1; { "BTC" => BigDecimal("60000") } }
       Exchanges::Binance::SpotTickerFetcher.stub(:new, stub_fetcher) do
-        CurrentPriceFetcher.call(tokens: ["BTC"], user: @user)
-        CurrentPriceFetcher.call(tokens: ["BTC"], user: @user)
+        CurrentPriceFetcher.call(tokens: [ "BTC" ], user: @user)
+        CurrentPriceFetcher.call(tokens: [ "BTC" ], user: @user)
       end
       assert_equal 1, call_count
     end
@@ -37,7 +37,7 @@ module Spot
       stub_fetcher = Object.new
       stub_fetcher.define_singleton_method(:fetch_prices) { |**| call_count += 1; {} }
       Exchanges::Binance::SpotTickerFetcher.stub(:new, stub_fetcher) do
-        CurrentPriceFetcher.call(tokens: ["btc", "BTC", "Btc"], user: @user)
+        CurrentPriceFetcher.call(tokens: [ "btc", "BTC", "Btc" ], user: @user)
       end
       assert_equal 1, call_count
     end

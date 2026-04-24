@@ -14,7 +14,7 @@ class StockPortfoliosController < ApplicationController
   def create
     @stock_portfolio = current_user.stock_portfolios.build(portfolio_params)
     if @stock_portfolio.save
-      redirect_to stocks_path, notice: "Portfolio created."
+      redirect_to stocks_path, notice: t("flash.stock_portfolio_created")
     else
       render :new, status: :unprocessable_entity
     end
@@ -24,7 +24,7 @@ class StockPortfoliosController < ApplicationController
 
   def update
     if @stock_portfolio.update(portfolio_params)
-      redirect_to stocks_path, notice: "Portfolio updated."
+      redirect_to stocks_path, notice: t("flash.stock_portfolio_updated")
     else
       render :edit, status: :unprocessable_entity
     end

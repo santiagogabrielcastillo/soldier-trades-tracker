@@ -65,7 +65,7 @@ class ExchangeAccounts::SyncService
   def historic_extra_symbols(client)
     return [] unless @historic && client.is_a?(Exchanges::BinanceClient)
     db_symbols = @account.trades
-                         .where.not(symbol: [nil, ""])
+                         .where.not(symbol: [ nil, "" ])
                          .distinct
                          .pluck(:symbol)
                          .filter_map { |s| s.gsub("-", "") }  # "BTC-USDT" → "BTCUSDT"

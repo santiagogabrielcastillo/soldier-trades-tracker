@@ -59,7 +59,7 @@ class Ai::PortfolioContextBuilderTest < ActiveSupport::TestCase
     fake_rel = Object.new
     fake_rel.define_singleton_method(:ordered_for_display) do
       ordered = Object.new
-      ordered.define_singleton_method(:to_a) { [open_pos] }
+      ordered.define_singleton_method(:to_a) { [ open_pos ] }
       ordered
     end
 
@@ -75,7 +75,7 @@ class Ai::PortfolioContextBuilderTest < ActiveSupport::TestCase
   test "watchlist section includes ticker when watchlist has items" do
     ticker = WatchlistTicker.new(ticker: "AAPL")
     mock_rel = Object.new
-    mock_rel.define_singleton_method(:ordered) { [ticker] }
+    mock_rel.define_singleton_method(:ordered) { [ ticker ] }
     StockFundamental.stub(:for_tickers, ->(_tickers) { {} }) do
       stub_empty_services(watchlist_rel: mock_rel) do
         result = @builder.call

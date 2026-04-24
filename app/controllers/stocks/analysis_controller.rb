@@ -7,7 +7,7 @@ module Stocks
       @analysis = StockAnalysis.find_by!(user: current_user, ticker: ticker)
       @fundamental = StockFundamental.for_tickers([ ticker ])[ticker]
     rescue ActiveRecord::RecordNotFound
-      redirect_to stocks_path, alert: "No analysis found for #{params[:ticker].upcase}."
+      redirect_to stocks_path, alert: t("flash.stocks_analysis_not_found", ticker: params[:ticker].upcase)
     end
   end
 end

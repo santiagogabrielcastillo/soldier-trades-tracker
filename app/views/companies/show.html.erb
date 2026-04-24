@@ -1,6 +1,6 @@
 <div>
   <%= render BreadcrumbComponent.new(items: [
-    { label: "Companies", url: companies_path },
+    { label: t("companies.index.title"), url: companies_path },
     { label: @company.ticker, url: nil }
   ]) %>
   <div class="mb-6 flex items-start justify-between gap-4">
@@ -26,11 +26,11 @@
         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
         </svg>
-        Compare
+        <%= t("companies.index.compare") %>
       <% end %>
-      <%= link_to "Edit", edit_company_path(@company),
+      <%= link_to t("companies.show.edit"), edit_company_path(@company),
             class: "inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors duration-100" %>
-      <%= render ButtonComponent.new(label: "New report", href: new_company_earnings_report_path(@company)) %>
+      <%= render ButtonComponent.new(label: t("companies.show.new_report"), href: new_company_earnings_report_path(@company)) %>
     </div>
   </div>
 
@@ -43,7 +43,7 @@
   <%# Custom metric definitions management %>
   <section class="mb-6 rounded-lg border border-slate-200 bg-white shadow-sm">
     <div class="flex items-center justify-between border-b border-slate-100 px-6 py-3.5">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Custom Metrics</h2>
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500"><%= t("companies.show.custom_metrics") %></h2>
     </div>
     <div class="px-6 py-4">
       <% if @custom_metric_definitions.any? %>
@@ -57,34 +57,34 @@
                 </span>
               </div>
               <div class="flex items-center gap-3">
-                <%= link_to "Edit", edit_company_custom_metric_definition_path(@company, defn),
+                <%= link_to t("companies.show.metric_edit"), edit_company_custom_metric_definition_path(@company, defn),
                       class: "text-xs text-slate-400 hover:text-slate-700 transition-colors duration-100" %>
-                <%= button_to "Remove", company_custom_metric_definition_path(@company, defn),
+                <%= button_to t("companies.show.metric_remove"), company_custom_metric_definition_path(@company, defn),
                       method: :delete,
-                      data: { turbo_confirm: "Remove \"#{defn.name}\"? This will delete its value from all reports for #{@company.ticker}." },
+                      data: { turbo_confirm: t("companies.show.metric_remove_confirm", name: defn.name, ticker: @company.ticker) },
                       class: "text-xs text-slate-400 hover:text-red-600 bg-transparent border-0 cursor-pointer transition-colors duration-100" %>
               </div>
             </li>
           <% end %>
         </ul>
       <% else %>
-        <p class="mb-4 text-sm text-slate-500">No custom metrics yet.</p>
+        <p class="mb-4 text-sm text-slate-500"><%= t("companies.show.no_metrics") %></p>
       <% end %>
 
       <%# Inline add form %>
       <%= form_with url: company_custom_metric_definitions_path(@company), local: true, class: "flex gap-2 items-end" do |f| %>
         <div class="flex-1">
-          <%= f.label :name, "Metric name", class: "block text-xs font-medium text-slate-700 mb-1" %>
+          <%= f.label :name, t("companies.show.metric_name"), class: "block text-xs font-medium text-slate-700 mb-1" %>
           <%= f.text_field :name, class: "block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", placeholder: "e.g. Active Users" %>
         </div>
         <div>
-          <%= f.label :data_type, "Type", class: "block text-xs font-medium text-slate-700 mb-1" %>
+          <%= f.label :data_type, t("companies.show.metric_type"), class: "block text-xs font-medium text-slate-700 mb-1" %>
           <%= f.select :data_type,
-                options_for_select([["Number", "number"], ["Money", "money"], ["Percentage", "percentage"], ["Text", "text"]]),
+                options_for_select([[t("companies.show.metric_types.number"), "number"], [t("companies.show.metric_types.money"), "money"], [t("companies.show.metric_types.percentage"), "percentage"], [t("companies.show.metric_types.text"), "text"]]),
                 {},
                 { class: "block rounded-md border border-slate-300 px-3 py-1.5 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" } %>
         </div>
-        <%= f.submit "Add metric", class: "rounded-md bg-slate-800 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700" %>
+        <%= f.submit t("companies.show.add_metric"), class: "rounded-md bg-slate-800 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700" %>
       <% end %>
     </div>
   </section>
@@ -92,7 +92,7 @@
   <%# Earnings reports list %>
   <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
     <div class="flex items-center justify-between border-b border-slate-100 px-6 py-3.5">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Earnings Reports</h2>
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500"><%= t("companies.show.earnings_reports") %></h2>
     </div>
     <% if @reports.any? %>
       <ul class="divide-y divide-slate-100">
@@ -112,17 +112,17 @@
                     <svg class="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" />
                     </svg>
-                    Reported <%= report.reported_on.strftime("%b %d, %Y") %>
+                    <%= t("companies.show.reported_on", date: report.reported_on.strftime("%b %d, %Y")) %>
                   </p>
                 <% end %>
               </div>
             </div>
             <div class="flex items-center gap-1">
-              <%= link_to "Edit", edit_company_earnings_report_path(@company, report),
+              <%= link_to t("companies.show.report_edit"), edit_company_earnings_report_path(@company, report),
                     class: "inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors duration-100" %>
-              <%= button_to "Remove", company_earnings_report_path(@company, report),
+              <%= button_to t("companies.show.report_remove"), company_earnings_report_path(@company, report),
                     method: :delete,
-                    data: { turbo_confirm: "Remove #{report.period_label}?" },
+                    data: { turbo_confirm: t("companies.show.report_remove_confirm", period: report.period_label) },
                     class: "inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-400 hover:text-red-600 hover:bg-red-50 bg-transparent border-0 cursor-pointer transition-colors duration-100" %>
             </div>
           </li>
@@ -130,8 +130,8 @@
       </ul>
     <% else %>
       <div class="px-6 py-12 text-center text-slate-600">
-        <p class="mb-4">No reports yet.</p>
-        <%= render ButtonComponent.new(label: "Add first report", href: new_company_earnings_report_path(@company), class: "inline-block") %>
+        <p class="mb-4"><%= t("companies.show.no_reports") %></p>
+        <%= render ButtonComponent.new(label: t("companies.show.add_first_report"), href: new_company_earnings_report_path(@company), class: "inline-block") %>
       </div>
     <% end %>
   </section>

@@ -13,6 +13,6 @@ class CreateStockAnalyses < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    add_index :stock_analyses, [:user_id, :ticker], unique: true
+    add_index :stock_analyses, [ :user_id, :ticker ], unique: true
   end
 end

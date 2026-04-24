@@ -53,14 +53,14 @@ class ExchangeAccount < ApplicationRecord
   def allowed_quote_currencies_is_array
     raw = raw_stored_currencies
     return if raw.nil? || raw.is_a?(Array)
-    errors.add(:allowed_quote_currencies, "must be an array")
+    errors.add(:allowed_quote_currencies, :must_be_array)
   end
 
   def allowed_quote_currencies_are_valid
     raw = raw_stored_currencies
     return unless raw.is_a?(Array)
     invalid = raw - SUPPORTED_QUOTE_CURRENCIES
-    errors.add(:allowed_quote_currencies, "contains unknown currencies: #{invalid.join(', ')}") if invalid.any?
+    errors.add(:allowed_quote_currencies, :unknown_currencies, currencies: invalid.join(", ")) if invalid.any?
   end
 
   # Single point of access for the raw stored value. Returns nil when the key is absent
@@ -68,5 +68,4 @@ class ExchangeAccount < ApplicationRecord
   def raw_stored_currencies
     settings.is_a?(Hash) ? settings["allowed_quote_currencies"] : nil
   end
-
 end

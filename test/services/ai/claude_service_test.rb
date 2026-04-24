@@ -183,5 +183,4 @@ class Ai::ClaudeServiceTest < ActiveSupport::TestCase
     fake.define_singleton_method(:request)       { |_req| raise exception_class, "timeout" }
     Net::HTTP.stub(:new, fake) { yield }
   end
-
 end

@@ -1,5 +1,5 @@
 <%= render BreadcrumbComponent.new(items: [
-  { label: "Stocks", url: stocks_path(view: "watchlist") },
+  { label: t("stocks.index.title"), url: stocks_path(view: "watchlist") },
   { label: @analysis.ticker }
 ]) %>
 

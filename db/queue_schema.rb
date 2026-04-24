@@ -22,7 +22,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.decimal "target_pct", precision: 5, scale: 2
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["user_id"], name: "index_allocation_buckets_on_user_id"
+    t.index [ "user_id" ], name: "index_allocation_buckets_on_user_id"
   end
 
   create_table "allocation_manual_entries", force: :cascade do |t|
@@ -32,8 +32,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "label", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["allocation_bucket_id"], name: "index_allocation_manual_entries_on_allocation_bucket_id"
-    t.index ["user_id"], name: "index_allocation_manual_entries_on_user_id"
+    t.index [ "allocation_bucket_id" ], name: "index_allocation_manual_entries_on_allocation_bucket_id"
+    t.index [ "user_id" ], name: "index_allocation_manual_entries_on_user_id"
   end
 
   create_table "cedear_instruments", force: :cascade do |t|
@@ -43,8 +43,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "underlying_ticker"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["user_id", "ticker"], name: "index_cedear_instruments_on_user_id_and_ticker", unique: true
-    t.index ["user_id"], name: "index_cedear_instruments_on_user_id"
+    t.index [ "user_id", "ticker" ], name: "index_cedear_instruments_on_user_id_and_ticker", unique: true
+    t.index [ "user_id" ], name: "index_cedear_instruments_on_user_id"
   end
 
   create_table "companies", force: :cascade do |t|
@@ -55,7 +55,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "ticker", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["user_id", "ticker"], name: "index_companies_on_user_id_and_ticker", unique: true
+    t.index [ "user_id", "ticker" ], name: "index_companies_on_user_id_and_ticker", unique: true
   end
 
   create_table "custom_metric_definitions", force: :cascade do |t|
@@ -65,7 +65,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "name", null: false
     t.integer "position", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.index ["company_id", "name"], name: "index_custom_metric_definitions_on_company_id_and_name", unique: true
+    t.index [ "company_id", "name" ], name: "index_custom_metric_definitions_on_company_id_and_name", unique: true
   end
 
   create_table "custom_metric_values", force: :cascade do |t|
@@ -75,8 +75,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.bigint "earnings_report_id", null: false
     t.text "text_value"
     t.datetime "updated_at", null: false
-    t.index ["custom_metric_definition_id"], name: "index_custom_metric_values_on_custom_metric_definition_id"
-    t.index ["earnings_report_id", "custom_metric_definition_id"], name: "idx_custom_metric_values_unique", unique: true
+    t.index [ "custom_metric_definition_id" ], name: "index_custom_metric_values_on_custom_metric_definition_id"
+    t.index [ "earnings_report_id", "custom_metric_definition_id" ], name: "idx_custom_metric_values_unique", unique: true
   end
 
   create_table "earnings_reports", force: :cascade do |t|
@@ -91,9 +91,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.date "reported_on"
     t.decimal "revenue", precision: 20, scale: 2
     t.datetime "updated_at", null: false
-    t.index ["company_id", "fiscal_year", "fiscal_quarter", "period_type"], name: "idx_earnings_reports_quarterly_unique", unique: true, where: "(fiscal_quarter IS NOT NULL)"
-    t.index ["company_id", "fiscal_year", "fiscal_quarter"], name: "idx_earnings_reports_on_company_period"
-    t.index ["company_id", "fiscal_year", "period_type"], name: "idx_earnings_reports_annual_unique", unique: true, where: "(fiscal_quarter IS NULL)"
+    t.index [ "company_id", "fiscal_year", "fiscal_quarter", "period_type" ], name: "idx_earnings_reports_quarterly_unique", unique: true, where: "(fiscal_quarter IS NOT NULL)"
+    t.index [ "company_id", "fiscal_year", "fiscal_quarter" ], name: "idx_earnings_reports_on_company_period"
+    t.index [ "company_id", "fiscal_year", "period_type" ], name: "idx_earnings_reports_annual_unique", unique: true, where: "(fiscal_quarter IS NULL)"
   end
 
   create_table "exchange_accounts", force: :cascade do |t|
@@ -109,7 +109,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.jsonb "settings", default: {}, null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["user_id"], name: "index_exchange_accounts_on_user_id"
+    t.index [ "user_id" ], name: "index_exchange_accounts_on_user_id"
   end
 
   create_table "invite_codes", force: :cascade do |t|
@@ -118,8 +118,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.datetime "expires_at", null: false
     t.datetime "updated_at", null: false
     t.index "(true)", name: "index_invite_codes_singleton", unique: true
-    t.index ["code"], name: "index_invite_codes_on_code", unique: true
-    t.index ["expires_at"], name: "index_invite_codes_on_expires_at"
+    t.index [ "code" ], name: "index_invite_codes_on_code", unique: true
+    t.index [ "expires_at" ], name: "index_invite_codes_on_expires_at"
   end
 
   create_table "portfolios", force: :cascade do |t|
@@ -133,8 +133,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.date "start_date", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["exchange_account_id"], name: "index_portfolios_on_exchange_account_id"
-    t.index ["user_id"], name: "index_portfolios_on_user_id"
+    t.index [ "exchange_account_id" ], name: "index_portfolios_on_exchange_account_id"
+    t.index [ "user_id" ], name: "index_portfolios_on_user_id"
   end
 
   create_table "position_trades", force: :cascade do |t|
@@ -142,9 +142,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.bigint "position_id", null: false
     t.bigint "trade_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["position_id", "trade_id"], name: "index_position_trades_on_position_id_and_trade_id", unique: true
-    t.index ["position_id"], name: "index_position_trades_on_position_id"
-    t.index ["trade_id"], name: "index_position_trades_on_trade_id"
+    t.index [ "position_id", "trade_id" ], name: "index_position_trades_on_position_id_and_trade_id", unique: true
+    t.index [ "position_id" ], name: "index_position_trades_on_position_id"
+    t.index [ "trade_id" ], name: "index_position_trades_on_trade_id"
   end
 
   create_table "positions", force: :cascade do |t|
@@ -165,8 +165,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "symbol", null: false
     t.decimal "total_commission", precision: 20, scale: 8, default: "0.0", null: false
     t.datetime "updated_at", null: false
-    t.index ["exchange_account_id", "open", "close_at"], name: "index_positions_on_account_open_close_at"
-    t.index ["exchange_account_id"], name: "index_positions_on_exchange_account_id"
+    t.index [ "exchange_account_id", "open", "close_at" ], name: "index_positions_on_account_open_close_at"
+    t.index [ "exchange_account_id" ], name: "index_positions_on_exchange_account_id"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -176,24 +176,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.bigint "job_id", null: false
     t.integer "priority", default: 0, null: false
     t.string "queue_name", null: false
-    t.index ["concurrency_key", "priority", "job_id"], name: "index_solid_queue_blocked_executions_for_release"
-    t.index ["expires_at", "concurrency_key"], name: "index_solid_queue_blocked_executions_for_maintenance"
-    t.index ["job_id"], name: "index_solid_queue_blocked_executions_on_job_id", unique: true
+    t.index [ "concurrency_key", "priority", "job_id" ], name: "index_solid_queue_blocked_executions_for_release"
+    t.index [ "expires_at", "concurrency_key" ], name: "index_solid_queue_blocked_executions_for_maintenance"
+    t.index [ "job_id" ], name: "index_solid_queue_blocked_executions_on_job_id", unique: true
   end
 
   create_table "solid_queue_claimed_executions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "job_id", null: false
     t.bigint "process_id"
-    t.index ["job_id"], name: "index_solid_queue_claimed_executions_on_job_id", unique: true
-    t.index ["process_id", "job_id"], name: "index_solid_queue_claimed_executions_on_process_id_and_job_id"
+    t.index [ "job_id" ], name: "index_solid_queue_claimed_executions_on_job_id", unique: true
+    t.index [ "process_id", "job_id" ], name: "index_solid_queue_claimed_executions_on_process_id_and_job_id"
   end
 
   create_table "solid_queue_failed_executions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "error"
     t.bigint "job_id", null: false
-    t.index ["job_id"], name: "index_solid_queue_failed_executions_on_job_id", unique: true
+    t.index [ "job_id" ], name: "index_solid_queue_failed_executions_on_job_id", unique: true
   end
 
   create_table "solid_queue_jobs", force: :cascade do |t|
@@ -207,17 +207,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "queue_name", null: false
     t.datetime "scheduled_at"
     t.datetime "updated_at", null: false
-    t.index ["active_job_id"], name: "index_solid_queue_jobs_on_active_job_id"
-    t.index ["class_name"], name: "index_solid_queue_jobs_on_class_name"
-    t.index ["finished_at"], name: "index_solid_queue_jobs_on_finished_at"
-    t.index ["queue_name", "finished_at"], name: "index_solid_queue_jobs_for_filtering"
-    t.index ["scheduled_at", "finished_at"], name: "index_solid_queue_jobs_for_alerting"
+    t.index [ "active_job_id" ], name: "index_solid_queue_jobs_on_active_job_id"
+    t.index [ "class_name" ], name: "index_solid_queue_jobs_on_class_name"
+    t.index [ "finished_at" ], name: "index_solid_queue_jobs_on_finished_at"
+    t.index [ "queue_name", "finished_at" ], name: "index_solid_queue_jobs_for_filtering"
+    t.index [ "scheduled_at", "finished_at" ], name: "index_solid_queue_jobs_for_alerting"
   end
 
   create_table "solid_queue_pauses", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "queue_name", null: false
-    t.index ["queue_name"], name: "index_solid_queue_pauses_on_queue_name", unique: true
+    t.index [ "queue_name" ], name: "index_solid_queue_pauses_on_queue_name", unique: true
   end
 
   create_table "solid_queue_processes", force: :cascade do |t|
@@ -229,9 +229,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "name", null: false
     t.integer "pid", null: false
     t.bigint "supervisor_id"
-    t.index ["last_heartbeat_at"], name: "index_solid_queue_processes_on_last_heartbeat_at"
-    t.index ["name", "supervisor_id"], name: "index_solid_queue_processes_on_name_and_supervisor_id", unique: true
-    t.index ["supervisor_id"], name: "index_solid_queue_processes_on_supervisor_id"
+    t.index [ "last_heartbeat_at" ], name: "index_solid_queue_processes_on_last_heartbeat_at"
+    t.index [ "name", "supervisor_id" ], name: "index_solid_queue_processes_on_name_and_supervisor_id", unique: true
+    t.index [ "supervisor_id" ], name: "index_solid_queue_processes_on_supervisor_id"
   end
 
   create_table "solid_queue_ready_executions", force: :cascade do |t|
@@ -239,9 +239,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.bigint "job_id", null: false
     t.integer "priority", default: 0, null: false
     t.string "queue_name", null: false
-    t.index ["job_id"], name: "index_solid_queue_ready_executions_on_job_id", unique: true
-    t.index ["priority", "job_id"], name: "index_solid_queue_poll_all"
-    t.index ["queue_name", "priority", "job_id"], name: "index_solid_queue_poll_by_queue"
+    t.index [ "job_id" ], name: "index_solid_queue_ready_executions_on_job_id", unique: true
+    t.index [ "priority", "job_id" ], name: "index_solid_queue_poll_all"
+    t.index [ "queue_name", "priority", "job_id" ], name: "index_solid_queue_poll_by_queue"
   end
 
   create_table "solid_queue_recurring_executions", force: :cascade do |t|
@@ -249,8 +249,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.bigint "job_id", null: false
     t.datetime "run_at", null: false
     t.string "task_key", null: false
-    t.index ["job_id"], name: "index_solid_queue_recurring_executions_on_job_id", unique: true
-    t.index ["task_key", "run_at"], name: "index_solid_queue_recurring_executions_on_task_key_and_run_at", unique: true
+    t.index [ "job_id" ], name: "index_solid_queue_recurring_executions_on_job_id", unique: true
+    t.index [ "task_key", "run_at" ], name: "index_solid_queue_recurring_executions_on_task_key_and_run_at", unique: true
   end
 
   create_table "solid_queue_recurring_tasks", force: :cascade do |t|
@@ -265,8 +265,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "schedule", null: false
     t.boolean "static", default: true, null: false
     t.datetime "updated_at", null: false
-    t.index ["key"], name: "index_solid_queue_recurring_tasks_on_key", unique: true
-    t.index ["static"], name: "index_solid_queue_recurring_tasks_on_static"
+    t.index [ "key" ], name: "index_solid_queue_recurring_tasks_on_key", unique: true
+    t.index [ "static" ], name: "index_solid_queue_recurring_tasks_on_static"
   end
 
   create_table "solid_queue_scheduled_executions", force: :cascade do |t|
@@ -275,8 +275,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.integer "priority", default: 0, null: false
     t.string "queue_name", null: false
     t.datetime "scheduled_at", null: false
-    t.index ["job_id"], name: "index_solid_queue_scheduled_executions_on_job_id", unique: true
-    t.index ["scheduled_at", "priority", "job_id"], name: "index_solid_queue_dispatch_all"
+    t.index [ "job_id" ], name: "index_solid_queue_scheduled_executions_on_job_id", unique: true
+    t.index [ "scheduled_at", "priority", "job_id" ], name: "index_solid_queue_dispatch_all"
   end
 
   create_table "solid_queue_semaphores", force: :cascade do |t|
@@ -285,9 +285,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "key", null: false
     t.datetime "updated_at", null: false
     t.integer "value", default: 1, null: false
-    t.index ["expires_at"], name: "index_solid_queue_semaphores_on_expires_at"
-    t.index ["key", "value"], name: "index_solid_queue_semaphores_on_key_and_value"
-    t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
+    t.index [ "expires_at" ], name: "index_solid_queue_semaphores_on_expires_at"
+    t.index [ "key", "value" ], name: "index_solid_queue_semaphores_on_key_and_value"
+    t.index [ "key" ], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
   create_table "spot_accounts", force: :cascade do |t|
@@ -299,9 +299,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.datetime "prices_synced_at"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["allocation_bucket_id"], name: "index_spot_accounts_on_allocation_bucket_id"
-    t.index ["user_id", "default"], name: "index_spot_accounts_on_user_id_and_default"
-    t.index ["user_id"], name: "index_spot_accounts_on_user_id"
+    t.index [ "allocation_bucket_id" ], name: "index_spot_accounts_on_allocation_bucket_id"
+    t.index [ "user_id", "default" ], name: "index_spot_accounts_on_user_id_and_default"
+    t.index [ "user_id" ], name: "index_spot_accounts_on_user_id"
   end
 
   create_table "spot_transactions", force: :cascade do |t|
@@ -316,9 +316,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "token", null: false
     t.decimal "total_value_usd", precision: 20, scale: 8, null: false
     t.datetime "updated_at", null: false
-    t.index ["spot_account_id", "executed_at"], name: "index_spot_transactions_on_spot_account_id_and_executed_at"
-    t.index ["spot_account_id", "row_signature"], name: "index_spot_transactions_on_spot_account_id_and_row_signature", unique: true
-    t.index ["spot_account_id"], name: "index_spot_transactions_on_spot_account_id"
+    t.index [ "spot_account_id", "executed_at" ], name: "index_spot_transactions_on_spot_account_id_and_executed_at"
+    t.index [ "spot_account_id", "row_signature" ], name: "index_spot_transactions_on_spot_account_id_and_row_signature", unique: true
+    t.index [ "spot_account_id" ], name: "index_spot_transactions_on_spot_account_id"
   end
 
   create_table "stock_analyses", force: :cascade do |t|
@@ -334,8 +334,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "ticker", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["user_id", "ticker"], name: "index_stock_analyses_on_user_id_and_ticker", unique: true
-    t.index ["user_id"], name: "index_stock_analyses_on_user_id"
+    t.index [ "user_id", "ticker" ], name: "index_stock_analyses_on_user_id_and_ticker", unique: true
+    t.index [ "user_id" ], name: "index_stock_analyses_on_user_id"
   end
 
   create_table "stock_fundamentals", force: :cascade do |t|
@@ -359,7 +359,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "sector"
     t.string "ticker", null: false
     t.datetime "updated_at", null: false
-    t.index ["ticker"], name: "index_stock_fundamentals_on_ticker", unique: true
+    t.index [ "ticker" ], name: "index_stock_fundamentals_on_ticker", unique: true
   end
 
   create_table "stock_portfolio_snapshots", force: :cascade do |t|
@@ -371,8 +371,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.bigint "stock_portfolio_id", null: false
     t.decimal "total_value", precision: 16, scale: 2, null: false
     t.datetime "updated_at", null: false
-    t.index ["stock_portfolio_id", "recorded_at"], name: "idx_on_stock_portfolio_id_recorded_at_3fff6867ab"
-    t.index ["stock_portfolio_id"], name: "index_stock_portfolio_snapshots_on_stock_portfolio_id"
+    t.index [ "stock_portfolio_id", "recorded_at" ], name: "idx_on_stock_portfolio_id_recorded_at_3fff6867ab"
+    t.index [ "stock_portfolio_id" ], name: "index_stock_portfolio_snapshots_on_stock_portfolio_id"
   end
 
   create_table "stock_portfolios", force: :cascade do |t|
@@ -383,9 +383,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["allocation_bucket_id"], name: "index_stock_portfolios_on_allocation_bucket_id"
-    t.index ["user_id", "default"], name: "index_stock_portfolios_on_user_id_and_default"
-    t.index ["user_id"], name: "index_stock_portfolios_on_user_id"
+    t.index [ "allocation_bucket_id" ], name: "index_stock_portfolios_on_allocation_bucket_id"
+    t.index [ "user_id", "default" ], name: "index_stock_portfolios_on_user_id_and_default"
+    t.index [ "user_id" ], name: "index_stock_portfolios_on_user_id"
   end
 
   create_table "stock_trades", force: :cascade do |t|
@@ -401,9 +401,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "ticker", null: false
     t.decimal "total_value_usd", precision: 20, scale: 8, null: false
     t.datetime "updated_at", null: false
-    t.index ["stock_portfolio_id", "executed_at"], name: "index_stock_trades_on_portfolio_id_and_executed_at"
-    t.index ["stock_portfolio_id", "row_signature"], name: "index_stock_trades_on_portfolio_id_and_row_signature", unique: true
-    t.index ["stock_portfolio_id"], name: "index_stock_trades_on_stock_portfolio_id"
+    t.index [ "stock_portfolio_id", "executed_at" ], name: "index_stock_trades_on_portfolio_id_and_executed_at"
+    t.index [ "stock_portfolio_id", "row_signature" ], name: "index_stock_trades_on_portfolio_id_and_row_signature", unique: true
+    t.index [ "stock_portfolio_id" ], name: "index_stock_trades_on_stock_portfolio_id"
   end
 
   create_table "sync_runs", force: :cascade do |t|
@@ -411,8 +411,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.bigint "exchange_account_id", null: false
     t.datetime "ran_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["exchange_account_id", "ran_at"], name: "index_sync_runs_on_account_and_ran_at"
-    t.index ["exchange_account_id"], name: "index_sync_runs_on_exchange_account_id"
+    t.index [ "exchange_account_id", "ran_at" ], name: "index_sync_runs_on_account_and_ran_at"
+    t.index [ "exchange_account_id" ], name: "index_sync_runs_on_exchange_account_id"
   end
 
   create_table "trades", force: :cascade do |t|
@@ -427,10 +427,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "side", null: false
     t.string "symbol", null: false
     t.datetime "updated_at", null: false
-    t.index ["exchange_account_id", "exchange_reference_id"], name: "index_trades_on_account_and_reference", unique: true
-    t.index ["exchange_account_id", "executed_at"], name: "index_trades_on_exchange_account_id_and_executed_at"
-    t.index ["exchange_account_id", "position_id"], name: "index_trades_on_account_and_position_id"
-    t.index ["exchange_account_id"], name: "index_trades_on_exchange_account_id"
+    t.index [ "exchange_account_id", "exchange_reference_id" ], name: "index_trades_on_account_and_reference", unique: true
+    t.index [ "exchange_account_id", "executed_at" ], name: "index_trades_on_exchange_account_id_and_executed_at"
+    t.index [ "exchange_account_id", "position_id" ], name: "index_trades_on_account_and_position_id"
+    t.index [ "exchange_account_id" ], name: "index_trades_on_exchange_account_id"
   end
 
   create_table "user_api_keys", force: :cascade do |t|
@@ -440,8 +440,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.text "secret"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["user_id", "provider"], name: "index_user_api_keys_on_user_id_and_provider", unique: true
-    t.index ["user_id"], name: "index_user_api_keys_on_user_id"
+    t.index [ "user_id", "provider" ], name: "index_user_api_keys_on_user_id_and_provider", unique: true
+    t.index [ "user_id" ], name: "index_user_api_keys_on_user_id"
   end
 
   create_table "user_preferences", force: :cascade do |t|
@@ -450,8 +450,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.jsonb "value", null: false
-    t.index ["user_id", "key"], name: "index_user_preferences_on_user_id_and_key", unique: true
-    t.index ["user_id"], name: "index_user_preferences_on_user_id"
+    t.index [ "user_id", "key" ], name: "index_user_preferences_on_user_id_and_key", unique: true
+    t.index [ "user_id" ], name: "index_user_preferences_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -462,7 +462,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "role", default: "user", null: false
     t.string "sync_interval"
     t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index [ "email" ], name: "index_users_on_email", unique: true
   end
 
   create_table "watchlist_tickers", force: :cascade do |t|
@@ -470,8 +470,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_194534) do
     t.string "ticker", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["user_id", "ticker"], name: "index_watchlist_tickers_on_user_id_and_ticker", unique: true
-    t.index ["user_id"], name: "index_watchlist_tickers_on_user_id"
+    t.index [ "user_id", "ticker" ], name: "index_watchlist_tickers_on_user_id_and_ticker", unique: true
+    t.index [ "user_id" ], name: "index_watchlist_tickers_on_user_id"
   end
 
   add_foreign_key "allocation_buckets", "users"

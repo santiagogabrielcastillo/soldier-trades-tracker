@@ -19,7 +19,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   test "analyze_ticker enqueues job for valid watchlist ticker" do
     sign_in_as(@user)
 
-    assert_enqueued_with(job: Stocks::SyncStockAnalysisJob, args: [@user.id, ["AAPL"]]) do
+    assert_enqueued_with(job: Stocks::SyncStockAnalysisJob, args: [ @user.id, [ "AAPL" ] ]) do
       post stocks_analyze_ticker_path("AAPL")
     end
 

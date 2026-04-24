@@ -25,17 +25,17 @@ class SpotController < ApplicationController
     @spot_account ||= SpotAccount.find_or_create_default_for(current_user)
 
     unless params[:csv_file].present?
-      redirect_to spot_path, alert: "Please select a CSV file." and return
+      redirect_to spot_path, alert: t("flash.spot_csv_required") and return
     end
 
     file = params[:csv_file]
     if file.respond_to?(:size) && file.size > MAX_CSV_SIZE
-      redirect_to spot_path, alert: "CSV file must be under #{MAX_CSV_SIZE / 1.megabyte} MB." and return
+      redirect_to spot_path, alert: t("flash.spot_csv_too_large", limit: MAX_CSV_SIZE / 1.megabyte) and return
     end
 
     result = Spot::ImportFromCsvService.call(spot_account: @spot_account, csv_io: file)
-    notice = "Imported #{result.created} row(s), #{result.skipped} skipped (duplicates)."
-    notice += " Errors: #{result.errors.join('; ')}" if result.errors.any?
+    notice = t("flash.spot_imported", created: result.created, skipped: result.skipped)
+    notice += t("flash.spot_imported_errors", errors: result.errors.join("; ")) if result.errors.any?
     redirect_to spot_path, notice: notice
   rescue ArgumentError => e
     redirect_to spot_path, alert: e.message
@@ -53,7 +53,7 @@ class SpotController < ApplicationController
       tx = build_cash_transaction(permitted, side, executed_at, amount)
       if tx.save
         respond_to do |format|
-          format.html { redirect_to spot_path, notice: "Cash movement added." }
+          format.html { redirect_to spot_path, notice: t("flash.spot_cash_added") }
           format.json { head :created, location: spot_path }
         end
         return
@@ -76,15 +76,15 @@ class SpotController < ApplicationController
         )
         if tx.save
           respond_to do |format|
-            format.html { redirect_to spot_path, notice: "Transaction added." }
+            format.html { redirect_to spot_path, notice: t("flash.spot_transaction_added") }
             format.json { head :created, location: spot_path }
           end
           return
         end
         if tx.errors[:row_signature].any?
           respond_to do |format|
-            format.html { redirect_to spot_path, alert: "This transaction already exists." }
-            format.json { render json: { error: "This transaction already exists." }, status: :unprocessable_entity }
+            format.html { redirect_to spot_path, alert: t("flash.spot_transaction_exists") }
+            format.json { render json: { error: t("flash.spot_transaction_exists") }, status: :unprocessable_entity }
           end
           return
         end
@@ -112,11 +112,11 @@ class SpotController < ApplicationController
     all_positions = Spot::PositionStateService.call(spot_account: @spot_account)
     open_tokens = all_positions.select(&:open?).map(&:token).uniq
     unless current_user.api_key_for(:coingecko)
-      flash.now[:alert] = "Crypto prices require a CoinGecko API key. #{view_context.link_to('Configure it here', settings_api_keys_path, class: 'underline')}".html_safe
+      flash.now[:alert] = t("flash.spot_coingecko_missing_html", link: view_context.link_to(t("flash.configure_here"), settings_api_keys_path, class: "underline"))
     end
     prices = Spot::CurrentPriceFetcher.call(tokens: open_tokens, user: current_user)
     @spot_account.cache_prices!(prices)
-    redirect_to spot_path, notice: "Prices updated."
+    redirect_to spot_path, notice: t("flash.spot_prices_updated")
   end
 
   def edit
@@ -138,7 +138,7 @@ class SpotController < ApplicationController
     attrs = build_update_attrs(@transaction, permitted, executed_at, amount)
 
     if attrs && @transaction.update(attrs)
-      redirect_to spot_path(view: "transactions"), notice: "Transaction updated."
+      redirect_to spot_path(view: "transactions"), notice: t("flash.spot_transaction_updated")
     else
       @transaction.errors.add(:base, "Invalid parameters.") if attrs.nil?
       render partial: "edit_form", locals: { transaction: @transaction }, status: :unprocessable_entity
@@ -151,7 +151,7 @@ class SpotController < ApplicationController
     @spot_account = SpotAccount.find_or_create_default_for(current_user)
     @transaction = @spot_account.spot_transactions.find(params[:id])
     @transaction.destroy!
-    redirect_to spot_path(view: "transactions"), notice: "Transaction deleted."
+    redirect_to spot_path(view: "transactions"), notice: t("flash.spot_transaction_deleted")
   rescue ActiveRecord::RecordNotFound
     render plain: "Not found", status: :not_found
   end

@@ -21,10 +21,10 @@ class ExchangeAccountsController < ApplicationController
     @exchange_account.linked_at = Time.current
     if @exchange_account.save
       if current_user.exchange_accounts.count == 1
-        flash[:info] = "Account linked! Contact an admin to request a historic data sync for your older trades."
+        flash[:info] = t("flash.exchange_account_linked_first")
         redirect_to exchange_accounts_path
       else
-        redirect_to exchange_accounts_path, notice: "Exchange account linked successfully."
+        redirect_to exchange_accounts_path, notice: t("flash.exchange_account_linked")
       end
     else
       render :new, status: :unprocessable_entity
@@ -36,7 +36,7 @@ class ExchangeAccountsController < ApplicationController
 
   def update
     if @exchange_account.update(settings_params)
-      redirect_to exchange_accounts_path, notice: "Settings updated."
+      redirect_to exchange_accounts_path, notice: t("flash.exchange_account_settings_updated")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -44,34 +44,34 @@ class ExchangeAccountsController < ApplicationController
 
   def destroy
     @exchange_account.destroy
-    redirect_to exchange_accounts_path, notice: "Exchange account removed."
+    redirect_to exchange_accounts_path, notice: t("flash.exchange_account_removed")
   end
 
   def sync
     unless Exchanges::ProviderForAccount.new(@exchange_account).supported?
-      redirect_to exchange_accounts_path, alert: "This exchange is not supported for sync."
+      redirect_to exchange_accounts_path, alert: t("flash.exchange_not_supported")
       return
     end
     unless @exchange_account.can_sync?
-      redirect_to exchange_accounts_path, alert: "Rate limit: max 2 syncs per day per account. Try again tomorrow."
+      redirect_to exchange_accounts_path, alert: t("flash.sync_rate_limit")
       return
     end
     SyncExchangeAccountJob.perform_later(@exchange_account.id)
-    redirect_to exchange_accounts_path, notice: "Sync started. Trades will appear shortly."
+    redirect_to exchange_accounts_path, notice: t("flash.sync_started")
   end
 
   def historic_sync
     unless current_user.admin? || current_user.super_admin?
-      redirect_to exchange_accounts_path, alert: "Not authorized."
+      redirect_to exchange_accounts_path, alert: t("flash.not_authorized")
       return
     end
     unless Exchanges::ProviderForAccount.new(@exchange_account).supported?
-      redirect_to exchange_accounts_path, alert: "This exchange is not supported for sync."
+      redirect_to exchange_accounts_path, alert: t("flash.exchange_not_supported")
       return
     end
     extra_symbols = params[:extra_symbols].to_s.split(/[\s,]+/).map(&:strip).map(&:upcase).reject(&:blank?)
     SyncExchangeAccountJob.perform_later(@exchange_account.id, historic: true, extra_symbols: extra_symbols)
-    redirect_to exchange_accounts_path, notice: "Historic sync started. This may take a few minutes."
+    redirect_to exchange_accounts_path, notice: t("flash.historic_sync_started")
   end
 
   private

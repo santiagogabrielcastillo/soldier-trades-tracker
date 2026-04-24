@@ -25,7 +25,7 @@ module Stocks
     test "creates snapshot with positions_data including open positions" do
       pos = OpenStruct.new(ticker: "AAPL", shares: BigDecimal("10"), open?: true)
 
-      Stocks::PositionStateService.stub(:call, [pos]) do
+      Stocks::PositionStateService.stub(:call, [ pos ]) do
         Stocks::CurrentPriceFetcher.stub(:call, { "AAPL" => BigDecimal("150") }) do
           Stocks::CashBalanceService.stub(:call, BigDecimal("500")) do
             snap = Stocks::PortfolioSnapshotService.call(stock_portfolio: @portfolio)
@@ -47,7 +47,7 @@ module Stocks
     test "omits CASH entry when cash balance is zero" do
       pos = OpenStruct.new(ticker: "MSFT", shares: BigDecimal("5"), open?: true)
 
-      Stocks::PositionStateService.stub(:call, [pos]) do
+      Stocks::PositionStateService.stub(:call, [ pos ]) do
         Stocks::CurrentPriceFetcher.stub(:call, { "MSFT" => BigDecimal("200") }) do
           Stocks::CashBalanceService.stub(:call, BigDecimal("0")) do
             snap = Stocks::PortfolioSnapshotService.call(stock_portfolio: @portfolio)

@@ -5,6 +5,7 @@ class ApplicationController < ActionController::Base
   allow_browser versions: :modern
 
   before_action :require_login
+  around_action :set_locale
 
   helper_method :current_user
 
@@ -17,6 +18,12 @@ class ApplicationController < ActionController::Base
   def require_login
     return if current_user
 
-    redirect_to login_path, alert: "Please sign in."
+    redirect_to login_path, alert: t("flash.please_sign_in")
+  end
+
+  def set_locale(&action)
+    locale = current_user&.user_preferences&.find_by(key: "locale")&.value
+    locale = I18n.default_locale unless I18n.available_locales.map(&:to_s).include?(locale.to_s)
+    I18n.with_locale(locale, &action)
   end
 end

@@ -48,7 +48,7 @@ class User < ApplicationRecord
 
     remaining = User.super_admin.where(active: true).where.not(id: id).count
     if remaining.zero?
-      errors.add(:active, "cannot deactivate the last active super admin")
+      errors.add(:active, :last_super_admin)
       throw :abort
     end
   end

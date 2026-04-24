@@ -63,7 +63,7 @@ module Stocks
     test "returns nil when snapshot table is missing" do
       html = "<html><body><p>Not found</p></body></html>"
       result_hash = nil
-      fetcher = FundamentalsFetcher.new(["AAPL"])
+      fetcher = FundamentalsFetcher.new([ "AAPL" ])
       Net::HTTP.stub(:start, mock_start(html)) do
         result_hash = fetcher.call
       end
@@ -77,7 +77,7 @@ module Stocks
     end
 
     def fetch_with_html(ticker, html)
-      fetcher = FundamentalsFetcher.new([ticker])
+      fetcher = FundamentalsFetcher.new([ ticker ])
       result = nil
       Net::HTTP.stub(:start, mock_start(html)) do
         result = fetcher.call

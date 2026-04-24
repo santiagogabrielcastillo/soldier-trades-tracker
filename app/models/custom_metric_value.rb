@@ -29,9 +29,9 @@ class CustomMetricValue < ApplicationRecord
 
     case custom_metric_definition.data_type
     when "number", "percentage", "money"
-      errors.add(:text_value, "must be blank for number metrics") if text_value.present?
+      errors.add(:text_value, :must_be_blank_for_number) if text_value.present?
     when "text"
-      errors.add(:decimal_value, "must be blank for text metrics") if decimal_value.present?
+      errors.add(:decimal_value, :must_be_blank_for_text) if decimal_value.present?
     end
   end
 end

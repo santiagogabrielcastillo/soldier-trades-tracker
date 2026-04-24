@@ -1,15 +1,15 @@
-<%= render PageHeaderComponent.new(title: @student.email, subtitle: "Read-only view") do |c| %>
+<%= render PageHeaderComponent.new(title: @student.email, subtitle: t("admin.shared.readonly_view")) do |c| %>
   <% c.with_actions do %>
-    <%= render BadgeComponent.new(label: @student.active? ? "Active" : "Inactive", variant: @student.active? ? :success : :danger) %>
-    <%= button_to @student.active? ? "Deactivate" : "Activate",
+    <%= render BadgeComponent.new(label: @student.active? ? t("admin.shared.active") : t("admin.shared.inactive"), variant: @student.active? ? :success : :danger) %>
+    <%= button_to @student.active? ? t("admin.shared.deactivate") : t("admin.shared.activate"),
           toggle_active_admin_student_path(@student),
           method: :patch,
           class: "rounded-md border px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-500 #{@student.active? ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'}" %>
-    <%= button_to "Promote to Admin",
+    <%= button_to t("admin.students.promote_to_admin"),
           promote_admin_student_path(@student),
           method: :patch,
           class: "rounded-md border border-indigo-300 px-3 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
-    <%= link_to "← All students", admin_students_path, class: "text-sm text-slate-500 hover:text-slate-800" %>
+    <%= link_to t("admin.students.all_students"), admin_students_path, class: "text-sm text-slate-500 hover:text-slate-800" %>
   <% end %>
 <% end %>
 
@@ -17,21 +17,21 @@
 <% open_count   = @position_counts.fetch(true, 0) %>
 <% closed_count = @position_counts.fetch(false, 0) %>
 <%= render SummaryStatRowComponent.new(mb: 8) do %>
-  <%= render StatCardComponent.new(label: "Realized P&L", value: format_money(@realized_pl), signed: true, color_value: @realized_pl) %>
-  <%= render StatCardComponent.new(label: "Open positions", value: open_count) %>
-  <%= render StatCardComponent.new(label: "Closed positions", value: closed_count) %>
+  <%= render StatCardComponent.new(label: t("admin.shared.realized_pnl"), value: format_money(@realized_pl), signed: true, color_value: @realized_pl) %>
+  <%= render StatCardComponent.new(label: t("admin.shared.open_positions"), value: open_count) %>
+  <%= render StatCardComponent.new(label: t("admin.shared.closed_positions"), value: closed_count) %>
 <% end %>
 
 <%# ── Recent closed positions ── %>
-<%= render CardComponent.new(heading: "Recent closed positions", class: "mb-6") do %>
+<%= render CardComponent.new(heading: t("admin.shared.recent_closed_positions"), class: "mb-6") do %>
   <% if @recent_positions.any? %>
     <%= render DataTableComponent.new(columns: [
-      { label: "Symbol",     classes: "text-left" },
-      { label: "Side",       classes: "text-left" },
-      { label: "Exchange",   classes: "text-left" },
-      { label: "Closed at",  classes: "text-left" },
-      { label: "Net P&L",    classes: "text-right" },
-      { label: "ROI",        classes: "text-right" }
+      { label: t("admin.shared.symbol"),     classes: "text-left" },
+      { label: t("admin.shared.side"),       classes: "text-left" },
+      { label: t("admin.shared.exchange"),   classes: "text-left" },
+      { label: t("admin.shared.closed_at"),  classes: "text-left" },
+      { label: t("admin.shared.net_pnl"),    classes: "text-right" },
+      { label: t("admin.shared.roi"),        classes: "text-right" }
     ]) do |table| %>
       <% @recent_positions.each do |pos| %>
         <% table.with_row do %>
@@ -49,13 +49,13 @@
       <% end %>
     <% end %>
   <% else %>
-    <p class="text-sm text-slate-500">No closed positions yet.</p>
+    <p class="text-sm text-slate-500"><%= t("admin.shared.no_closed_positions") %></p>
   <% end %>
 <% end %>
 
 <%# ── Stock portfolios ── %>
 <% if @stock_portfolios.any? %>
-  <%= render CardComponent.new(heading: "Stock portfolios", class: "mb-6") do %>
+  <%= render CardComponent.new(heading: t("admin.shared.stock_portfolios"), class: "mb-6") do %>
     <div class="space-y-2">
       <% @stock_portfolios.each do |portfolio| %>
         <div class="flex items-center justify-between rounded-md border border-slate-100 px-4 py-3">
@@ -63,7 +63,7 @@
             <span class="text-sm font-medium text-slate-900"><%= portfolio.name %></span>
             <span class="ml-2 rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500"><%= portfolio.market %></span>
           </div>
-          <span class="text-sm text-slate-500"><%= portfolio.stock_trades.size %> trades</span>
+          <span class="text-sm text-slate-500"><%= t("admin.shared.trades_count", count: portfolio.stock_trades.size) %></span>
         </div>
       <% end %>
     </div>
@@ -72,12 +72,12 @@
 
 <%# ── Spot accounts ── %>
 <% if @spot_accounts.any? %>
-  <%= render CardComponent.new(heading: "Spot accounts") do %>
+  <%= render CardComponent.new(heading: t("admin.shared.spot_accounts")) do %>
     <div class="space-y-2">
       <% @spot_accounts.each do |account| %>
         <div class="flex items-center justify-between rounded-md border border-slate-100 px-4 py-3">
           <span class="text-sm font-medium text-slate-900"><%= account.name %></span>
-          <span class="text-sm text-slate-500"><%= account.spot_transactions.size %> transactions</span>
+          <span class="text-sm text-slate-500"><%= t("admin.shared.transactions_count", count: account.spot_transactions.size) %></span>
         </div>
       <% end %>
     </div>
