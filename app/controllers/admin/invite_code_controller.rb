@@ -8,12 +8,12 @@ class Admin::InviteCodeController < Admin::BaseController
   def create
     expires_at = Time.zone.parse(params[:expires_at].to_s.presence || "")
     if expires_at.nil? || expires_at <= Time.current
-      redirect_to admin_invite_code_path, alert: "Please provide a valid future expiry date." and return
+      redirect_to admin_invite_code_path, alert: t("flash.admin_invite_invalid_expiry") and return
     end
 
     InviteCode.rotate!(expires_at: expires_at)
-    redirect_to admin_invite_code_path, notice: "Invite code rotated successfully."
+    redirect_to admin_invite_code_path, notice: t("flash.admin_invite_rotated")
   rescue ActiveRecord::RecordInvalid => e
-    redirect_to admin_invite_code_path, alert: "Could not rotate code: #{e.message}"
+    redirect_to admin_invite_code_path, alert: t("flash.admin_invite_rotate_failed", message: e.message)
   end
 end

@@ -1,18 +1,18 @@
 <div>
   <%= render BreadcrumbComponent.new(items: [
-    { label: "Stocks", url: stocks_path },
-    { label: "CEDEAR instruments", url: nil }
+    { label: t("nav.stocks"), url: stocks_path },
+    { label: t("cedear_instruments.index.title"), url: nil }
   ]) %>
-  <%= render PageHeaderComponent.new(title: "CEDEAR instruments", subtitle: "Manage the CEDEAR tickers you trade, including their ratio to the underlying US stock.") do |c| %>
-    <% c.with_actions { render ButtonComponent.new(label: "Add instrument", href: new_cedear_instrument_path) } %>
+  <%= render PageHeaderComponent.new(title: t("cedear_instruments.index.title"), subtitle: t("cedear_instruments.index.subtitle")) do |c| %>
+    <% c.with_actions { render ButtonComponent.new(label: t("cedear_instruments.index.add_instrument"), href: new_cedear_instrument_path) } %>
   <% end %>
 
   <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
     <% if @cedear_instruments.any? %>
       <%= render DataTableComponent.new(columns: [
-        { label: "Ticker (CEDEAR)", classes: "text-left" },
-        { label: "Ratio", classes: "text-right" },
-        { label: "Underlying", classes: "text-left" },
+        { label: t("cedear_instruments.index.columns.ticker"), classes: "text-left" },
+        { label: t("cedear_instruments.index.columns.ratio"), classes: "text-right" },
+        { label: t("cedear_instruments.index.columns.underlying"), classes: "text-left" },
         { label: "", classes: "text-right" }
       ]) do |table| %>
         <% @cedear_instruments.each do |instrument| %>
@@ -23,16 +23,16 @@
             </td>
             <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-500"><%= instrument.underlying_ticker.presence || "—" %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
-              <%= link_to "Edit", edit_cedear_instrument_path(instrument), class: "mr-4 text-slate-600 hover:text-slate-900" %>
-              <%= button_to "Remove", cedear_instrument_path(instrument), method: :delete,
-                    data: { turbo_confirm: "Remove #{instrument.ticker}?" },
+              <%= link_to t("cedear_instruments.index.edit"), edit_cedear_instrument_path(instrument), class: "mr-4 text-slate-600 hover:text-slate-900" %>
+              <%= button_to t("cedear_instruments.index.remove"), cedear_instrument_path(instrument), method: :delete,
+                    data: { turbo_confirm: t("cedear_instruments.index.remove_confirm", ticker: instrument.ticker) },
                     class: "text-red-600 hover:text-red-800 bg-transparent border-0 p-0 cursor-pointer text-sm" %>
             </td>
           <% end %>
         <% end %>
       <% end %>
     <% else %>
-      <%= render EmptyStateComponent.new(message: "No CEDEAR instruments yet. Add one to enable ratio auto-fill in Argentina-mode trade forms.") %>
+      <%= render EmptyStateComponent.new(message: t("cedear_instruments.index.empty")) %>
     <% end %>
   </section>
 </div>

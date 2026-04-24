@@ -9,7 +9,7 @@ class TradesController < ApplicationController
 
     exchange_account = resolve_exchange_account
     if params[:view].to_s == "exchange" && params[:exchange_account_id].present? && exchange_account.nil?
-      redirect_to trades_path(view: "history"), alert: "That exchange account wasn't found." and return
+      redirect_to trades_path(view: "history"), alert: t("flash.exchange_account_not_found") and return
     end
 
     result = Trades::IndexService.call(

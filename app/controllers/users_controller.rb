@@ -14,14 +14,14 @@ class UsersController < ApplicationController
     unless invite&.valid_for_registration? && ActiveSupport::SecurityUtils.secure_compare(
       params[:invite_code].to_s, invite.code
     )
-      flash.now[:alert] = "Invalid or expired invite code."
+      flash.now[:alert] = t("flash.invalid_invite_code")
       render :new, status: :unprocessable_entity and return
     end
 
     if @user.save
       reset_session
       session[:user_id] = @user.id
-      redirect_to root_path, notice: "Account created. Welcome!"
+      redirect_to root_path, notice: t("flash.account_created")
     else
       render :new, status: :unprocessable_entity
     end

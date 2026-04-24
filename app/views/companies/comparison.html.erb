@@ -1,8 +1,8 @@
 <div>
   <%= render BreadcrumbComponent.new(items: [
-    { label: "Companies", url: companies_path },
+    { label: t("companies.index.title"), url: companies_path },
     { label: @company.ticker, url: company_path(@company) },
-    { label: "Comparison", url: nil }
+    { label: t("companies.comparison.breadcrumb"), url: nil }
   ]) %>
   <div class="mb-6 flex items-start justify-between gap-4">
     <div>
@@ -13,21 +13,21 @@
       <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
       </svg>
-      Back to profile
+      <%= t("companies.comparison.back_to_profile") %>
     <% end %>
   </div>
 
   <% if @reports.none? %>
     <div class="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center text-slate-600 shadow-sm">
-      <p class="mb-4">No reports yet.</p>
-      <%= render ButtonComponent.new(label: "Add first report", href: new_company_earnings_report_path(@company), class: "inline-block") %>
+      <p class="mb-4"><%= t("companies.show.no_reports") %></p>
+      <%= render ButtonComponent.new(label: t("companies.show.add_first_report"), href: new_company_earnings_report_path(@company), class: "inline-block") %>
     </div>
   <% else %>
     <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
       <table class="min-w-full divide-y divide-slate-200 text-sm">
         <thead class="bg-slate-50">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">Metric</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap"><%= t("companies.comparison.metric_column") %></th>
             <% @reports.each do |report| %>
               <th class="px-6 py-3 text-right whitespace-nowrap">
                 <span class="text-sm font-semibold text-slate-800"><%= report.period_label %></span>
@@ -42,10 +42,10 @@
           <%# Standard metrics — subtle section label %>
           <tr class="bg-slate-50/50">
             <td colspan="<%= @reports.size + 1 %>" class="px-6 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Core financials
+              <%= t("companies.comparison.core_financials") %>
             </td>
           </tr>
-          <% [["Revenue", :revenue, true], ["Net Income", :net_income, true], ["EPS", :eps, false]].each do |label, attr, money| %>
+          <% [[t("companies.comparison.revenue"), :revenue, true], [t("companies.comparison.net_income"), :net_income, true], [t("companies.comparison.eps"), :eps, false]].each do |label, attr, money| %>
             <tr class="hover:bg-slate-50 transition-colors duration-75">
               <td class="px-6 py-3 font-medium text-slate-700 whitespace-nowrap"><%= label %></td>
               <% @reports.each do |report| %>
@@ -61,7 +61,7 @@
           <% if @definitions.any? %>
             <tr class="bg-slate-50/50">
               <td colspan="<%= @reports.size + 1 %>" class="px-6 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Custom metrics
+                <%= t("companies.comparison.custom_metrics") %>
               </td>
             </tr>
             <% @definitions.each do |defn| %>

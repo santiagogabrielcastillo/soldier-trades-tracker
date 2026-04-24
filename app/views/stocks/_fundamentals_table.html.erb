@@ -3,34 +3,34 @@
 <div class="mb-4 flex items-center justify-between">
   <p class="text-xs text-slate-500">
     <% if last_synced %>
-      Last synced <%= time_ago_in_words(last_synced) %> ago · "—" means no data available for that ticker
+      <%= t("stocks.fundamentals.last_synced", time: time_ago_in_words(last_synced)) %>
     <% else %>
-      No data yet — click Sync to fetch fundamentals from Finviz
+      <%= t("stocks.fundamentals.no_data") %>
     <% end %>
   </p>
   <div class="flex items-center gap-2">
-    <%= button_to "Sync now", sync_url,
+    <%= button_to t("stocks.fundamentals.sync_now"), sync_url,
           method: :post,
           class: "rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
   </div>
 </div>
 
 <%= render DataTableComponent.new(columns: [
-  { label: "Ticker",     classes: "text-left" },
-  { label: "AI Signal",  classes: "text-center", html: { title: "Powered by Gemini AI" } },
-  { label: "Sector",     classes: "text-left" },
+  { label: t("stocks.fundamentals.columns.ticker"),      classes: "text-left" },
+  { label: t("stocks.fundamentals.columns.ai_signal"),   classes: "text-center", html: { title: t("stocks.fundamentals.columns.ai_signal_title") } },
+  { label: t("stocks.fundamentals.columns.sector"),      classes: "text-left" },
   { label: "P/E",        classes: "text-right" },
   { label: "Fwd P/E",   classes: "text-right" },
   { label: "PEG",        classes: "text-right" },
   { label: "P/S",        classes: "text-right" },
   { label: "P/FCF",      classes: "text-right" },
   { label: "EV/EBITDA",  classes: "text-right" },
-  { label: "Net Margin", classes: "text-right" },
+  { label: t("stocks.fundamentals.columns.net_margin"),  classes: "text-right" },
   { label: "ROE",        classes: "text-right" },
   { label: "ROIC",       classes: "text-right" },
   { label: "Debt/Eq",    classes: "text-right" },
-  { label: "Sales Y/Y",  classes: "text-right" },
-  { label: "Sales Q/Q",  classes: "text-right" },
+  { label: t("stocks.fundamentals.columns.sales_yy"),    classes: "text-right" },
+  { label: t("stocks.fundamentals.columns.sales_qq"),    classes: "text-right" },
   { label: "",           classes: "text-right" },
   *(watchlist_items ? [{ label: "", classes: "text-right" }] : [])
 ]) do |table| %>
@@ -84,11 +84,11 @@
                     method: :post,
                     form_class: "inline",
                     class: "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 bg-transparent border-0 cursor-pointer transition-colors duration-100",
-                    title: "Re-analyze with AI" do %>
+                    title: t("stocks.fundamentals.reanalyze") do %>
                 <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                 </svg>
-                Re-analyze
+                <%= t("stocks.fundamentals.reanalyze") %>
               <% end %>
             <% end %>
           </div>
@@ -99,10 +99,10 @@
             <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
             </svg>
-            Analyze
+            <%= t("stocks.fundamentals.analyze") %>
           <% end %>
         <% else %>
-          <%= link_to "Configure AI", settings_path,
+          <%= link_to t("stocks.fundamentals.configure_ai"), settings_path,
                 class: "text-xs font-medium text-slate-400 hover:text-indigo-600 underline underline-offset-2 transition-colors duration-100" %>
         <% end %>
       </td>
@@ -130,12 +130,12 @@
         <%= f&.sales_qq ? number_to_percentage(f.sales_qq, precision: 1) : "—" %>
       </td>
       <td class="whitespace-nowrap px-6 py-4 text-right">
-        <%= link_to "Sanity Check", stocks_valuation_check_path(ticker: ticker),
+        <%= link_to t("stocks.fundamentals.sanity_check"), stocks_valuation_check_path(ticker: ticker),
               class: "text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline" %>
       </td>
       <% if watchlist_items %>
         <td class="whitespace-nowrap px-6 py-4 text-right">
-          <%= button_to "Remove", stocks_watchlist_item_path(watchlist_items[ticker]),
+          <%= button_to t("common.remove"), stocks_watchlist_item_path(watchlist_items[ticker]),
                 method: :delete,
                 class: "text-xs font-medium text-red-500 hover:text-red-700" %>
         </td>

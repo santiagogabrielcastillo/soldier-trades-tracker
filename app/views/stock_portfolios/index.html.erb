@@ -1,7 +1,7 @@
 <div>
   <div class="mb-6 flex items-center justify-between">
-    <h1 class="text-2xl font-semibold text-slate-900">Stock portfolios</h1>
-    <%= render ButtonComponent.new(label: "New portfolio", href: new_stock_portfolio_path) %>
+    <h1 class="text-2xl font-semibold text-slate-900"><%= t("stock_portfolios.index.title") %></h1>
+    <%= render ButtonComponent.new(label: t("stock_portfolios.index.new_portfolio"), href: new_stock_portfolio_path) %>
   </div>
 
   <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -12,20 +12,20 @@
             <div class="flex items-center gap-2">
               <span class="font-medium text-slate-900"><%= portfolio.name %></span>
               <% if portfolio.default? %>
-                <%= render BadgeComponent.new(label: "Default") %>
+                <%= render BadgeComponent.new(label: t("stock_portfolios.index.default_badge")) %>
               <% end %>
-              <%= render BadgeComponent.new(label: portfolio.argentina? ? "Argentina (CEDEARs)" : "US") %>
+              <%= render BadgeComponent.new(label: portfolio.argentina? ? t("stock_portfolios.index.argentina_badge") : t("stock_portfolios.index.us_badge")) %>
             </div>
             <div class="flex items-center gap-3">
-              <%= link_to "Edit", edit_stock_portfolio_path(portfolio), class: "text-sm text-slate-600 hover:text-slate-900" %>
+              <%= link_to t("stock_portfolios.index.edit"), edit_stock_portfolio_path(portfolio), class: "text-sm text-slate-600 hover:text-slate-900" %>
             </div>
           </li>
         <% end %>
       </ul>
     <% else %>
       <div class="px-6 py-12 text-center text-slate-600">
-        <p class="mb-4">No stock portfolios yet.</p>
-        <%= render ButtonComponent.new(label: "Create portfolio", href: new_stock_portfolio_path, class: "inline-block") %>
+        <p class="mb-4"><%= t("stock_portfolios.index.empty") %></p>
+        <%= render ButtonComponent.new(label: t("stock_portfolios.index.create_portfolio"), href: new_stock_portfolio_path, class: "inline-block") %>
       </div>
     <% end %>
   </section>

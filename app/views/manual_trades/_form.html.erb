@@ -12,16 +12,16 @@
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :symbol, "Symbol", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.label :symbol, t("manual_trades.form.symbol"), class: "block text-sm font-medium text-slate-700" %>
       <%= f.text_field :symbol, required: true, placeholder: "BTC-USDT",
             class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
     </div>
 
     <div>
-      <%= f.label :side, "Side", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.label :side, t("manual_trades.form.side"), class: "block text-sm font-medium text-slate-700" %>
       <%= f.select :side,
-            options_for_select([["Buy", "buy"], ["Sell", "sell"]], @trade.side),
-            { prompt: "Select side" },
+            options_for_select([[t("spot.index.form.buy"), "buy"], [t("spot.index.form.sell"), "sell"]], @trade.side),
+            { prompt: t("manual_trades.form.select_side") },
             required: true,
             class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500",
             data: { action: "change->manual-trade-form#updateNetAmount" } %>
@@ -30,7 +30,7 @@
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :quantity, "Quantity", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.label :quantity, t("manual_trades.form.quantity"), class: "block text-sm font-medium text-slate-700" %>
       <%= f.number_field :quantity, required: true, step: "any", min: 0,
             class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500",
             data: {
@@ -40,7 +40,7 @@
     </div>
 
     <div>
-      <%= f.label :price, "Price", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.label :price, t("manual_trades.form.price"), class: "block text-sm font-medium text-slate-700" %>
       <%= f.number_field :price, required: true, step: "any", min: 0,
             class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500",
             data: {
@@ -51,37 +51,37 @@
   </div>
 
   <div>
-    <label class="block text-sm font-medium text-slate-700">Net amount preview</label>
+    <label class="block text-sm font-medium text-slate-700"><%= t("manual_trades.form.net_amount_preview") %></label>
     <div class="mt-1 flex items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
       <span data-manual-trade-form-target="netAmountPreview">—</span>
     </div>
-    <p class="mt-1 text-xs text-slate-500">Computed automatically from quantity × price.</p>
+    <p class="mt-1 text-xs text-slate-500"><%= t("manual_trades.form.net_amount_hint") %></p>
   </div>
 
   <div>
-    <%= f.label :executed_at, "Executed at", class: "block text-sm font-medium text-slate-700" %>
+    <%= f.label :executed_at, t("manual_trades.form.executed_at"), class: "block text-sm font-medium text-slate-700" %>
     <%= f.datetime_local_field :executed_at, required: true,
           class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
   </div>
 
   <div>
-    <%= f.label :fee, "Fee (optional)", class: "block text-sm font-medium text-slate-700" %>
+    <%= f.label :fee, t("manual_trades.form.fee"), class: "block text-sm font-medium text-slate-700" %>
     <%= f.number_field :fee, step: "any", min: 0, placeholder: "0",
           class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :position_side, "Position side (optional)", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.label :position_side, t("manual_trades.form.position_side"), class: "block text-sm font-medium text-slate-700" %>
       <%= f.select :position_side,
-            options_for_select([["Auto-detect", ""], ["LONG", "LONG"], ["SHORT", "SHORT"]], @trade.position_side),
+            options_for_select([[t("manual_trades.form.auto_detect"), ""], ["LONG", "LONG"], ["SHORT", "SHORT"]], @trade.position_side),
             {},
             class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
-      <p class="mt-1 text-xs text-slate-500">Leave blank to infer from side.</p>
+      <p class="mt-1 text-xs text-slate-500"><%= t("manual_trades.form.position_side_hint") %></p>
     </div>
 
     <div>
-      <%= f.label :leverage, "Leverage (optional)", class: "block text-sm font-medium text-slate-700" %>
+      <%= f.label :leverage, t("manual_trades.form.leverage"), class: "block text-sm font-medium text-slate-700" %>
       <%= f.number_field :leverage, step: 1, min: 1, placeholder: "10",
             class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
     </div>
@@ -89,18 +89,18 @@
 
   <div class="flex items-center">
     <%= f.check_box :reduce_only, class: "h-4 w-4 rounded border-slate-300 text-slate-800 focus:ring-slate-500" %>
-    <%= f.label :reduce_only, "Reduce only", class: "ml-2 block text-sm text-slate-700" %>
+    <%= f.label :reduce_only, t("manual_trades.form.reduce_only"), class: "ml-2 block text-sm text-slate-700" %>
   </div>
 
   <div>
-    <%= f.label :realized_pnl, "Realized P&L (optional)", class: "block text-sm font-medium text-slate-700" %>
+    <%= f.label :realized_pnl, t("manual_trades.form.realized_pnl"), class: "block text-sm font-medium text-slate-700" %>
     <%= f.number_field :realized_pnl, step: "any", placeholder: "0",
           class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
-    <p class="mt-1 text-xs text-slate-500">Fill in for closing trades.</p>
+    <p class="mt-1 text-xs text-slate-500"><%= t("manual_trades.form.realized_pnl_hint") %></p>
   </div>
 
   <div class="flex gap-3 pt-2">
-    <%= f.submit "Save Trade", class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
-    <%= link_to "Cancel", trades_path, class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+    <%= f.submit t("manual_trades.form.save"), class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
+    <%= link_to t("manual_trades.form.cancel"), trades_path, class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
   </div>
 <% end %>

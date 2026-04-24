@@ -48,16 +48,16 @@ class StocksController < ApplicationController
 
     if type.in?(%w[deposit withdrawal]) && cash_flow.nil?
       redirect_to stocks_path(portfolio_id: @stock_portfolio.id, view: "performance"),
-                  alert: "Enter a positive amount." and return
+                  alert: t("flash.stocks_enter_positive_amount") and return
     end
 
     Stocks::PortfolioSnapshotService.call(stock_portfolio: @stock_portfolio, cash_flow: cash_flow || 0)
     redirect_to stocks_path(portfolio_id: @stock_portfolio.id, view: "performance"),
-                notice: type == "snapshot" ? "Snapshot recorded." : "Cash flow recorded."
+                notice: type == "snapshot" ? t("flash.stocks_snapshot_recorded") : t("flash.stocks_cash_flow_recorded")
   rescue => e
     Rails.logger.error("[StocksController#record_snapshot] #{e.message}")
     redirect_to stocks_path(portfolio_id: @stock_portfolio.id, view: "performance"),
-                alert: "Could not fetch current prices. Try again later."
+                alert: t("flash.stocks_price_fetch_failed")
   end
 
   def sync_fundamentals
@@ -66,23 +66,23 @@ class StocksController < ApplicationController
                 .select(&:open?).map(&:ticker).uniq
     Stocks::SyncFundamentalsJob.perform_later(tickers)
     redirect_to stocks_path(portfolio_id: @stock_portfolio.id, view: "valuations"),
-                notice: "Sync started — refresh in a moment to see updated data."
+                notice: t("flash.stocks_sync_started")
   end
 
   def sync_watchlist
     tickers = current_user.watchlist_tickers.pluck(:ticker)
     Stocks::SyncFundamentalsJob.perform_later(tickers)
     redirect_to stocks_path(view: "watchlist"),
-                notice: "Sync started — refresh in a moment to see updated data."
+                notice: t("flash.stocks_sync_started")
   end
 
   def analyze_ticker
     ticker = params[:ticker].to_s.strip.upcase
     unless allowed_analysis_tickers.include?(ticker)
-      redirect_back fallback_location: stocks_path, alert: "Ticker not found." and return
+      redirect_back fallback_location: stocks_path, alert: t("flash.stocks_ticker_not_found") and return
     end
-    Stocks::SyncStockAnalysisJob.perform_later(current_user.id, [ticker])
-    redirect_back fallback_location: stocks_path, notice: "Analysis started — refresh in a moment."
+    Stocks::SyncStockAnalysisJob.perform_later(current_user.id, [ ticker ])
+    redirect_back fallback_location: stocks_path, notice: t("flash.stocks_analysis_started")
   end
 
   def add_to_watchlist
@@ -103,7 +103,7 @@ class StocksController < ApplicationController
     snapshot = @stock_portfolio.stock_portfolio_snapshots.find(params[:id])
     snapshot.destroy!
     redirect_to stocks_path(portfolio_id: @stock_portfolio.id, view: "performance"),
-                notice: "Entry deleted."
+                notice: t("flash.stocks_entry_deleted")
   end
 
   def create
@@ -131,10 +131,10 @@ class StocksController < ApplicationController
         cedear_ratio: cedear_ratio
       )
       if trade.save
-        redirect_to stocks_path(portfolio_id: @stock_portfolio.id), notice: "Trade added." and return
+        redirect_to stocks_path(portfolio_id: @stock_portfolio.id), notice: t("flash.stocks_trade_added") and return
       end
       if trade.errors[:row_signature].any?
-        redirect_to stocks_path(portfolio_id: @stock_portfolio.id), alert: "This trade already exists." and return
+        redirect_to stocks_path(portfolio_id: @stock_portfolio.id), alert: t("flash.stocks_trade_exists") and return
       end
       @stock_trade = trade
     else
@@ -209,7 +209,7 @@ class StocksController < ApplicationController
 
     if @stock_portfolio.argentina?
       unless current_user.api_key_for(:iol)
-        flash.now[:alert] = "Argentine stock prices require IOL credentials. #{view_context.link_to('Configure them here', settings_api_keys_path, class: 'underline')}".html_safe
+        flash.now[:alert] = t("flash.stocks_iol_missing_html", link: view_context.link_to(t("flash.configure_them_here"), settings_api_keys_path, class: "underline"))
       end
       prices_thread = Thread.new { Stocks::ArgentineCurrentPriceFetcher.call(tickers: open_tickers, user: current_user) }
       mep_thread    = Thread.new { Stocks::MepRateFetcher.call }
@@ -218,7 +218,7 @@ class StocksController < ApplicationController
       @cedear_instruments = current_user.cedear_instruments.where(ticker: open_tickers).index_by(&:ticker)
     else
       unless current_user.api_key_for(:finnhub)
-        flash.now[:alert] = "Stock prices require a Finnhub API key. #{view_context.link_to('Configure it here', settings_api_keys_path, class: 'underline')}".html_safe
+        flash.now[:alert] = t("flash.stocks_finnhub_missing_html", link: view_context.link_to(t("flash.configure_here"), settings_api_keys_path, class: "underline"))
       end
       @current_prices = Stocks::CurrentPriceFetcher.call(tickers: open_tickers, user: current_user)
       @mep_rate = nil
@@ -283,5 +283,4 @@ class StocksController < ApplicationController
   def stock_trade_params
     params.permit(:ticker, :side, :shares, :price_usd, :executed_at)
   end
-
 end

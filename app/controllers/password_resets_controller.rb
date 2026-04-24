@@ -12,24 +12,24 @@ class PasswordResetsController < ApplicationController
       UsersMailer.password_reset(user, token).deliver_now
     end
     # Same response whether or not the email matched — prevents account enumeration.
-    redirect_to login_path, notice: "If that email is registered, you'll receive a reset link shortly."
+    redirect_to login_path, notice: t("flash.password_reset_sent")
   end
 
   def edit
     @token = params[:token]
     unless User.find_by_token_for(:password_reset, @token)
-      redirect_to new_password_reset_path, alert: "Reset link is invalid or has expired." and return
+      redirect_to new_password_reset_path, alert: t("flash.invalid_reset_link") and return
     end
   end
 
   def update
     user = User.find_by_token_for(:password_reset, params[:token])
     unless user
-      redirect_to new_password_reset_path, alert: "Reset link is invalid or has expired." and return
+      redirect_to new_password_reset_path, alert: t("flash.invalid_reset_link") and return
     end
 
     if user.update(password: params[:password], password_confirmation: params[:password_confirmation])
-      redirect_to login_path, notice: "Password updated. Please sign in."
+      redirect_to login_path, notice: t("flash.password_updated")
     else
       @token = params[:token]
       @user = user

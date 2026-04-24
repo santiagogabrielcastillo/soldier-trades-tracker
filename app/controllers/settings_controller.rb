@@ -6,7 +6,7 @@ class SettingsController < ApplicationController
 
   def update
     if current_user.update(settings_params)
-      redirect_to settings_path, notice: "Settings saved."
+      redirect_to settings_path, notice: t("flash.settings_saved")
     else
       render :show, status: :unprocessable_entity
     end

@@ -1,6 +1,6 @@
 <div>
   <%= render BreadcrumbComponent.new(items: [
-    { label: "Companies", url: companies_path },
+    { label: t("companies.index.title"), url: companies_path },
     { label: @company.ticker, url: company_path(@company) },
     { label: @report.period_label, url: nil }
   ]) %>
@@ -12,28 +12,28 @@
           <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" />
           </svg>
-          Reported <%= @report.reported_on.strftime("%B %d, %Y") %>
+          <%= t("companies.show.reported_on", date: @report.reported_on.strftime("%B %d, %Y")) %>
         </p>
       <% end %>
     </div>
     <div class="flex shrink-0 items-center gap-2">
-      <%= link_to "Edit", edit_company_earnings_report_path(@company, @report),
+      <%= link_to t("earnings_reports.show.edit"), edit_company_earnings_report_path(@company, @report),
             class: "inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors duration-100" %>
-      <%= button_to "Remove", company_earnings_report_path(@company, @report),
+      <%= button_to t("earnings_reports.show.remove"), company_earnings_report_path(@company, @report),
             method: :delete,
-            data: { turbo_confirm: "Remove this report?" },
+            data: { turbo_confirm: t("earnings_reports.show.remove_confirm") },
             class: "inline-flex items-center rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors duration-100" %>
     </div>
   </div>
 
   <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
     <%# Core financials section %>
-    <% core_metrics = [["Revenue", @report.revenue, true], ["Net Income", @report.net_income, true], ["EPS", @report.eps, false]].reject { |_, v, _| v.nil? } %>
+    <% core_metrics = [[t("companies.comparison.revenue"), @report.revenue, true], [t("companies.comparison.net_income"), @report.net_income, true], [t("companies.comparison.eps"), @report.eps, false]].reject { |_, v, _| v.nil? } %>
     <% custom_values = @report.custom_metric_values.includes(:custom_metric_definition) %>
 
     <% if core_metrics.any? %>
       <div class="border-b border-slate-100 px-6 py-2.5">
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Core financials</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400"><%= t("companies.comparison.core_financials") %></p>
       </div>
       <div class="divide-y divide-slate-100">
         <% core_metrics.each do |label, value, money| %>
@@ -47,7 +47,7 @@
 
     <% if custom_values.any? %>
       <div class="border-b border-slate-100 border-t px-6 py-2.5 bg-slate-50/50">
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Custom metrics</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400"><%= t("companies.comparison.custom_metrics") %></p>
       </div>
       <div class="divide-y divide-slate-100">
         <% custom_values.each do |val| %>
@@ -66,7 +66,7 @@
 
     <% if @report.notes.present? %>
       <div class="border-t border-slate-200 px-6 py-4">
-        <p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Notes</p>
+        <p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400"><%= t("earnings_reports.show.notes") %></p>
         <p class="text-sm text-slate-600 whitespace-pre-wrap"><%= @report.notes %></p>
       </div>
     <% end %>

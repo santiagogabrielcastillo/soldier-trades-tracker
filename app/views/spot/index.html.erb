@@ -1,32 +1,32 @@
 <div>
-  <%= render PageHeaderComponent.new(title: "Spot portfolio") %>
+  <%= render PageHeaderComponent.new(title: t("spot.index.title")) %>
 
   <%= render TabNavComponent.new(tabs: [
-    { label: "Portfolio", url: spot_path(spot_index_filter_params.merge("view" => "portfolio")), active: @view == "portfolio" },
-    { label: "Transactions", url: spot_path(spot_index_filter_params.merge("view" => "transactions")), active: @view == "transactions" }
+    { label: t("spot.index.portfolio_tab"), url: spot_path(spot_index_filter_params.merge("view" => "portfolio")), active: @view == "portfolio" },
+    { label: t("spot.index.transactions_tab"), url: spot_path(spot_index_filter_params.merge("view" => "transactions")), active: @view == "transactions" }
   ]) %>
 
   <% if @view == "portfolio" %>
   <div class="mb-6 flex flex-wrap items-center gap-3">
-    <%= button_to "Sync prices", spot_sync_prices_path, method: :post, class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+    <%= button_to t("spot.index.sync_prices"), spot_sync_prices_path, method: :post, class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
     <% if @prices_synced_at %>
-      <span class="text-xs text-slate-400">Last synced <%= time_ago_in_words(@prices_synced_at) %> ago</span>
+      <span class="text-xs text-slate-400"><%= t("spot.index.last_synced", time: time_ago_in_words(@prices_synced_at)) %></span>
     <% else %>
-      <span class="text-xs text-slate-400">Prices not synced yet</span>
+      <span class="text-xs text-slate-400"><%= t("spot.index.prices_not_synced") %></span>
     <% end %>
-    <%= render ModalComponent.new(title: "New transaction", trigger_label: "New transaction", open_on_connect: @open_new_transaction_modal.present?) do %>
+    <%= render ModalComponent.new(title: t("spot.index.new_transaction"), trigger_label: t("spot.index.new_transaction"), open_on_connect: @open_new_transaction_modal.present?) do %>
       <%= form_with url: spot_transactions_path, method: :post, local: true, data: { turbo: false, controller: "spot-transaction-form" } do |f| %>
         <div class="space-y-4">
           <div>
-            <%= f.label :side, "Side", class: "block text-sm font-medium text-slate-700" %>
-            <%= f.select :side, options_for_select([["Buy", "buy"], ["Sell", "sell"], ["Deposit", "deposit"], ["Withdraw", "withdraw"]], @spot_transaction&.side), { include_blank: "Select" }, class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", data: { action: "change->spot-transaction-form#togglePriceAndToken" } %>
+            <%= f.label :side, t("spot.index.form.side"), class: "block text-sm font-medium text-slate-700" %>
+            <%= f.select :side, options_for_select([[t("spot.index.form.buy"), "buy"], [t("spot.index.form.sell"), "sell"], [t("spot.index.form.deposit"), "deposit"], [t("spot.index.form.withdraw"), "withdraw"]], @spot_transaction&.side), { include_blank: t("spot.index.form.select") }, class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", data: { action: "change->spot-transaction-form#togglePriceAndToken" } %>
             <% if @spot_transaction&.errors&.key?(:side) %>
               <p class="mt-1 text-sm text-red-600"><%= @spot_transaction.errors[:side].first %></p>
             <% end %>
           </div>
           <div data-spot-transaction-form-target="tokenWrapper">
             <div data-controller="spot-token-select" data-spot-token-select-tokens-value="<%= @tokens_for_select.to_json %>">
-              <%= f.label :token, "Token", class: "block text-sm font-medium text-slate-700" %>
+              <%= f.label :token, t("spot.index.form.token"), class: "block text-sm font-medium text-slate-700" %>
               <%= f.text_field :token, value: @spot_transaction&.token, placeholder: "Search or type...", autocomplete: "off", class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", data: { spot_token_select_target: "input", action: "input->spot-token-select#filter keydown->spot-token-select#keydown" } %>
               <% if @spot_transaction&.errors&.key?(:token) %>
                 <p class="mt-1 text-sm text-red-600"><%= @spot_transaction.errors[:token].first %></p>
@@ -35,31 +35,31 @@
             </div>
           </div>
           <div>
-            <%= f.label :amount, "Amount", class: "block text-sm font-medium text-slate-700" %>
+            <%= f.label :amount, t("spot.index.form.amount"), class: "block text-sm font-medium text-slate-700" %>
             <%= f.number_field :amount, value: @spot_transaction&.amount, step: :any, min: 0, placeholder: "0", class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
             <% if @spot_transaction&.errors&.key?(:amount) %>
               <p class="mt-1 text-sm text-red-600"><%= @spot_transaction.errors[:amount].first %></p>
             <% end %>
           </div>
           <div data-spot-transaction-form-target="priceWrapper">
-            <%= f.label :price_usd, "Price (USD)", class: "block text-sm font-medium text-slate-700" %>
+            <%= f.label :price_usd, t("spot.index.form.price_usd"), class: "block text-sm font-medium text-slate-700" %>
             <%= f.number_field :price_usd, value: @spot_transaction&.price_usd, step: :any, min: 0, placeholder: "0", class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
             <% if @spot_transaction&.errors&.key?(:price_usd) %>
               <p class="mt-1 text-sm text-red-600"><%= @spot_transaction.errors[:price_usd].first %></p>
             <% end %>
           </div>
           <div>
-            <%= f.label :executed_at, "Date & time", class: "block text-sm font-medium text-slate-700" %>
+            <%= f.label :executed_at, t("spot.index.form.executed_at"), class: "block text-sm font-medium text-slate-700" %>
             <%= f.datetime_local_field :executed_at, value: @spot_transaction&.executed_at&.strftime("%Y-%m-%dT%H:%M"), class: "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
-            <p class="mt-1 text-xs text-slate-500">Interpreted in <%= Time.zone.name %> and stored in UTC.</p>
+            <p class="mt-1 text-xs text-slate-500"><%= t("spot.index.form.timezone_hint", zone: Time.zone.name) %></p>
             <% if @spot_transaction&.errors&.key?(:executed_at) %>
               <p class="mt-1 text-sm text-red-600"><%= @spot_transaction.errors[:executed_at].first %></p>
             <% end %>
           </div>
         </div>
         <div class="mt-6 flex gap-2">
-          <%= f.submit "Add transaction", class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
-          <button type="button" data-action="dialog#close" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Cancel</button>
+          <%= f.submit t("spot.index.form.add_transaction"), class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+          <button type="button" data-action="dialog#close" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"><%= t("spot.index.form.cancel") %></button>
         </div>
       <% end %>
     <% end %>
@@ -67,19 +67,19 @@
 
   <div class="mb-4 flex flex-wrap items-baseline gap-6">
     <div>
-      <span class="text-sm text-slate-500">Cash balance</span>
+      <span class="text-sm text-slate-500"><%= t("spot.index.cash_balance") %></span>
       <p class="text-xl font-semibold <%= (@cash_balance || 0).to_d >= 0 ? 'text-slate-900' : 'text-red-600' %>"><%= format_money(@cash_balance || 0) %></p>
     </div>
     <div>
-      <span class="text-sm text-slate-500">Cash % of portfolio</span>
+      <span class="text-sm text-slate-500"><%= t("spot.index.cash_pct") %></span>
       <p class="text-xl font-semibold text-slate-900"><%= @cash_pct.nil? ? "—" : "#{number_with_precision(@cash_pct, precision: 2)}%" %></p>
     </div>
     <div>
-      <span class="text-sm text-slate-500">Crypto value</span>
+      <span class="text-sm text-slate-500"><%= t("spot.index.crypto_value") %></span>
       <p class="text-xl font-semibold text-slate-900"><%= @spot_value&.positive? ? format_money(@spot_value) : "—" %></p>
     </div>
     <div>
-      <span class="text-sm text-slate-500">Total (crypto + cash)</span>
+      <span class="text-sm text-slate-500"><%= t("spot.index.total_portfolio") %></span>
       <p class="text-xl font-semibold text-slate-900"><%= @total_portfolio&.positive? ? format_money(@total_portfolio) : "—" %></p>
     </div>
   </div>
@@ -87,23 +87,23 @@
   <div class="mb-6">
     <%= form_with url: spot_import_path, method: :post, local: true, multipart: true, class: "flex flex-wrap items-end gap-3", data: { turbo: false } do |f| %>
       <%= f.file_field :csv_file, accept: "text/csv,application/csv,.csv", class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
-      <%= f.submit "Import CSV", class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+      <%= f.submit t("spot.index.import_csv"), class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
     <% end %>
-    <p class="mt-2 text-sm text-slate-500">CSV columns: Date (UTC-3:00), Token, Type, Price (USD), Amount, Total value (USD), Fee, Fee Currency, Notes. Re-uploading the same file skips duplicates.</p>
+    <p class="mt-2 text-sm text-slate-500"><%= t("spot.index.csv_hint") %></p>
   </div>
 
   <% if @positions.any? %>
     <%= render DataTableComponent.new(columns: [
-      { label: "Token", classes: "text-left" },
-      { label: "Net breakeven", classes: "text-right" },
-      { label: "Gross avg price", classes: "text-right" },
-      { label: "Current qty", classes: "text-right" },
-      { label: "Current price", classes: "text-right" },
-      { label: "Current net value", classes: "text-right" },
-      { label: "Unrealized PnL", classes: "text-right" },
-      { label: "ROI (net)", classes: "text-right" },
-      { label: "ROI (avg)", classes: "text-right" },
-      { label: "Status", classes: "text-left" }
+      { label: t("spot.index.columns.token"), classes: "text-left" },
+      { label: t("spot.index.columns.net_breakeven"), classes: "text-right" },
+      { label: t("spot.index.columns.gross_avg_price"), classes: "text-right" },
+      { label: t("spot.index.columns.current_qty"), classes: "text-right" },
+      { label: t("spot.index.columns.current_price"), classes: "text-right" },
+      { label: t("spot.index.columns.current_net_value"), classes: "text-right" },
+      { label: t("spot.index.columns.unrealized_pnl"), classes: "text-right" },
+      { label: t("spot.index.columns.roi_net"), classes: "text-right" },
+      { label: t("spot.index.columns.roi_avg"), classes: "text-right" },
+      { label: t("spot.index.columns.status"), classes: "text-left" }
     ]) do |table| %>
       <% @positions.each do |pos| %>
         <% current_price = @current_prices[pos.token] %>
@@ -121,12 +121,12 @@
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized.nil? ? 'text-slate-500' : (unrealized >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized.nil? ? "—" : format_money(unrealized) %></td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized_roi_net.nil? ? 'text-slate-500' : (unrealized_roi_net >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized_roi_net.nil? ? "—" : number_to_percentage(unrealized_roi_net, precision: 2) %></td>
           <td class="whitespace-nowrap px-6 py-4 text-right text-sm <%= unrealized_roi_avg.nil? ? 'text-slate-500' : (unrealized_roi_avg >= 0 ? 'text-emerald-600' : 'text-red-600') %>"><%= unrealized_roi_avg.nil? ? "—" : number_to_percentage(unrealized_roi_avg, precision: 2) %></td>
-          <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600"><%= pos.open? ? "Open" : "Closed" %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600"><%= pos.open? ? t("spot.index.open") : t("spot.index.closed") %></td>
         <% end %>
       <% end %>
     <% end %>
     <% if current_user.exchange_accounts.empty? %>
-      <p class="mt-4 text-sm text-slate-500">Connect an <%= link_to "exchange account", exchange_accounts_path, class: "text-slate-700 underline" %> to see live prices, current net value, and unrealized PnL/ROI.</p>
+      <p class="mt-4 text-sm text-slate-500"><%= t("spot.index.connect_exchange_html", link: link_to(t("spot.index.exchange_account_link"), exchange_accounts_path, class: "text-slate-700 underline")).html_safe %></p>
     <% end %>
 
     <% if @spot_pie_data&.any? %>
@@ -134,16 +134,16 @@
             class: "mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2",
             data: { controller: "spot-charts", "spot-charts-pie-value": @spot_pie_data.to_json } do %>
         <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <p class="mb-3 text-sm font-medium text-slate-700">Crypto allocation</p>
+          <p class="mb-3 text-sm font-medium text-slate-700"><%= t("spot.index.crypto_allocation") %></p>
           <div class="h-52">
             <canvas data-spot-charts-target="pieCanvas"></canvas>
-            <p class="hidden text-sm text-slate-500" data-spot-charts-target="pieEmpty">No price data available.</p>
+            <p class="hidden text-sm text-slate-500" data-spot-charts-target="pieEmpty"><%= t("spot.index.no_price_data") %></p>
           </div>
         </div>
       <% end %>
     <% end %>
   <% else %>
-    <%= render EmptyStateComponent.new(message: "No spot positions yet. Upload a transaction history CSV above to get started.") %>
+    <%= render EmptyStateComponent.new(message: t("spot.index.empty_positions")) %>
   <% end %>
 
   <%# Scenario calculator — always shown in portfolio view, collapsed by default %>
@@ -160,16 +160,16 @@
         ) do |c| %>
       <% c.with_extra_fields do %>
         <div class="flex flex-col gap-1">
-          <label for="token" class="text-sm font-medium text-slate-700">Token</label>
+          <label for="token" class="text-sm font-medium text-slate-700"><%= t("spot.index.form.token") %></label>
           <%= select_tag :token,
-                options_for_select([["All", ""]] + (@tokens_for_filter || []).map { |t| [t, t] }, @filter_token),
+                options_for_select([[t("spot.index.filter.all"), ""]] + (@tokens_for_filter || []).map { |tok| [tok, tok] }, @filter_token),
                 class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[8rem]",
                 data: { auto_submit_form_target: "trigger" } %>
         </div>
         <div class="flex flex-col gap-1">
-          <label for="side" class="text-sm font-medium text-slate-700">Side</label>
+          <label for="side" class="text-sm font-medium text-slate-700"><%= t("spot.index.form.side") %></label>
           <%= select_tag :side,
-                options_for_select([["All", ""], ["Buy", "buy"], ["Sell", "sell"], ["Deposit", "deposit"], ["Withdraw", "withdraw"]], @filter_side),
+                options_for_select([[t("spot.index.filter.all"), ""], [t("spot.index.form.buy"), "buy"], [t("spot.index.form.sell"), "sell"], [t("spot.index.form.deposit"), "deposit"], [t("spot.index.form.withdraw"), "withdraw"]], @filter_side),
                 class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[6rem]",
                 data: { auto_submit_form_target: "trigger" } %>
         </div>
@@ -178,12 +178,12 @@
 
     <% if @transactions.present? %>
       <%= render DataTableComponent.new(columns: [
-        { label: "Date", classes: "text-left" },
-        { label: "Token", classes: "text-left" },
-        { label: "Side", classes: "text-left" },
-        { label: "Amount", classes: "text-right" },
-        { label: "Price (USD)", classes: "text-right" },
-        { label: "Total value (USD)", classes: "text-right" },
+        { label: t("spot.index.tx_columns.date"), classes: "text-left" },
+        { label: t("spot.index.tx_columns.token"), classes: "text-left" },
+        { label: t("spot.index.tx_columns.side"), classes: "text-left" },
+        { label: t("spot.index.tx_columns.amount"), classes: "text-right" },
+        { label: t("spot.index.tx_columns.price_usd"), classes: "text-right" },
+        { label: t("spot.index.tx_columns.total_value_usd"), classes: "text-right" },
         { label: "", classes: "text-right" }
       ]) do |table| %>
         <% @transactions.each do |tx| %>
@@ -196,10 +196,10 @@
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= tx.side.in?(%w[deposit withdraw]) ? "—" : format_money(tx.price_usd) %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= format_money(tx.total_value_usd) %></td>
             <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
-              <%= link_to "Edit", edit_spot_transaction_path(tx),
+              <%= link_to t("spot.index.tx_actions.edit"), edit_spot_transaction_path(tx),
                   data: { turbo_frame: "spot-transaction-edit-frame" },
                   class: "mr-3 text-slate-500 underline hover:text-slate-800" %>
-              <%= link_to "Delete", confirm_destroy_spot_transaction_path(tx),
+              <%= link_to t("spot.index.tx_actions.delete"), confirm_destroy_spot_transaction_path(tx),
                   data: { turbo_frame: "spot-transaction-delete-frame" },
                   class: "text-red-500 underline hover:text-red-700" %>
             </td>
@@ -213,7 +213,7 @@
       <% end %>
 
     <% else %>
-      <%= render EmptyStateComponent.new(message: "No spot transactions yet.") %>
+      <%= render EmptyStateComponent.new(message: t("spot.index.empty_transactions")) %>
     <% end %>
 
     <%# Shared edit modal — content loaded on demand via Turbo Frame %>

@@ -14,7 +14,7 @@ class PortfoliosController < ApplicationController
   def create
     @portfolio = current_user.portfolios.build(portfolio_params)
     if @portfolio.save
-      redirect_to portfolios_path, notice: "Portfolio created."
+      redirect_to portfolios_path, notice: t("flash.portfolio_created")
     else
       render :new, status: :unprocessable_entity
     end
@@ -25,7 +25,7 @@ class PortfoliosController < ApplicationController
 
   def update
     if @portfolio.update(portfolio_params)
-      redirect_to portfolios_path, notice: "Portfolio updated."
+      redirect_to portfolios_path, notice: t("flash.portfolio_updated")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -33,12 +33,12 @@ class PortfoliosController < ApplicationController
 
   def destroy
     @portfolio.destroy
-    redirect_to portfolios_path, notice: "Portfolio removed."
+    redirect_to portfolios_path, notice: t("flash.portfolio_removed")
   end
 
   def set_default
     @portfolio.update!(default: true)
-    redirect_to portfolios_path, notice: "#{@portfolio.name} is now the default portfolio."
+    redirect_to portfolios_path, notice: t("flash.portfolio_set_default", name: @portfolio.name)
   end
 
   private

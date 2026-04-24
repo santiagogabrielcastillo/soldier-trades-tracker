@@ -1,10 +1,10 @@
 <div>
   <%= render BreadcrumbComponent.new(items: [
-    { label: "Trades", url: trades_path },
-    { label: "Portfolios", url: nil }
+    { label: t("nav.trades"), url: trades_path },
+    { label: t("portfolios.index.title"), url: nil }
   ]) %>
-  <%= render PageHeaderComponent.new(title: "Portfolios") do |c| %>
-    <% c.with_actions { render ButtonComponent.new(label: "New portfolio", href: new_portfolio_path) } %>
+  <%= render PageHeaderComponent.new(title: t("portfolios.index.title")) do |c| %>
+    <% c.with_actions { render ButtonComponent.new(label: t("portfolios.index.new_portfolio"), href: new_portfolio_path) } %>
   <% end %>
 
   <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -15,19 +15,19 @@
             <div>
               <span class="font-medium text-slate-900"><%= portfolio.name %></span>
               <% if portfolio.default? %>
-                <%= render BadgeComponent.new(label: "Default") %>
+                <%= render BadgeComponent.new(label: t("portfolios.index.default_badge")) %>
               <% end %>
               <span class="ml-2 text-sm text-slate-500"><%= portfolio.date_range_label %></span>
               <% if portfolio.initial_balance != 0 %>
-                <span class="ml-2 text-sm text-slate-500">· Floor <%= format_money(portfolio.initial_balance) %></span>
+                <span class="ml-2 text-sm text-slate-500">· <%= t("portfolios.index.floor", amount: format_money(portfolio.initial_balance)) %></span>
               <% end %>
             </div>
             <div class="flex items-center gap-3">
               <% unless portfolio.default? %>
-                <%= button_to "Set as default", set_default_portfolio_path(portfolio), method: :post, class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50" %>
+                <%= button_to t("portfolios.index.set_as_default"), set_default_portfolio_path(portfolio), method: :post, class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50" %>
               <% end %>
-              <%= link_to "Edit", edit_portfolio_path(portfolio), class: "text-sm text-slate-600 hover:text-slate-900" %>
-              <%= button_to "Remove", portfolio_path(portfolio), method: :delete, data: { turbo_confirm: "Remove this portfolio?" }, class: "text-sm text-slate-600 hover:text-red-600" %>
+              <%= link_to t("portfolios.index.edit"), edit_portfolio_path(portfolio), class: "text-sm text-slate-600 hover:text-slate-900" %>
+              <%= button_to t("portfolios.index.remove"), portfolio_path(portfolio), method: :delete, data: { turbo_confirm: t("portfolios.index.remove_confirm") }, class: "text-sm text-slate-600 hover:text-red-600" %>
             </div>
           </li>
         <% end %>
@@ -39,8 +39,8 @@
       <% end %>
     <% else %>
       <div class="px-6 py-12 text-center text-slate-600">
-        <p class="mb-4">No portfolios yet. Create one to view trades for a specific period with an optional starting balance.</p>
-        <%= render ButtonComponent.new(label: "Create portfolio", href: new_portfolio_path, class: "inline-block") %>
+        <p class="mb-4"><%= t("portfolios.index.empty") %></p>
+        <%= render ButtonComponent.new(label: t("portfolios.index.create_portfolio"), href: new_portfolio_path, class: "inline-block") %>
       </div>
     <% end %>
   </section>

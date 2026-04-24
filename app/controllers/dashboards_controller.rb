@@ -3,7 +3,7 @@
 class DashboardsController < ApplicationController
   def show
     unless current_user.api_key_for(:coingecko)
-      flash.now[:alert] = "Crypto spot prices require a CoinGecko API key. #{view_context.link_to('Configure it here', settings_api_keys_path, class: 'underline')}".html_safe
+      flash.now[:alert] = t("flash.dashboard_coingecko_missing_html", link: view_context.link_to(t("flash.configure_here"), settings_api_keys_path, class: "underline"))
     end
 
     mep_rate = begin
@@ -32,7 +32,7 @@ class DashboardsController < ApplicationController
       @allocation_summary = allocation_thread.value
     ensure
       # Guarantee both threads are joined and their connections returned even if one raises.
-      [summary_thread, allocation_thread].each { |t| t.join rescue nil }
+      [ summary_thread, allocation_thread ].each { |t| t.join rescue nil }
     end
   end
 end

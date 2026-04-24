@@ -1,7 +1,7 @@
 <div>
   <div class="mb-6 flex items-center justify-between">
-    <h1 class="text-2xl font-semibold text-slate-900">Exchange accounts</h1>
-    <%= render ButtonComponent.new(label: "Link account", href: new_exchange_account_path) %>
+    <h1 class="text-2xl font-semibold text-slate-900"><%= t("exchange_accounts.index.title") %></h1>
+    <%= render ButtonComponent.new(label: t("exchange_accounts.index.link_account"), href: new_exchange_account_path) %>
   </div>
 
   <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -15,22 +15,22 @@
                 <% sync_failed = account.last_sync_failed_at.present? && (account.last_synced_at.nil? || account.last_sync_failed_at > account.last_synced_at) %>
                 <% if sync_failed %>
                   <span class="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20" title="<%= account.last_sync_error %>">
-                    ⚠ Sync failed
+                    <%= t("exchange_accounts.index.sync_failed") %>
                   </span>
                 <% end %>
               </div>
               <div class="mt-0.5 flex items-center gap-2 text-sm text-slate-500">
-                <span>Linked <%= time_ago_in_words(account.linked_at || account.created_at) %> ago</span>
+                <span><%= t("exchange_accounts.index.linked_ago", time: time_ago_in_words(account.linked_at || account.created_at)) %></span>
                 <% if account.last_synced_at %>
                   <span class="text-slate-300">·</span>
-                  <span>Last synced <%= time_ago_in_words(account.last_synced_at) %> ago</span>
+                  <span><%= t("exchange_accounts.index.last_synced_ago", time: time_ago_in_words(account.last_synced_at)) %></span>
                 <% elsif account.created_at < 1.hour.ago %>
                   <span class="text-slate-300">·</span>
-                  <span class="text-amber-600">Never synced</span>
+                  <span class="text-amber-600"><%= t("exchange_accounts.index.never_synced") %></span>
                 <% end %>
               </div>
               <div class="mt-1 flex items-center gap-1">
-                <span class="text-xs text-slate-400">Syncing:</span>
+                <span class="text-xs text-slate-400"><%= t("exchange_accounts.index.syncing") %></span>
                 <% account.allowed_quote_currencies.each do |currency| %>
                   <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"><%= currency %></span>
                 <% end %>
@@ -39,21 +39,21 @@
             <div class="flex items-center gap-3">
               <% provider_supported = Exchanges::ProviderForAccount.new(account).supported? %>
               <% if provider_supported && account.can_sync? %>
-                <%= button_to "Sync now", sync_exchange_account_path(account), method: :post, class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50" %>
+                <%= button_to t("exchange_accounts.index.sync_now"), sync_exchange_account_path(account), method: :post, class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50" %>
               <% elsif provider_supported && !account.can_sync? %>
-                <span class="text-sm text-slate-400">Rate limit (2/day)</span>
+                <span class="text-sm text-slate-400"><%= t("exchange_accounts.index.rate_limit") %></span>
               <% end %>
               <% if provider_supported && current_user.admin? %>
                 <%= form_with url: historic_sync_exchange_account_path(account), method: :post, class: "flex items-center gap-1" do |f| %>
                   <%= f.text_field :extra_symbols, placeholder: "e.g. BTCUSDT,ETHUSDT", size: 22,
                         class: "rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400" %>
-                  <%= f.submit "Historic sync",
+                  <%= f.submit t("exchange_accounts.index.historic_sync"),
                         class: "cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50",
                         data: { turbo_confirm: "Fetch all trades from 2018 onwards? This may take a few minutes." } %>
                 <% end %>
               <% end %>
-              <%= link_to "Settings", edit_exchange_account_path(account), class: "text-sm text-slate-600 hover:text-slate-900" %>
-              <%= button_to "Remove", exchange_account_path(account), method: :delete, data: { turbo_confirm: "Remove this exchange account?" }, class: "text-sm text-slate-600 hover:text-red-600" %>
+              <%= link_to t("exchange_accounts.index.settings"), edit_exchange_account_path(account), class: "text-sm text-slate-600 hover:text-slate-900" %>
+              <%= button_to t("exchange_accounts.index.remove"), exchange_account_path(account), method: :delete, data: { turbo_confirm: t("exchange_accounts.index.remove_confirm") }, class: "text-sm text-slate-600 hover:text-red-600" %>
             </div>
           </li>
         <% end %>
@@ -71,10 +71,10 @@
           </svg>
         </div>
         <div>
-          <p class="text-base font-medium text-slate-900">No exchange accounts linked yet</p>
+          <p class="text-base font-medium text-slate-900"><%= t("exchange_accounts.index.no_accounts") %></p>
           <p class="mt-1 text-sm text-slate-500">Connect Binance or BingX to start syncing your perpetual futures trades.</p>
         </div>
-        <%= render ButtonComponent.new(label: "Link your first account", href: new_exchange_account_path) %>
+        <%= render ButtonComponent.new(label: t("exchange_accounts.index.link_account"), href: new_exchange_account_path) %>
       </div>
     <% end %>
   </section>

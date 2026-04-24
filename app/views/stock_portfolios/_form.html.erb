@@ -1,18 +1,18 @@
 <%= form_with model: @stock_portfolio, local: true, class: "space-y-4", data: { turbo: false } do |f| %>
   <%= render ErrorSummaryComponent.new(model: @stock_portfolio) %>
 
-  <%= render FormFieldComponent.new(form: f, attribute: :name, label: "Name", placeholder: "e.g. My CEDEAR Portfolio") %>
+  <%= render FormFieldComponent.new(form: f, attribute: :name, label: t("stock_portfolios.form.name"), placeholder: "e.g. My CEDEAR Portfolio") %>
 
   <div>
-    <%= f.label :market, "Market", class: "block text-sm font-medium text-slate-700" %>
+    <%= f.label :market, t("stock_portfolios.form.market"), class: "block text-sm font-medium text-slate-700" %>
     <div class="mt-2 space-y-2">
       <label class="flex items-center gap-2 text-sm text-slate-700">
         <%= f.radio_button :market, "us", class: "h-4 w-4 border-slate-300 text-slate-800 focus:ring-slate-500" %>
-        <span><strong>US market</strong> — prices in USD via Finnhub</span>
+        <span><strong><%= t("stock_portfolios.form.us_market") %></strong> — <%= t("stock_portfolios.form.us_market_hint") %></span>
       </label>
       <label class="flex items-center gap-2 text-sm text-slate-700">
         <%= f.radio_button :market, "argentina", class: "h-4 w-4 border-slate-300 text-slate-800 focus:ring-slate-500" %>
-        <span><strong>Argentina (CEDEARs)</strong> — prices in ARS, USD equivalent via MEP rate</span>
+        <span><strong><%= t("stock_portfolios.form.argentina_market") %></strong> — <%= t("stock_portfolios.form.argentina_market_hint") %></span>
       </label>
     </div>
     <% if @stock_portfolio.errors[:market].any? %>
@@ -22,11 +22,11 @@
 
   <div class="flex items-center">
     <%= f.check_box :default, class: "h-4 w-4 rounded border-slate-300 text-slate-800 focus:ring-slate-500" %>
-    <%= f.label :default, "Set as default portfolio", class: "ml-2 block text-sm text-slate-700" %>
+    <%= f.label :default, t("stock_portfolios.form.set_as_default"), class: "ml-2 block text-sm text-slate-700" %>
   </div>
 
   <div class="flex gap-3 pt-2">
     <%= f.submit class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
-    <%= link_to "Cancel", stock_portfolios_path, class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+    <%= link_to t("stock_portfolios.form.cancel"), stock_portfolios_path, class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
   </div>
 <% end %>

@@ -7,7 +7,7 @@ class CustomMetricDefinitionsController < ApplicationController
   def create
     @definition = @company.custom_metric_definitions.build(create_params)
     if @definition.save
-      redirect_to company_path(@company), notice: "#{@definition.name} metric added."
+      redirect_to company_path(@company), notice: t("flash.metric_added", name: @definition.name)
     else
       redirect_to company_path(@company), alert: @definition.errors.full_messages.to_sentence
     end
@@ -18,7 +18,7 @@ class CustomMetricDefinitionsController < ApplicationController
 
   def update
     if @definition.update(update_params)
-      redirect_to company_path(@company), notice: "#{@definition.name} metric updated."
+      redirect_to company_path(@company), notice: t("flash.metric_updated", name: @definition.name)
     else
       render :edit, status: :unprocessable_entity
     end
@@ -27,7 +27,7 @@ class CustomMetricDefinitionsController < ApplicationController
   def destroy
     definition = @company.custom_metric_definitions.find(params[:id])
     definition.destroy
-    redirect_to company_path(@company), notice: "#{definition.name} metric removed."
+    redirect_to company_path(@company), notice: t("flash.metric_removed", name: definition.name)
   end
 
   private

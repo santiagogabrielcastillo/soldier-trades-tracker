@@ -25,6 +25,7 @@ gem "tailwindcss-rails"
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.22"
 gem "rack-attack"
+gem "rails-i18n"
 
 # Solid Queue for background jobs (no Redis)
 gem "solid_queue"

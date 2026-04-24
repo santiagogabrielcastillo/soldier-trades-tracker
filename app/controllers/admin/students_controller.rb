@@ -23,7 +23,7 @@ class Admin::StudentsController < Admin::BaseController
   def toggle_active
     if @student.update(active: !@student.active)
       redirect_to admin_students_path,
-                  notice: "#{@student.email} marked #{@student.active? ? "active" : "inactive"}."
+                  notice: t("flash.admin_student_status", email: @student.email, status: @student.active? ? t("admin.shared.active").downcase : t("admin.shared.inactive").downcase)
     else
       redirect_to admin_students_path,
                   alert: @student.errors.full_messages.to_sentence
@@ -32,7 +32,7 @@ class Admin::StudentsController < Admin::BaseController
 
   def promote
     if @student.update(role: "admin")
-      redirect_to admin_students_path, notice: "#{@student.email} promoted to admin."
+      redirect_to admin_students_path, notice: t("flash.admin_student_promoted", email: @student.email)
     else
       redirect_to admin_students_path, alert: @student.errors.full_messages.to_sentence
     end

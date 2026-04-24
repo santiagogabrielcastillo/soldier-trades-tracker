@@ -12,6 +12,6 @@ class CreateStockPortfolioSnapshots < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    add_index :stock_portfolio_snapshots, [:stock_portfolio_id, :recorded_at]
+    add_index :stock_portfolio_snapshots, [ :stock_portfolio_id, :recorded_at ]
   end
 end

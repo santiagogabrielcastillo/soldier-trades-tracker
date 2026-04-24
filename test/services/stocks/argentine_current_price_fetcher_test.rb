@@ -14,7 +14,7 @@ module Stocks
     end
 
     test "returns empty hash when no IOL credentials configured" do
-      assert_equal({}, ArgentineCurrentPriceFetcher.call(tickers: ["AAPL"], user: @user))
+      assert_equal({}, ArgentineCurrentPriceFetcher.call(tickers: [ "AAPL" ], user: @user))
     end
 
     test "returns prices when credentials configured" do
@@ -22,7 +22,7 @@ module Stocks
       stub_client = Object.new
       stub_client.define_singleton_method(:quote) { |ticker| ticker == "AAPL" ? BigDecimal("1500.0") : nil }
       ArgentineCurrentPriceFetcher.stub(:build_client, stub_client) do
-        result = ArgentineCurrentPriceFetcher.call(tickers: ["AAPL"], user: @user)
+        result = ArgentineCurrentPriceFetcher.call(tickers: [ "AAPL" ], user: @user)
         assert_equal BigDecimal("1500.0"), result["AAPL"]
       end
     end
@@ -32,7 +32,7 @@ module Stocks
       stub_client = Object.new
       stub_client.define_singleton_method(:quote) { |_| nil }
       ArgentineCurrentPriceFetcher.stub(:build_client, stub_client) do
-        assert_equal({}, ArgentineCurrentPriceFetcher.call(tickers: ["UNKNOWN"], user: @user))
+        assert_equal({}, ArgentineCurrentPriceFetcher.call(tickers: [ "UNKNOWN" ], user: @user))
       end
     end
   end

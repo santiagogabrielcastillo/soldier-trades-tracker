@@ -14,7 +14,7 @@ class CedearInstrumentsController < ApplicationController
   def create
     @cedear_instrument = current_user.cedear_instruments.build(instrument_params)
     if @cedear_instrument.save
-      redirect_to cedear_instruments_path, notice: "Instrument added."
+      redirect_to cedear_instruments_path, notice: t("flash.cedear_added")
     else
       render :new, status: :unprocessable_entity
     end
@@ -24,7 +24,7 @@ class CedearInstrumentsController < ApplicationController
 
   def update
     if @cedear_instrument.update(instrument_params)
-      redirect_to cedear_instruments_path, notice: "Instrument updated."
+      redirect_to cedear_instruments_path, notice: t("flash.cedear_updated")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -32,7 +32,7 @@ class CedearInstrumentsController < ApplicationController
 
   def destroy
     @cedear_instrument.destroy
-    redirect_to cedear_instruments_path, notice: "Instrument removed."
+    redirect_to cedear_instruments_path, notice: t("flash.cedear_removed")
   end
 
   # GET /cedear_instruments/lookup?ticker=AAPL

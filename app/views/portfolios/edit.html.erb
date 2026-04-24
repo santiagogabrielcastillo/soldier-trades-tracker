@@ -1,10 +1,10 @@
 <div class="mx-auto max-w-4xl">
   <%= render BreadcrumbComponent.new(items: [
-    { label: "Trades", url: trades_path },
-    { label: "Portfolios", url: portfolios_path },
-    { label: "Edit", url: nil }
+    { label: t("nav.trades"), url: trades_path },
+    { label: t("portfolios.index.title"), url: portfolios_path },
+    { label: t("portfolios.edit.breadcrumb"), url: nil }
   ]) %>
-  <h1 class="mb-2 text-2xl font-semibold text-slate-900">Edit portfolio</h1>
+  <h1 class="mb-2 text-2xl font-semibold text-slate-900"><%= t("portfolios.edit.title") %></h1>
   <p class="mb-6 text-sm text-slate-600"><%= @portfolio.name %></p>
   <%= render "form" %>
 </div>

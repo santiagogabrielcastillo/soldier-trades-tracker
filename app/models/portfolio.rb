@@ -31,14 +31,13 @@ class Portfolio < ApplicationRecord
     return if end_date.blank? || start_date.blank?
     return if end_date >= start_date
 
-    errors.add(:end_date, "must be on or after start date")
+    errors.add(:end_date, :after_start_date)
   end
 
   def exchange_account_belongs_to_user
     return if exchange_account_id.blank? || user_id.blank?
     return if user.exchange_accounts.exists?(exchange_account_id)
 
-    errors.add(:exchange_account_id, "must be one of your exchange accounts")
+    errors.add(:exchange_account_id, :not_your_account)
   end
-
 end

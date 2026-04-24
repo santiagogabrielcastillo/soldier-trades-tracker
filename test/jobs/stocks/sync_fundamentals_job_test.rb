@@ -19,7 +19,7 @@ module Stocks
       }
 
       Stocks::FundamentalsFetcher.stub(:call, fundamentals_data) do
-        Stocks::SyncFundamentalsJob.new.perform(["MSFT"])
+        Stocks::SyncFundamentalsJob.new.perform([ "MSFT" ])
       end
 
       record = StockFundamental.find_by!(ticker: "MSFT")
@@ -31,7 +31,7 @@ module Stocks
 
     test "logs count of synced tickers" do
       Stocks::FundamentalsFetcher.stub(:call, {}) do
-        assert_nothing_raised { Stocks::SyncFundamentalsJob.new.perform(["AAPL"]) }
+        assert_nothing_raised { Stocks::SyncFundamentalsJob.new.perform([ "AAPL" ]) }
       end
     end
   end
