@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class StockTrade < ApplicationRecord
+  include Auditable
+  include Discardable
+
   belongs_to :stock_portfolio
 
   validates :executed_at, presence: true

@@ -1,4 +1,7 @@
 class ExchangeAccount < ApplicationRecord
+  include Discardable
+  has_paper_trail on: %i[create update], skip: %i[api_key api_secret settings]
+
   PROVIDER_TYPES = %w[binance bingx].freeze
   SUPPORTED_QUOTE_CURRENCIES = Exchanges::QuoteCurrencies::SUPPORTED
   DEFAULT_QUOTE_CURRENCIES = Exchanges::QuoteCurrencies::DEFAULT

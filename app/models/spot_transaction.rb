@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class SpotTransaction < ApplicationRecord
+  include Auditable
+  include Discardable
+
   belongs_to :spot_account
 
   validates :executed_at, presence: true
