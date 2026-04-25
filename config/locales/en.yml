@@ -31,6 +31,7 @@ en:
     password_reset_sent: "If that email is registered, you'll receive a reset link shortly."
     invalid_reset_link: "Reset link is invalid or has expired."
     password_updated: "Password updated. Please sign in."
+    language_changed: "Language preference saved."
     # Exchange accounts
     exchange_account_linked: "Exchange account linked successfully."
     exchange_account_linked_first: "Account linked! Contact an admin to request a historic data sync for your older trades."
@@ -290,6 +291,7 @@ en:
 
   # ── Settings ──────────────────────────────────────────────────────────────────
   settings:
+    language: "Language"
     show:
       title: "Settings"
       sync_interval_legend: "Sync interval"
