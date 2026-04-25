@@ -1,0 +1,4 @@
+<%= render PageHeaderComponent.new(title: "Edit stock portfolio for #{@student.email}") %>
+<%= render CardComponent.new do %>
+  <%= render "form", url: admin_student_stock_portfolio_path(@student, @portfolio), method: :patch, submit_label: "Update portfolio" %>
+<% end %>

@@ -1,0 +1,4 @@
+<%= render PageHeaderComponent.new(title: "Edit allocation entry for #{@student.email}") %>
+<%= render CardComponent.new do %>
+  <%= render "form", url: admin_student_allocation_manual_entry_path(@student, @entry), method: :patch, submit_label: "Update entry" %>
+<% end %>

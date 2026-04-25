@@ -1,0 +1,31 @@
+<%= render PageHeaderComponent.new(title: "#{@student.email} — Spot Accounts") do |c| %>
+  <% c.with_actions do %>
+    <%= link_to "New account", new_admin_student_spot_account_path(@student),
+          class: "rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700" %>
+    <%= link_to "← Student", admin_student_path(@student), class: "text-sm text-slate-500 hover:text-slate-800" %>
+  <% end %>
+<% end %>
+<%= render CardComponent.new do %>
+  <% if @accounts.any? %>
+    <ul class="divide-y divide-slate-100">
+      <% @accounts.each do |a| %>
+        <li class="flex items-center justify-between px-6 py-3">
+          <span class="text-sm font-medium text-slate-900">
+            <%= a.name %>
+            <% if a.discarded_at? %><span class="ml-1 rounded bg-red-100 px-1.5 py-0.5 text-xs text-red-600">deleted</span><% end %>
+          </span>
+          <% unless a.discarded_at? %>
+            <div class="flex gap-4 text-sm">
+              <%= link_to "Edit", edit_admin_student_spot_account_path(@student, a), class: "text-indigo-600 hover:text-indigo-900" %>
+              <%= button_to "Delete", admin_student_spot_account_path(@student, a),
+                    method: :delete, data: { turbo_confirm: "Delete?" },
+                    class: "text-red-600 hover:text-red-900 bg-transparent border-0 cursor-pointer text-sm" %>
+            </div>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="px-6 py-4 text-sm text-slate-500">None yet.</p>
+  <% end %>
+<% end %>

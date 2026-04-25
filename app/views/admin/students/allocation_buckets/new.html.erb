@@ -1,0 +1,4 @@
+<%= render PageHeaderComponent.new(title: "New allocation bucket for #{@student.email}") %>
+<%= render CardComponent.new do %>
+  <%= render "form", url: admin_student_allocation_buckets_path(@student), method: :post, submit_label: "Create bucket" %>
+<% end %>

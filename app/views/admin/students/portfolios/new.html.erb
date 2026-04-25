@@ -1,0 +1,4 @@
+<%= render PageHeaderComponent.new(title: "New portfolio for #{@student.email}") %>
+<%= render CardComponent.new do %>
+  <%= render "form", url: admin_student_portfolios_path(@student), method: :post, submit_label: "Create portfolio" %>
+<% end %>

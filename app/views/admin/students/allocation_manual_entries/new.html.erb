@@ -1,0 +1,4 @@
+<%= render PageHeaderComponent.new(title: "New allocation entry for #{@student.email}") %>
+<%= render CardComponent.new do %>
+  <%= render "form", url: admin_student_allocation_manual_entries_path(@student), method: :post, submit_label: "Create entry" %>
+<% end %>
