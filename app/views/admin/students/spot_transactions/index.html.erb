@@ -1,0 +1,49 @@
+<%= render PageHeaderComponent.new(title: "#{@student.email} — Spot Transactions") do |c| %>
+  <% c.with_actions do %>
+    <% @spot_accounts.each do |acct| %>
+      <%= link_to "New transaction (#{acct.name})",
+            new_admin_student_spot_transaction_path(@student, spot_account_id: acct.id),
+            class: "rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700" %>
+    <% end %>
+    <%= link_to "← Student", admin_student_path(@student), class: "text-sm text-slate-500 hover:text-slate-800" %>
+  <% end %>
+<% end %>
+
+<%= render CardComponent.new do %>
+  <% if @transactions.any? %>
+    <%= render DataTableComponent.new(columns: [
+      { label: "Token",  classes: "text-left" },
+      { label: "Side",   classes: "text-left" },
+      { label: "Amount", classes: "text-right" },
+      { label: "Price",  classes: "text-right" },
+      { label: "Date",   classes: "text-left" },
+      { label: "",       classes: "text-right" }
+    ]) do |table| %>
+      <% @transactions.each do |tx| %>
+        <% table.with_row do %>
+          <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900">
+            <%= tx.token %>
+            <% if tx.discarded_at? %><span class="ml-1 rounded bg-red-100 px-1.5 py-0.5 text-xs text-red-600">deleted</span><% end %>
+          </td>
+          <td class="whitespace-nowrap px-6 py-4 text-sm capitalize text-slate-700"><%= tx.side %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700"><%= number_with_precision(tx.amount, precision: 4) %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-slate-700">$<%= number_with_precision(tx.price_usd, precision: 2) %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-500"><%= tx.executed_at.strftime("%b %d, %Y") %></td>
+          <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
+            <% unless tx.discarded_at? %>
+              <%= link_to "Edit", edit_admin_student_spot_transaction_path(@student, tx), class: "mr-3 text-indigo-600 hover:text-indigo-900" %>
+              <%= button_to "Delete", admin_student_spot_transaction_path(@student, tx),
+                    method: :delete, data: { turbo_confirm: "Delete this transaction?" },
+                    class: "text-red-600 hover:text-red-900 bg-transparent border-0 cursor-pointer text-sm" %>
+            <% end %>
+          </td>
+        <% end %>
+      <% end %>
+    <% end %>
+    <% if @pagy.last > 1 %>
+      <div class="px-6 py-3"><%== @pagy.series_nav %></div>
+    <% end %>
+  <% else %>
+    <p class="px-6 py-4 text-sm text-slate-500">No transactions yet.</p>
+  <% end %>
+<% end %>

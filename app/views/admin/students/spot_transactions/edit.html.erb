@@ -1,0 +1,4 @@
+<%= render PageHeaderComponent.new(title: "Edit spot transaction for #{@student.email}") %>
+<%= render CardComponent.new do %>
+  <%= render "form", url: admin_student_spot_transaction_path(@student, @transaction), method: :patch, submit_label: "Update transaction" %>
+<% end %>
