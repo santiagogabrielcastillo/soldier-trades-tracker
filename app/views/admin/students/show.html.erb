@@ -9,6 +9,7 @@
           promote_admin_student_path(@student),
           method: :patch,
           class: "rounded-md border border-indigo-300 px-3 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+    <%= link_to "Audit log →", admin_audit_log_path(student_id: @student.id), class: "text-sm text-indigo-600 hover:text-indigo-900" %>
     <%= link_to t("admin.students.all_students"), admin_students_path, class: "text-sm text-slate-500 hover:text-slate-800" %>
   <% end %>
 <% end %>
@@ -72,7 +73,7 @@
 
 <%# ── Spot accounts ── %>
 <% if @spot_accounts.any? %>
-  <%= render CardComponent.new(heading: t("admin.shared.spot_accounts")) do %>
+  <%= render CardComponent.new(heading: t("admin.shared.spot_accounts"), class: "mb-6") do %>
     <div class="space-y-2">
       <% @spot_accounts.each do |account| %>
         <div class="flex items-center justify-between rounded-md border border-slate-100 px-4 py-3">
@@ -82,4 +83,37 @@
       <% end %>
     </div>
   <% end %>
+<% end %>
+
+<%# ── Manage student data ── %>
+<%= render CardComponent.new(heading: "Manage student data") do %>
+  <div class="grid grid-cols-2 gap-3 px-6 py-4 sm:grid-cols-3">
+    <%= link_to "Futures trades",
+          admin_student_trades_path(@student),
+          class: "rounded-md border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:border-indigo-300 hover:text-indigo-700" %>
+    <%= link_to "Spot transactions",
+          admin_student_spot_transactions_path(@student),
+          class: "rounded-md border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:border-indigo-300 hover:text-indigo-700" %>
+    <%= link_to "Stock trades",
+          admin_student_stock_trades_path(@student),
+          class: "rounded-md border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:border-indigo-300 hover:text-indigo-700" %>
+    <%= link_to "Portfolios",
+          admin_student_portfolios_path(@student),
+          class: "rounded-md border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:border-indigo-300 hover:text-indigo-700" %>
+    <%= link_to "Exchange accounts",
+          admin_student_exchange_accounts_path(@student),
+          class: "rounded-md border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:border-indigo-300 hover:text-indigo-700" %>
+    <%= link_to "Spot accounts",
+          admin_student_spot_accounts_path(@student),
+          class: "rounded-md border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:border-indigo-300 hover:text-indigo-700" %>
+    <%= link_to "Stock portfolios",
+          admin_student_stock_portfolios_path(@student),
+          class: "rounded-md border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:border-indigo-300 hover:text-indigo-700" %>
+    <%= link_to "Allocation buckets",
+          admin_student_allocation_buckets_path(@student),
+          class: "rounded-md border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:border-indigo-300 hover:text-indigo-700" %>
+    <%= link_to "Allocation entries",
+          admin_student_allocation_manual_entries_path(@student),
+          class: "rounded-md border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:border-indigo-300 hover:text-indigo-700" %>
+  </div>
 <% end %>

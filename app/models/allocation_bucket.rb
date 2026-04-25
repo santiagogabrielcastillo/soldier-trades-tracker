@@ -3,6 +3,9 @@
 class AllocationBucket < ApplicationRecord
   COLORS = %w[#6366f1 #8b5cf6 #06b6d4 #10b981 #f59e0b #ef4444 #ec4899 #84cc16].freeze
 
+  include Auditable
+  include Discardable
+
   belongs_to :user
   has_many :allocation_manual_entries, dependent: :destroy
   has_many :stock_portfolios, foreign_key: :allocation_bucket_id, dependent: :nullify, inverse_of: :allocation_bucket

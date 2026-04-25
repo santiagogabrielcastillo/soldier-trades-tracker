@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Portfolio < ApplicationRecord
+  include Auditable
+  include Discardable
   include HasSingleDefault
 
   belongs_to :user

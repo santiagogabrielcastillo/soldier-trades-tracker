@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class AllocationManualEntry < ApplicationRecord
+  include Auditable
+  include Discardable
+
   belongs_to :user
   belongs_to :allocation_bucket
 

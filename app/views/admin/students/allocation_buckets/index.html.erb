@@ -1,0 +1,33 @@
+<%= render PageHeaderComponent.new(title: "#{@student.email} — Allocation Buckets") do |c| %>
+  <% c.with_actions do %>
+    <%= link_to "New bucket", new_admin_student_allocation_bucket_path(@student),
+          class: "rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700" %>
+    <%= link_to "← Student", admin_student_path(@student), class: "text-sm text-slate-500 hover:text-slate-800" %>
+  <% end %>
+<% end %>
+<%= render CardComponent.new do %>
+  <% if @buckets.any? %>
+    <ul class="divide-y divide-slate-100">
+      <% @buckets.each do |b| %>
+        <li class="flex items-center justify-between px-6 py-3">
+          <span class="flex items-center gap-2 text-sm font-medium text-slate-900">
+            <span class="inline-block h-3 w-3 rounded-full" style="background-color: <%= b.color %>"></span>
+            <%= b.name %>
+            <% if b.target_pct %><span class="text-xs text-slate-500"><%= number_with_precision(b.target_pct, precision: 1) %>%</span><% end %>
+            <% if b.discarded_at? %><span class="ml-1 rounded bg-red-100 px-1.5 py-0.5 text-xs text-red-600">deleted</span><% end %>
+          </span>
+          <% unless b.discarded_at? %>
+            <div class="flex gap-4 text-sm">
+              <%= link_to "Edit", edit_admin_student_allocation_bucket_path(@student, b), class: "text-indigo-600 hover:text-indigo-900" %>
+              <%= button_to "Delete", admin_student_allocation_bucket_path(@student, b),
+                    method: :delete, data: { turbo_confirm: "Delete?" },
+                    class: "text-red-600 hover:text-red-900 bg-transparent border-0 cursor-pointer text-sm" %>
+            </div>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="px-6 py-4 text-sm text-slate-500">None yet.</p>
+  <% end %>
+<% end %>

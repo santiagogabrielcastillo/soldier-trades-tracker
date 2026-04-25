@@ -3,6 +3,8 @@
 class StockPortfolio < ApplicationRecord
   MARKET_TYPES = %w[us argentina].freeze
 
+  include Auditable
+  include Discardable
   include HasSingleDefault
 
   belongs_to :user

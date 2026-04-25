@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class SpotAccount < ApplicationRecord
+  include Auditable
+  include Discardable
   include HasSingleDefault
 
   belongs_to :user

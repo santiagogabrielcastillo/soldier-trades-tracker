@@ -1,4 +1,7 @@
 class Trade < ApplicationRecord
+  include Auditable
+  include Discardable
+
   belongs_to :exchange_account
   has_many :position_trades, dependent: :destroy
   has_many :positions, through: :position_trades

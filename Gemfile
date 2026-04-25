@@ -33,6 +33,9 @@ gem "solid_queue"
 # Pagination
 gem "pagy"
 
+# Audit trail
+gem "paper_trail", "~> 15.0"
+
 # View components
 gem "view_component", "~> 4.6"
 

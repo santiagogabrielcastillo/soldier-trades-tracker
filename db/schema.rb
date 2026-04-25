@@ -10,30 +10,34 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_23_192059) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_25_134525) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "allocation_buckets", force: :cascade do |t|
     t.string "color", null: false
     t.datetime "created_at", null: false
+    t.datetime "discarded_at"
     t.string "name", null: false
     t.integer "position", default: 0, null: false
     t.decimal "target_pct", precision: 5, scale: 2
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index [ "user_id" ], name: "index_allocation_buckets_on_user_id"
+    t.index ["discarded_at"], name: "index_allocation_buckets_on_discarded_at"
+    t.index ["user_id"], name: "index_allocation_buckets_on_user_id"
   end
 
   create_table "allocation_manual_entries", force: :cascade do |t|
     t.bigint "allocation_bucket_id", null: false
     t.decimal "amount_usd", precision: 20, scale: 2, null: false
     t.datetime "created_at", null: false
+    t.datetime "discarded_at"
     t.string "label", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index [ "allocation_bucket_id" ], name: "index_allocation_manual_entries_on_allocation_bucket_id"
-    t.index [ "user_id" ], name: "index_allocation_manual_entries_on_user_id"
+    t.index ["allocation_bucket_id"], name: "index_allocation_manual_entries_on_allocation_bucket_id"
+    t.index ["discarded_at"], name: "index_allocation_manual_entries_on_discarded_at"
+    t.index ["user_id"], name: "index_allocation_manual_entries_on_user_id"
   end
 
   create_table "cedear_instruments", force: :cascade do |t|
@@ -100,6 +104,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_192059) do
     t.string "api_key"
     t.string "api_secret"
     t.datetime "created_at", null: false
+    t.datetime "discarded_at"
     t.datetime "historic_sync_requested_at"
     t.string "last_sync_error"
     t.datetime "last_sync_failed_at"
@@ -109,7 +114,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_192059) do
     t.jsonb "settings", default: {}, null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index [ "user_id" ], name: "index_exchange_accounts_on_user_id"
+    t.index ["discarded_at"], name: "index_exchange_accounts_on_discarded_at"
+    t.index ["user_id"], name: "index_exchange_accounts_on_user_id"
   end
 
   create_table "invite_codes", force: :cascade do |t|
@@ -125,6 +131,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_192059) do
   create_table "portfolios", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "default", default: false, null: false
+    t.datetime "discarded_at"
     t.date "end_date"
     t.bigint "exchange_account_id"
     t.decimal "initial_balance", precision: 20, scale: 8, default: "0.0", null: false
@@ -133,8 +140,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_192059) do
     t.date "start_date", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index [ "exchange_account_id" ], name: "index_portfolios_on_exchange_account_id"
-    t.index [ "user_id" ], name: "index_portfolios_on_user_id"
+    t.index ["discarded_at"], name: "index_portfolios_on_discarded_at"
+    t.index ["exchange_account_id"], name: "index_portfolios_on_exchange_account_id"
+    t.index ["user_id"], name: "index_portfolios_on_user_id"
   end
 
   create_table "position_trades", force: :cascade do |t|
@@ -305,18 +313,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_192059) do
     t.jsonb "cached_prices", default: {}
     t.datetime "created_at", null: false
     t.boolean "default", default: false, null: false
+    t.datetime "discarded_at"
     t.string "name", null: false
     t.datetime "prices_synced_at"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index [ "allocation_bucket_id" ], name: "index_spot_accounts_on_allocation_bucket_id"
-    t.index [ "user_id", "default" ], name: "index_spot_accounts_on_user_id_and_default"
-    t.index [ "user_id" ], name: "index_spot_accounts_on_user_id"
+    t.index ["allocation_bucket_id"], name: "index_spot_accounts_on_allocation_bucket_id"
+    t.index ["discarded_at"], name: "index_spot_accounts_on_discarded_at"
+    t.index ["user_id", "default"], name: "index_spot_accounts_on_user_id_and_default"
+    t.index ["user_id"], name: "index_spot_accounts_on_user_id"
   end
 
   create_table "spot_transactions", force: :cascade do |t|
     t.decimal "amount", precision: 20, scale: 8, null: false
     t.datetime "created_at", null: false
+    t.datetime "discarded_at"
     t.datetime "executed_at", null: false
     t.text "notes"
     t.decimal "price_usd", precision: 20, scale: 8, null: false
@@ -326,9 +337,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_192059) do
     t.string "token", null: false
     t.decimal "total_value_usd", precision: 20, scale: 8, null: false
     t.datetime "updated_at", null: false
-    t.index [ "spot_account_id", "executed_at" ], name: "index_spot_transactions_on_spot_account_id_and_executed_at"
-    t.index [ "spot_account_id", "row_signature" ], name: "index_spot_transactions_on_spot_account_id_and_row_signature", unique: true
-    t.index [ "spot_account_id" ], name: "index_spot_transactions_on_spot_account_id"
+    t.index ["discarded_at"], name: "index_spot_transactions_on_discarded_at"
+    t.index ["spot_account_id", "executed_at"], name: "index_spot_transactions_on_spot_account_id_and_executed_at"
+    t.index ["spot_account_id", "row_signature"], name: "index_spot_transactions_on_spot_account_id_and_row_signature", unique: true
+    t.index ["spot_account_id"], name: "index_spot_transactions_on_spot_account_id"
   end
 
   create_table "stock_analyses", force: :cascade do |t|
@@ -389,18 +401,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_192059) do
     t.bigint "allocation_bucket_id"
     t.datetime "created_at", null: false
     t.boolean "default", default: false, null: false
+    t.datetime "discarded_at"
     t.string "market", default: "us", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index [ "allocation_bucket_id" ], name: "index_stock_portfolios_on_allocation_bucket_id"
-    t.index [ "user_id", "default" ], name: "index_stock_portfolios_on_user_id_and_default"
-    t.index [ "user_id" ], name: "index_stock_portfolios_on_user_id"
+    t.index ["allocation_bucket_id"], name: "index_stock_portfolios_on_allocation_bucket_id"
+    t.index ["discarded_at"], name: "index_stock_portfolios_on_discarded_at"
+    t.index ["user_id", "default"], name: "index_stock_portfolios_on_user_id_and_default"
+    t.index ["user_id"], name: "index_stock_portfolios_on_user_id"
   end
 
   create_table "stock_trades", force: :cascade do |t|
     t.decimal "cedear_ratio", precision: 10, scale: 4
     t.datetime "created_at", null: false
+    t.datetime "discarded_at"
     t.datetime "executed_at", null: false
     t.text "notes"
     t.decimal "price_usd", precision: 20, scale: 8, null: false
@@ -411,9 +426,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_192059) do
     t.string "ticker", null: false
     t.decimal "total_value_usd", precision: 20, scale: 8, null: false
     t.datetime "updated_at", null: false
-    t.index [ "stock_portfolio_id", "executed_at" ], name: "index_stock_trades_on_portfolio_id_and_executed_at"
-    t.index [ "stock_portfolio_id", "row_signature" ], name: "index_stock_trades_on_portfolio_id_and_row_signature", unique: true
-    t.index [ "stock_portfolio_id" ], name: "index_stock_trades_on_stock_portfolio_id"
+    t.index ["discarded_at"], name: "index_stock_trades_on_discarded_at"
+    t.index ["stock_portfolio_id", "executed_at"], name: "index_stock_trades_on_portfolio_id_and_executed_at"
+    t.index ["stock_portfolio_id", "row_signature"], name: "index_stock_trades_on_portfolio_id_and_row_signature", unique: true
+    t.index ["stock_portfolio_id"], name: "index_stock_trades_on_stock_portfolio_id"
   end
 
   create_table "sync_runs", force: :cascade do |t|
@@ -427,6 +443,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_192059) do
 
   create_table "trades", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.datetime "discarded_at"
     t.bigint "exchange_account_id", null: false
     t.string "exchange_reference_id", null: false
     t.datetime "executed_at", null: false
@@ -437,10 +454,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_192059) do
     t.string "side", null: false
     t.string "symbol", null: false
     t.datetime "updated_at", null: false
-    t.index [ "exchange_account_id", "exchange_reference_id" ], name: "index_trades_on_account_and_reference", unique: true
-    t.index [ "exchange_account_id", "executed_at" ], name: "index_trades_on_exchange_account_id_and_executed_at"
-    t.index [ "exchange_account_id", "position_id" ], name: "index_trades_on_account_and_position_id"
-    t.index [ "exchange_account_id" ], name: "index_trades_on_exchange_account_id"
+    t.index ["discarded_at"], name: "index_trades_on_discarded_at"
+    t.index ["exchange_account_id", "exchange_reference_id"], name: "index_trades_on_account_and_reference", unique: true
+    t.index ["exchange_account_id", "executed_at"], name: "index_trades_on_exchange_account_id_and_executed_at"
+    t.index ["exchange_account_id", "position_id"], name: "index_trades_on_account_and_position_id"
+    t.index ["exchange_account_id"], name: "index_trades_on_exchange_account_id"
   end
 
   create_table "user_api_keys", force: :cascade do |t|
@@ -473,6 +491,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_192059) do
     t.string "sync_interval"
     t.datetime "updated_at", null: false
     t.index [ "email" ], name: "index_users_on_email", unique: true
+  end
+
+  create_table "versions", force: :cascade do |t|
+    t.datetime "created_at"
+    t.string "event", null: false
+    t.bigint "item_id", null: false
+    t.string "item_type", null: false
+    t.text "object"
+    t.text "object_changes"
+    t.string "whodunnit"
+    t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
   end
 
   create_table "watchlist_tickers", force: :cascade do |t|

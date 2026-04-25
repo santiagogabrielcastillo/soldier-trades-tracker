@@ -1,0 +1,9 @@
+one:
+  stock_portfolio: one
+  ticker: AAPL
+  side: buy
+  price_usd: 180.00
+  shares: 10
+  total_value_usd: 1800.00
+  executed_at: 2026-01-10 10:00:00 UTC
+  row_signature: sig_aapl_buy_1

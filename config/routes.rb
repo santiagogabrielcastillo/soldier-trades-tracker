@@ -88,6 +88,17 @@ Rails.application.routes.draw do
         patch :toggle_active
         patch :promote
       end
+      scope module: "students" do
+        resources :trades,                    only: %i[index new create edit update destroy]
+        resources :spot_transactions,         only: %i[index new create edit update destroy]
+        resources :stock_trades,              only: %i[index new create edit update destroy]
+        resources :portfolios,                only: %i[index new create edit update destroy]
+        resources :exchange_accounts,         only: %i[index new create edit update destroy]
+        resources :spot_accounts,             only: %i[index new create edit update destroy]
+        resources :stock_portfolios,          only: %i[index new create edit update destroy]
+        resources :allocation_buckets,        only: %i[index new create edit update destroy]
+        resources :allocation_manual_entries, only: %i[index new create edit update destroy]
+      end
     end
     resources :admins, only: %i[index show] do
       member do
@@ -95,7 +106,8 @@ Rails.application.routes.draw do
         patch :demote
       end
     end
-    resource :invite_code, only: %i[show create], controller: "invite_code"
+    resource  :invite_code, only: %i[show create], controller: "invite_code"
+    resource  :audit_log,   only: [:show],          controller: "audit_log"
   end
 
   resources :companies, only: %i[index new create show edit update destroy] do
