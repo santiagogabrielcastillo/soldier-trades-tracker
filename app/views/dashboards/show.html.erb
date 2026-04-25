@@ -1,38 +1,38 @@
-<%= render PageHeaderComponent.new(title: "Dashboard", subtitle: "Centralize your trade activity across exchanges.") %>
+<%= render PageHeaderComponent.new(title: t("dashboards.show.title"), subtitle: t("dashboards.show.subtitle")) %>
 
 <%# ── Period summary ── %>
 <%= render CardComponent.new(class: "card-accent mb-8") do %>
   <div class="mb-4 flex items-center justify-between">
     <div>
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Period summary</h2>
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500"><%= t("dashboards.show.period_summary") %></h2>
       <p class="mt-0.5 text-sm text-slate-500">
         <%= @dashboard.summary_label %><% if @dashboard.summary_date_range %> · <%= @dashboard.summary_date_range %><% end %>
       </p>
     </div>
-    <%= link_to "View trades", @dashboard.summary_trades_path,
+    <%= link_to t("dashboards.show.view_trades"), @dashboard.summary_trades_path,
           class: "inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors duration-100" %>
   </div>
 
   <%= render SummaryStatRowComponent.new(mb: 4) do %>
-    <%= render StatCardComponent.new(label: "Balance", value: format_money(@dashboard.summary_balance)) %>
-    <%= render StatCardComponent.new(label: "Period P&L", value: format_money(@dashboard.summary_period_pl), signed: true, color_value: @dashboard.summary_period_pl) %>
-    <%= render StatCardComponent.new(label: "Total return", value: @dashboard.summary_total_return_pct.nil? ? nil : "#{number_with_precision(@dashboard.summary_total_return_pct, precision: 2)}%", signed: true, color_value: @dashboard.summary_total_return_pct) %>
-    <%= render StatCardComponent.new(label: "Unrealized P&L", value: @dashboard.summary_unrealized_pl.nil? ? nil : format_money(@dashboard.summary_unrealized_pl), signed: true, color_value: @dashboard.summary_unrealized_pl) %>
-    <%= render StatCardComponent.new(label: "Positions", value: @dashboard.summary_position_count) %>
+    <%= render StatCardComponent.new(label: t("dashboards.show.balance"), value: format_money(@dashboard.summary_balance)) %>
+    <%= render StatCardComponent.new(label: t("dashboards.show.period_pl"), value: format_money(@dashboard.summary_period_pl), signed: true, color_value: @dashboard.summary_period_pl) %>
+    <%= render StatCardComponent.new(label: t("dashboards.show.total_return"), value: @dashboard.summary_total_return_pct.nil? ? nil : "#{number_with_precision(@dashboard.summary_total_return_pct, precision: 2)}%", signed: true, color_value: @dashboard.summary_total_return_pct) %>
+    <%= render StatCardComponent.new(label: t("dashboards.show.unrealized_pl"), value: @dashboard.summary_unrealized_pl.nil? ? nil : format_money(@dashboard.summary_unrealized_pl), signed: true, color_value: @dashboard.summary_unrealized_pl) %>
+    <%= render StatCardComponent.new(label: t("dashboards.show.positions"), value: @dashboard.summary_position_count) %>
   <% end %>
 
   <%= render SummaryStatRowComponent.new(mb: 4) do %>
-    <span class="text-sm font-medium text-slate-700">Consistency</span>
-    <%= render StatCardComponent.new(label: "Win rate", value: @dashboard.summary_win_rate.nil? ? nil : "#{number_with_precision(@dashboard.summary_win_rate, precision: 1)}%") %>
+    <span class="text-sm font-medium text-slate-700"><%= t("dashboards.show.consistency") %></span>
+    <%= render StatCardComponent.new(label: t("dashboards.show.win_rate"), value: @dashboard.summary_win_rate.nil? ? nil : "#{number_with_precision(@dashboard.summary_win_rate, precision: 1)}%") %>
     <div>
-      <span class="text-sm text-slate-500">Avg win</span>
+      <span class="text-sm text-slate-500"><%= t("dashboards.show.avg_win") %></span>
       <p class="text-lg font-semibold text-emerald-600"><%= @dashboard.summary_avg_win.nil? ? "—" : format_money(@dashboard.summary_avg_win) %></p>
     </div>
     <div>
-      <span class="text-sm text-slate-500">Avg loss</span>
+      <span class="text-sm text-slate-500"><%= t("dashboards.show.avg_loss") %></span>
       <p class="text-lg font-semibold text-red-600"><%= @dashboard.summary_avg_loss.nil? ? "—" : format_money(@dashboard.summary_avg_loss) %></p>
     </div>
-    <%= render StatCardComponent.new(label: "Closed", value: @dashboard.summary_closed_count || 0) %>
+    <%= render StatCardComponent.new(label: t("dashboards.show.closed"), value: @dashboard.summary_closed_count || 0) %>
   <% end %>
 
   <% if @dashboard.exchange_accounts.none? %>
@@ -41,8 +41,8 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
       </svg>
       <p class="text-sm text-amber-700">
-        <strong class="font-semibold">No exchange linked.</strong>
-        <%= link_to "Connect an exchange account", new_exchange_account_path, class: "font-medium underline hover:text-amber-900" %>
+        <strong class="font-semibold"><%= t("dashboards.show.no_exchange_linked") %></strong>
+        <%= link_to t("dashboards.show.connect_exchange"), new_exchange_account_path, class: "font-medium underline hover:text-amber-900" %>
         to start seeing your trading performance here.
       </p>
     </div>
@@ -65,11 +65,11 @@
           cumulative_pl_series: @dashboard.chart_cumulative_pl_series
         }
       }) do %>
-  <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Performance over time</h2>
+  <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500"><%= t("dashboards.show.performance_over_time") %></h2>
   <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
     <%# Balance chart %>
     <div>
-      <p class="mb-2 text-sm font-medium text-slate-600">Balance</p>
+      <p class="mb-2 text-sm font-medium text-slate-600"><%= t("dashboards.show.balance") %></p>
       <div class="relative h-48">
         <canvas class="absolute inset-0" data-dashboard-charts-target="balanceCanvas"></canvas>
         <%# Empty state — outer div uses absolute positioning; inner div centers content.
@@ -113,7 +113,7 @@
         spot_chart_series_value: (@dashboard.spot_chart_series || [])
       }) do %>
   <div class="mb-4 flex items-center justify-between">
-    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Spot</h2>
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500"><%= t("dashboards.show.spot") %></h2>
     <%= link_to "View spot portfolio", spot_path,
           class: "inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors duration-100" %>
   </div>
@@ -121,7 +121,7 @@
   <%= render SummaryStatRowComponent.new(mb: 4) do %>
     <%= render StatCardComponent.new(label: "Total value", value: format_money(@dashboard.spot_value)) %>
     <%= render StatCardComponent.new(label: "Cost basis", value: format_money(@dashboard.spot_cost_basis)) %>
-    <%= render StatCardComponent.new(label: "Unrealized P&L", value: format_money(@dashboard.spot_unrealized_pl), signed: true, color_value: @dashboard.spot_unrealized_pl) %>
+    <%= render StatCardComponent.new(label: t("dashboards.show.unrealized_pl"), value: format_money(@dashboard.spot_unrealized_pl), signed: true, color_value: @dashboard.spot_unrealized_pl) %>
     <%= render StatCardComponent.new(label: "Unrealized ROI", value: @dashboard.spot_roi_pct.nil? ? nil : "#{number_with_precision(@dashboard.spot_roi_pct, precision: 2)}%", signed: true, color_value: @dashboard.spot_roi_pct) %>
     <%= render StatCardComponent.new(label: "Open positions", value: @dashboard.spot_position_count || 0) %>
     <%= render StatCardComponent.new(label: "Cash balance", value: format_money(@dashboard.spot_cash_balance || 0)) %>
@@ -155,7 +155,7 @@
         "stocks-charts-data-value": { pie: (@dashboard.stocks_pie_series || []), bar: [] }.to_json
       }) do %>
   <div class="mb-4 flex items-center justify-between">
-    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Stocks</h2>
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500"><%= t("dashboards.show.stocks") %></h2>
     <%= link_to "View stock portfolio", stocks_path,
           class: "inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors duration-100" %>
   </div>
@@ -164,7 +164,7 @@
   <%= render SummaryStatRowComponent.new(mb: 4) do %>
     <%= render StatCardComponent.new(label: "Market value", value: stocks_ars ? format_ars(@dashboard.stocks_value) : format_money(@dashboard.stocks_value)) %>
     <%= render StatCardComponent.new(label: "Cost basis", value: stocks_ars ? format_ars(@dashboard.stocks_cost_basis) : format_money(@dashboard.stocks_cost_basis)) %>
-    <%= render StatCardComponent.new(label: "Unrealized P&L", value: stocks_ars ? format_ars(@dashboard.stocks_unrealized_pl) : format_money(@dashboard.stocks_unrealized_pl), signed: true, color_value: @dashboard.stocks_unrealized_pl) %>
+    <%= render StatCardComponent.new(label: t("dashboards.show.unrealized_pl"), value: stocks_ars ? format_ars(@dashboard.stocks_unrealized_pl) : format_money(@dashboard.stocks_unrealized_pl), signed: true, color_value: @dashboard.stocks_unrealized_pl) %>
     <%= render StatCardComponent.new(label: "Unrealized ROI", value: @dashboard.stocks_roi_pct.nil? ? nil : "#{number_with_precision(@dashboard.stocks_roi_pct, precision: 2)}%", signed: true, color_value: @dashboard.stocks_roi_pct) %>
     <%= render StatCardComponent.new(label: "Open positions", value: @dashboard.stocks_position_count || 0) %>
   <% end %>
@@ -194,13 +194,13 @@
   <%= render "allocations/bucket_styles", buckets: @allocation_summary.buckets %>
   <%= render CardComponent.new(class: "card-accent mb-8") do %>
     <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Allocation</h2>
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500"><%= t("dashboards.show.allocation") %></h2>
       <%= link_to "Manage", allocation_path,
             class: "text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors duration-100" %>
     </div>
     <%= render SummaryStatRowComponent.new(mb: 4) do %>
       <%= render StatCardComponent.new(label: "Net worth", value: format_money(@allocation_summary.total_usd)) %>
-      <%= render StatCardComponent.new(label: "Buckets", value: @allocation_summary.buckets.size) %>
+      <%= render StatCardComponent.new(label: t("allocations.show.buckets"), value: @allocation_summary.buckets.size) %>
       <% biggest_drift = @allocation_summary.buckets.select { |b| b.drift_pct }.max_by { |b| b.drift_pct.abs } %>
       <% if biggest_drift %>
         <%= render StatCardComponent.new(label: "Biggest drift", value: "#{biggest_drift.name}: #{biggest_drift.drift_pct >= 0 ? '+' : ''}#{number_with_precision(biggest_drift.drift_pct, precision: 1)}%", signed: true, color_value: biggest_drift.drift_pct) %>
@@ -221,11 +221,11 @@
 <%# ── Exchange accounts ── %>
 <%= render CardComponent.new(class: "card-accent") do %>
   <div class="mb-4 flex items-center justify-between">
-    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Exchange accounts</h2>
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500"><%= t("dashboards.show.exchange_accounts") %></h2>
     <div class="flex items-center gap-2">
-      <%= link_to "Link account", new_exchange_account_path,
+      <%= link_to t("exchange_accounts.index.link_account"), new_exchange_account_path,
             class: "inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors duration-100" %>
-      <%= link_to "Manage portfolios", portfolios_path,
+      <%= link_to t("trades.index.manage_portfolios"), portfolios_path,
             class: "text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors duration-100" %>
     </div>
   </div>
@@ -238,7 +238,7 @@
             <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
             <span class="font-mono text-sm font-semibold capitalize text-slate-800"><%= account.provider_type %></span>
           </div>
-          <span class="text-xs text-slate-400">Linked <%= time_ago_in_words(account.linked_at || account.created_at) %> ago</span>
+          <span class="text-xs text-slate-400"><%= t("exchange_accounts.index.linked_ago", time: time_ago_in_words(account.linked_at || account.created_at)) %></span>
         </li>
       <% end %>
     </ul>
@@ -250,10 +250,10 @@
         </svg>
       </div>
       <div>
-        <p class="text-sm font-medium text-slate-900">No exchange accounts linked</p>
+        <p class="text-sm font-medium text-slate-900"><%= t("dashboards.show.no_exchange_linked") %></p>
         <p class="mt-1 text-sm text-slate-500">Connect your first exchange to start syncing trades.</p>
       </div>
-      <%= link_to "Link exchange account", new_exchange_account_path,
+      <%= link_to t("dashboards.show.connect_exchange"), new_exchange_account_path,
             class: "inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 transition-colors duration-100" %>
     </div>
   <% end %>

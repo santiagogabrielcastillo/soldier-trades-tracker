@@ -1,23 +1,23 @@
 <%= form_with model: @cedear_instrument, local: true, class: "space-y-4", data: { turbo: false } do |f| %>
   <%= render ErrorSummaryComponent.new(model: @cedear_instrument) %>
 
-  <%= render FormFieldComponent.new(form: f, attribute: :ticker, label: "Ticker (CEDEAR)", placeholder: "e.g. AAPL") %>
+  <%= render FormFieldComponent.new(form: f, attribute: :ticker, label: t("cedear_instruments.form.ticker"), placeholder: "e.g. AAPL") %>
 
   <div>
-    <%= f.label :ratio, "Ratio (CEDEARs per underlying share)", class: "block text-sm font-medium text-slate-700" %>
+    <%= f.label :ratio, t("cedear_instruments.form.ratio"), class: "block text-sm font-medium text-slate-700" %>
     <%= f.number_field :ratio, value: @cedear_instrument.ratio, step: :any, min: 0,
           placeholder: "e.g. 10",
           class: "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" %>
-    <p class="mt-1 text-xs text-slate-500">How many CEDEARs equal 1 share of the underlying US stock.</p>
+    <p class="mt-1 text-xs text-slate-500"><%= t("cedear_instruments.form.ratio_hint") %></p>
     <% if @cedear_instrument.errors[:ratio].any? %>
       <p class="mt-1 text-sm text-red-600"><%= @cedear_instrument.errors[:ratio].first %></p>
     <% end %>
   </div>
 
-  <%= render FormFieldComponent.new(form: f, attribute: :underlying_ticker, label: "Underlying ticker (optional)", placeholder: "e.g. AAPL (on NASDAQ)") %>
+  <%= render FormFieldComponent.new(form: f, attribute: :underlying_ticker, label: t("cedear_instruments.form.underlying_ticker"), placeholder: "e.g. AAPL (on NASDAQ)") %>
 
   <div class="flex gap-3 pt-2">
     <%= f.submit class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" %>
-    <%= link_to "Cancel", cedear_instruments_path, class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+    <%= link_to t("cedear_instruments.form.cancel"), cedear_instruments_path, class: "rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
   </div>
 <% end %>

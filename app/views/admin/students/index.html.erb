@@ -1,11 +1,11 @@
-<%= render PageHeaderComponent.new(title: "Students") %>
+<%= render PageHeaderComponent.new(title: t("admin.students.title")) %>
 
 <% if @students.any? %>
   <%= render DataTableComponent.new(columns: [
-    { label: "Email",        classes: "text-left" },
-    { label: "Realized P&L", classes: "text-right" },
-    { label: "Status",       classes: "text-left" },
-    { label: "",             classes: "text-right" }
+    { label: t("admin.shared.email"),        classes: "text-left" },
+    { label: t("admin.shared.realized_pnl"), classes: "text-right" },
+    { label: t("admin.shared.status"),       classes: "text-left" },
+    { label: "",                             classes: "text-right" }
   ]) do |table| %>
     <% @students.each do |id, email, active| %>
       <% pl = @pl_by_user.fetch(id, 0.0) %>
@@ -17,22 +17,22 @@
           <%= format_money(pl) %>
         </td>
         <td class="whitespace-nowrap px-6 py-4 text-sm">
-          <%= render BadgeComponent.new(label: active ? "Active" : "Inactive", variant: active ? :success : :danger) %>
+          <%= render BadgeComponent.new(label: active ? t("admin.shared.active") : t("admin.shared.inactive"), variant: active ? :success : :danger) %>
         </td>
         <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
-          <%= button_to active ? "Deactivate" : "Activate",
+          <%= button_to active ? t("admin.shared.deactivate") : t("admin.shared.activate"),
                 toggle_active_admin_student_path(id),
                 method: :patch,
                 class: "text-xs font-medium #{active ? 'text-red-500 hover:text-red-700' : 'text-emerald-600 hover:text-emerald-800'} bg-transparent border-0 p-0 cursor-pointer" %>
-          <%= button_to "Promote",
+          <%= button_to t("admin.students.promote"),
                 promote_admin_student_path(id),
                 method: :patch,
                 class: "ml-4 text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-transparent border-0 p-0 cursor-pointer" %>
-          <%= link_to "View", admin_student_path(id), class: "ml-4 text-xs text-slate-500 hover:text-slate-800" %>
+          <%= link_to t("common.view"), admin_student_path(id), class: "ml-4 text-xs text-slate-500 hover:text-slate-800" %>
         </td>
       <% end %>
     <% end %>
   <% end %>
 <% else %>
-  <%= render EmptyStateComponent.new(message: "No students registered yet. Share the invite code to get started.") %>
+  <%= render EmptyStateComponent.new(message: t("admin.students.empty_share_code")) %>
 <% end %>

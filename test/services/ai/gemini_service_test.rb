@@ -10,7 +10,7 @@ class Ai::GeminiServiceTest < ActiveSupport::TestCase
   test "generate returns response text on success" do
     body = JSON.generate({
       "candidates" => [
-        { "content" => { "parts" => [{ "text" => "Hello from Gemini" }] } }
+        { "content" => { "parts" => [ { "text" => "Hello from Gemini" } ] } }
       ]
     })
     stub_http_response(code: "200", body: body) do

@@ -13,7 +13,7 @@ class ManualTradesController < ApplicationController
     @trade.exchange_account = @account
     if @trade.save
       Positions::RebuildForAccountService.call(@account)
-      redirect_to trades_path, notice: "Trade added and positions rebuilt."
+      redirect_to trades_path, notice: t("flash.trade_added")
     else
       render :new, status: :unprocessable_entity
     end
@@ -25,7 +25,7 @@ class ManualTradesController < ApplicationController
     @trade.assign_from_params(manual_trade_params)
     if @trade.save
       Positions::RebuildForAccountService.call(@account)
-      redirect_to trades_path, notice: "Trade updated and positions rebuilt."
+      redirect_to trades_path, notice: t("flash.trade_updated")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -34,7 +34,7 @@ class ManualTradesController < ApplicationController
   def destroy
     @trade.trade_record.destroy
     Positions::RebuildForAccountService.call(@account)
-    redirect_to trades_path, notice: "Trade deleted and positions rebuilt."
+    redirect_to trades_path, notice: t("flash.trade_deleted")
   end
 
   private
@@ -46,7 +46,7 @@ class ManualTradesController < ApplicationController
   def set_trade
     trade = @account.trades.find(params[:id])
     unless trade.manual?
-      redirect_to trades_path, alert: "Only manually-entered trades can be edited."
+      redirect_to trades_path, alert: t("flash.manual_trade_only")
       return
     end
     @trade = ManualTrade.from_trade(trade)

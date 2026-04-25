@@ -14,12 +14,12 @@ class AllocationsController < ApplicationController
   def assign_stock_portfolio
     portfolio = current_user.stock_portfolios.find(params[:id])
     portfolio.update!(allocation_bucket_id: params[:allocation_bucket_id].presence)
-    redirect_to allocation_path, notice: "Portfolio assigned."
+    redirect_to allocation_path, notice: t("flash.allocation_portfolio_assigned")
   end
 
   def assign_spot_account
     account = current_user.spot_accounts.find(params[:id])
     account.update!(allocation_bucket_id: params[:allocation_bucket_id].presence)
-    redirect_to allocation_path, notice: "Account assigned."
+    redirect_to allocation_path, notice: t("flash.allocation_account_assigned")
   end
 end

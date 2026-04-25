@@ -36,12 +36,12 @@ class EarningsReport < ApplicationRecord
   def fiscal_quarter_matches_period_type
     if period_type == "quarterly"
       if fiscal_quarter.nil?
-        errors.add(:fiscal_quarter, "is required for quarterly reports")
+        errors.add(:fiscal_quarter, :required_for_quarterly)
       elsif !(1..4).cover?(fiscal_quarter)
-        errors.add(:fiscal_quarter, "must be between 1 and 4")
+        errors.add(:fiscal_quarter, :out_of_range)
       end
     elsif period_type == "annual"
-      errors.add(:fiscal_quarter, "must be blank for annual reports") if fiscal_quarter.present?
+      errors.add(:fiscal_quarter, :must_be_blank_for_annual) if fiscal_quarter.present?
     end
   end
 end

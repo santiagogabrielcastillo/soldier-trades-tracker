@@ -83,7 +83,7 @@ module Allocations
       spot_accounts.to_h do |spot|
         open_positions = positions_by_account[spot].select(&:open?)
         crypto_value   = open_positions.sum(BigDecimal("0")) { |pos| (prices[pos.token] || 0).to_d * pos.balance }
-        [spot.id, crypto_value + spot.cash_balance.to_d]
+        [ spot.id, crypto_value + spot.cash_balance.to_d ]
       end
     end
 

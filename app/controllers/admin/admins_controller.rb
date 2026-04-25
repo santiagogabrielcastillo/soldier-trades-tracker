@@ -24,7 +24,7 @@ class Admin::AdminsController < Admin::BaseController
   def toggle_active
     if @admin.update(active: !@admin.active)
       redirect_to admin_admins_path,
-                  notice: "#{@admin.email} marked #{@admin.active? ? "active" : "inactive"}."
+                  notice: t("flash.admin_student_status", email: @admin.email, status: @admin.active? ? t("admin.shared.active").downcase : t("admin.shared.inactive").downcase)
     else
       redirect_to admin_admins_path,
                   alert: @admin.errors.full_messages.to_sentence
@@ -33,7 +33,7 @@ class Admin::AdminsController < Admin::BaseController
 
   def demote
     if @admin.update(role: "user")
-      redirect_to admin_admins_path, notice: "#{@admin.email} demoted to user."
+      redirect_to admin_admins_path, notice: t("flash.admin_admin_demoted", email: @admin.email)
     else
       redirect_to admin_admins_path, alert: @admin.errors.full_messages.to_sentence
     end

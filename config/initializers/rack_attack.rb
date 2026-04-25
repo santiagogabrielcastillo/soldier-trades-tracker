@@ -17,6 +17,6 @@ class Rack::Attack
 
   # Return 429 with a plain message on throttle
   self.throttled_responder = lambda do |_req|
-    [429, { "Content-Type" => "text/plain" }, ["Too many login attempts. Try again in a minute."]]
+    [ 429, { "Content-Type" => "text/plain" }, [ "Too many login attempts. Try again in a minute." ] ]
   end
 end

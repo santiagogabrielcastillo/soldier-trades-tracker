@@ -9,6 +9,6 @@ class UserPreference < ApplicationRecord
   private
 
   def value_must_be_present
-    errors.add(:value, "can't be blank") if value.blank?
+    errors.add(:value, :blank) if value.blank?
   end
 end

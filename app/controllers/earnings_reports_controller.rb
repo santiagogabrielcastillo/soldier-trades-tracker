@@ -12,7 +12,7 @@ class EarningsReportsController < ApplicationController
   def create
     @report = @company.earnings_reports.build(report_params)
     if @report.save
-      redirect_to company_earnings_report_path(@company, @report), notice: "Report added."
+      redirect_to company_earnings_report_path(@company, @report), notice: t("flash.report_added")
     else
       build_metric_value_fields
       render :new, status: :unprocessable_entity
@@ -28,7 +28,7 @@ class EarningsReportsController < ApplicationController
 
   def update
     if @report.update(report_params)
-      redirect_to company_earnings_report_path(@company, @report), notice: "Report updated."
+      redirect_to company_earnings_report_path(@company, @report), notice: t("flash.report_updated")
     else
       build_metric_value_fields
       render :edit, status: :unprocessable_entity
@@ -37,7 +37,7 @@ class EarningsReportsController < ApplicationController
 
   def destroy
     @report.destroy
-    redirect_to company_path(@company), notice: "Report removed."
+    redirect_to company_path(@company), notice: t("flash.report_removed")
   end
 
   private

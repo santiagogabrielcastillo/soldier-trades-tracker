@@ -1,12 +1,12 @@
 <div>
-  <%= render PageHeaderComponent.new(title: "Trades") do |c| %>
+  <%= render PageHeaderComponent.new(title: t("nav.trades")) do |c| %>
     <% c.with_actions do %>
-      <%= link_to "Manage portfolios", portfolios_path, class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+      <%= link_to t("trades.index.manage_portfolios"), portfolios_path, class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
       <% if @exchange_accounts.size == 1 %>
-        <%= link_to "Add manual trade", new_exchange_account_manual_trade_path(@exchange_accounts.first), class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+        <%= link_to t("trades.index.add_manual_trade"), new_exchange_account_manual_trade_path(@exchange_accounts.first), class: "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
       <% elsif @exchange_accounts.size > 1 %>
         <details class="relative">
-          <summary class="cursor-pointer list-none rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500">Add manual trade ▾</summary>
+          <summary class="cursor-pointer list-none rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500"><%= t("trades.index.add_manual_trade") %> ▾</summary>
           <div class="absolute right-0 top-full z-10 mt-1 w-52 rounded-md border border-slate-200 bg-white py-1 shadow-lg">
             <% @exchange_accounts.each do |acct| %>
               <%= link_to acct.provider_type.to_s.capitalize, new_exchange_account_manual_trade_path(acct),
@@ -19,11 +19,11 @@
   <% end %>
 
   <nav class="mb-6 flex gap-1 border-b border-slate-200" aria-label="Tabs">
-    <%= link_to "History", trades_path(trades_index_filter_params.merge("view" => "history")), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'history' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}" %>
+    <%= link_to t("trades.index.history_tab"), trades_path(trades_index_filter_params.merge("view" => "history")), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'history' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}" %>
     <% (@exchange_accounts || []).each do |account| %>
       <%= link_to account.provider_type.to_s.capitalize, trades_path(trades_index_filter_params.merge("view" => "exchange", "exchange_account_id" => account.id)), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'exchange' && @exchange_account&.id == account.id ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}" %>
     <% end %>
-    <%= link_to "Portfolio", trades_path(trades_index_filter_params.merge("view" => "portfolio", "portfolio_id" => @portfolio&.id)), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'portfolio' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}" %>
+    <%= link_to t("trades.index.portfolio_tab"), trades_path(trades_index_filter_params.merge("view" => "portfolio", "portfolio_id" => @portfolio&.id)), class: "border-b-2 px-4 py-2 text-sm font-medium #{@view == 'portfolio' ? 'border-slate-800 text-slate-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}" %>
   </nav>
 
   <% if @view == "history" %>
@@ -36,9 +36,9 @@
         ) do |c| %>
       <% c.with_extra_fields do %>
         <div class="flex flex-col gap-1">
-          <label for="exchange_account_id" class="text-sm font-medium text-slate-700">Exchange</label>
+          <label for="exchange_account_id" class="text-sm font-medium text-slate-700"><%= t("trades.index.exchange_tab") %></label>
           <%= select_tag :exchange_account_id,
-                options_for_select([["All exchanges", nil]] + (@exchange_accounts || []).map { |a| [a.provider_type.to_s.capitalize, a.id] }, params[:exchange_account_id]),
+                options_for_select([[t("trades.index.all_exchanges"), nil]] + (@exchange_accounts || []).map { |a| [a.provider_type.to_s.capitalize, a.id] }, params[:exchange_account_id]),
                 class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 w-auto min-w-[8rem]",
                 data: { auto_submit_form_target: "trigger" } %>
         </div>
@@ -58,7 +58,7 @@
 
   <% if @view == "portfolio" && @portfolios.present? %>
     <div class="mb-4 flex items-center gap-3">
-      <label for="portfolio_id" class="text-sm font-medium text-slate-700">Portfolio</label>
+      <label for="portfolio_id" class="text-sm font-medium text-slate-700"><%= t("trades.index.portfolio_tab") %></label>
       <%= form_with url: trades_path, method: :get, local: true, class: "flex items-center gap-2", data: { turbo: false } do |f| %>
         <%= f.hidden_field :view, value: "portfolio" %>
         <%= f.select :portfolio_id, options_from_collection_for_select(@portfolios, :id, :name, @portfolio&.id), { include_blank: "Select a portfolio" }, { class: "rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500", id: "portfolio_id", onchange: "this.form.submit()" } %>
@@ -72,11 +72,11 @@
   <% if @positions.any? %>
     <% visible_ids = @visible_column_ids || TradesIndexColumns::DEFAULT_VISIBLE %>
     <div class="mb-2 flex items-center justify-end" data-controller="dialog">
-      <button type="button" data-action="dialog#open" aria-label="Choose columns" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500">
-        Columns
+      <button type="button" data-action="dialog#open" aria-label="<%= t("trades.index.columns") %>" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500">
+        <%= t("trades.index.columns") %>
       </button>
       <dialog data-dialog-target="dialog" class="rounded-lg border border-slate-200 bg-white p-6 shadow-xl backdrop:bg-slate-900/20">
-        <h2 class="mb-4 text-lg font-semibold text-slate-900">Visible columns</h2>
+        <h2 class="mb-4 text-lg font-semibold text-slate-900"><%= t("trades.index.visible_columns") %></h2>
         <%= form_with url: user_preferences_trades_index_columns_path, method: :patch, local: true, data: { turbo: false } do |f| %>
           <%= f.hidden_field :view, value: @view %>
           <%= f.hidden_field :portfolio_id, value: @portfolio&.id %>
@@ -87,13 +87,13 @@
             <% TradesIndexColumns::ALL_IDS.each do |col_id| %>
               <label class="flex items-center gap-2 text-sm">
                 <%= f.check_box :column_ids, { multiple: true, checked: visible_ids.include?(col_id) }, col_id, nil %>
-                <%= TradesIndexColumns::LABELS[col_id] %>
+                <%= t("trades.columns.#{col_id}") %>
               </label>
             <% end %>
           </div>
           <div class="mt-4 flex gap-2">
-            <%= f.submit "Save", class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
-            <button type="button" data-action="dialog#close" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Cancel</button>
+            <%= f.submit t("trades.index.save"), class: "rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500" %>
+            <button type="button" data-action="dialog#close" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"><%= t("trades.index.cancel") %></button>
           </div>
         <% end %>
       </dialog>
@@ -103,7 +103,7 @@
         <thead class="bg-slate-50">
           <tr>
             <% visible_ids.each do |col_id| %>
-              <th scope="col" class="<%= col_id.in?(%w[margin_used roi commission net_pl balance entry_price exit_price]) ? 'text-right' : 'text-left' %> px-6 py-3 text-xs font-medium uppercase tracking-wider text-slate-600"><%= TradesIndexColumns::LABELS[col_id] %></th>
+              <th scope="col" class="<%= col_id.in?(%w[margin_used roi commission net_pl balance entry_price exit_price]) ? 'text-right' : 'text-left' %> px-6 py-3 text-xs font-medium uppercase tracking-wider text-slate-600"><%= t("trades.columns.#{col_id}") %></th>
             <% end %>
             <th scope="col" class="px-4 py-3"></th>
           </tr>
@@ -122,13 +122,13 @@
               <% end %>
               <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
                 <% pos.trades.select(&:manual?).each do |t| %>
-                  <%= link_to "Edit",
+                  <%= link_to t("trades.index.edit"),
                       edit_exchange_account_manual_trade_path(t.exchange_account, t),
                       class: "mr-2 text-slate-500 hover:text-slate-800 text-xs" %>
-                  <%= button_to "Delete",
+                  <%= button_to t("trades.index.delete"),
                       exchange_account_manual_trade_path(t.exchange_account, t),
                       method: :delete,
-                      data: { turbo_confirm: "Delete this manual trade and rebuild positions?" },
+                      data: { turbo_confirm: I18n.t("trades.index.delete_confirm") },
                       class: "text-red-500 hover:text-red-700 text-xs bg-transparent border-0 p-0 cursor-pointer" %>
                 <% end %>
               </td>

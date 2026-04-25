@@ -7,7 +7,7 @@ class UserPreferencesController < ApplicationController
     column_ids = column_ids.select { |id| allowed.include?(id) }.uniq
 
     if column_ids.empty?
-      redirect_back fallback_location: trades_path, alert: "Select at least one column."
+      redirect_back fallback_location: trades_path, alert: t("flash.columns_at_least_one")
       return
     end
 
@@ -15,10 +15,10 @@ class UserPreferencesController < ApplicationController
     portfolio = resolve_portfolio_for_columns
 
     if params[:view].to_s == "exchange" && params[:exchange_account_id].present? && exchange_account.nil?
-      redirect_back fallback_location: trades_path, alert: "Exchange account not found." and return
+      redirect_back fallback_location: trades_path, alert: t("flash.columns_exchange_not_found") and return
     end
     if params[:view].to_s == "portfolio" && params[:portfolio_id].present? && portfolio.nil?
-      redirect_back fallback_location: trades_path, alert: "Portfolio not found." and return
+      redirect_back fallback_location: trades_path, alert: t("flash.columns_portfolio_not_found") and return
     end
 
     tab_key = helpers.trades_index_tab_key(params[:view], exchange_account&.id, portfolio&.id)
@@ -26,9 +26,9 @@ class UserPreferencesController < ApplicationController
     pref.value = column_ids
     if pref.save
       redirect_params = params.permit(TradesHelper::TRADES_INDEX_PARAMS).to_h.compact_blank
-      redirect_to trades_path(redirect_params), notice: "Columns saved."
+      redirect_to trades_path(redirect_params), notice: t("flash.columns_saved")
     else
-      redirect_back fallback_location: trades_path, alert: "Could not save columns."
+      redirect_back fallback_location: trades_path, alert: t("flash.columns_could_not_save")
     end
   end
 

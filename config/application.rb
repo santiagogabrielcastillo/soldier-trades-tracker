@@ -18,6 +18,10 @@ module SoldierTradesTracker
 
     config.middleware.use Rack::Attack
 
+    config.i18n.default_locale = :en
+    config.i18n.available_locales = %i[en es]
+    config.i18n.fallbacks = true
+
     # errors.rb defines multiple constants (Ai::Error, Ai::RateLimitError, etc.)
     # so Zeitwerk cannot autoload it by name. It is require_relative'd explicitly
     # in gemini_service.rb instead.

@@ -34,7 +34,7 @@ class StockPortfolio < ApplicationRecord
 
   def market_immutable_if_trades_exist
     if market_changed? && stock_trades.exists?
-      errors.add(:market, "cannot be changed after trades have been recorded")
+      errors.add(:market, :immutable_after_trades)
     end
   end
 end

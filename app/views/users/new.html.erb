@@ -1,20 +1,20 @@
 <div class="w-full rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-  <h1 class="mb-1 text-xl font-semibold text-slate-900">Create account</h1>
-  <p class="mb-6 text-sm text-slate-500">Start tracking your trades in minutes.</p>
+  <h1 class="mb-1 text-xl font-semibold text-slate-900"><%= t("users.new.title") %></h1>
+  <p class="mb-6 text-sm text-slate-500"><%= t("users.new.subtitle") %></p>
   <%= form_with model: @user, url: users_path, local: true, class: "space-y-4" do |f| %>
     <%= render ErrorSummaryComponent.new(model: @user) %>
-    <%= render FormFieldComponent.new(form: f, attribute: :email, label: "Email", autofocus: true, autocomplete: "email") %>
-    <%= render FormFieldComponent.new(form: f, attribute: :password, label: "Password", type: :password, autocomplete: "new-password") %>
-    <%= render FormFieldComponent.new(form: f, attribute: :password_confirmation, label: "Confirm password", type: :password, autocomplete: "new-password") %>
+    <%= render FormFieldComponent.new(form: f, attribute: :email, label: t("users.new.email"), autofocus: true, autocomplete: "email") %>
+    <%= render FormFieldComponent.new(form: f, attribute: :password, label: t("users.new.password"), type: :password, autocomplete: "new-password") %>
+    <%= render FormFieldComponent.new(form: f, attribute: :password_confirmation, label: t("users.new.password_confirmation"), type: :password, autocomplete: "new-password") %>
     <div class="flex flex-col gap-1">
-      <label for="invite_code" class="text-sm font-medium text-slate-700">Invite code</label>
+      <label for="invite_code" class="text-sm font-medium text-slate-700"><%= t("users.new.invite_code") %></label>
       <input type="text" name="invite_code" id="invite_code" autocomplete="off"
              class="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-             placeholder="Enter your invite code" />
+             placeholder="<%= t("users.new.invite_code_placeholder") %>" />
     </div>
-    <%= f.submit "Sign up", class: "mt-2 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+    <%= f.submit t("users.new.submit"), class: "mt-2 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
   <% end %>
   <p class="mt-5 text-center text-sm text-slate-500">
-    Already have an account? <%= link_to "Sign in", login_path, class: "font-medium text-indigo-600 hover:text-indigo-700 hover:underline" %>
+    <%= t("users.new.have_account") %> <%= link_to t("users.new.sign_in"), login_path, class: "font-medium text-indigo-600 hover:text-indigo-700 hover:underline" %>
   </p>
 </div>

@@ -6,7 +6,7 @@ class AllocationManualEntriesController < ApplicationController
   def create
     @entry = current_user.allocation_manual_entries.build(entry_params)
     if @entry.save
-      redirect_to allocation_path, notice: "Entry added."
+      redirect_to allocation_path, notice: t("flash.allocation_entry_added")
     else
       redirect_to allocation_path, alert: @entry.errors.full_messages.first
     end
@@ -14,7 +14,7 @@ class AllocationManualEntriesController < ApplicationController
 
   def update
     if @entry.update(entry_params)
-      redirect_to allocation_path, notice: "Entry updated."
+      redirect_to allocation_path, notice: t("flash.allocation_entry_updated")
     else
       redirect_to allocation_path, alert: @entry.errors.full_messages.first
     end
@@ -22,7 +22,7 @@ class AllocationManualEntriesController < ApplicationController
 
   def destroy
     @entry.destroy
-    redirect_to allocation_path, notice: "Entry removed."
+    redirect_to allocation_path, notice: t("flash.allocation_entry_removed")
   end
 
   private

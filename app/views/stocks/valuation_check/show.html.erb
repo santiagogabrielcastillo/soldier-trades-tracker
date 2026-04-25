@@ -1,13 +1,13 @@
 <%= render BreadcrumbComponent.new(items: [
-  { label: "Stocks", url: stocks_path(view: "valuations") },
-  { label: @ticker.present? ? "Sanity Check — #{@ticker}" : "Sanity Check" }
+  { label: t("stocks.index.title"), url: stocks_path(view: "valuations") },
+  { label: @ticker.present? ? t("stocks.valuation_check.breadcrumb_with_ticker", ticker: @ticker) : t("stocks.valuation_check.breadcrumb") }
 ]) %>
 
 <div class="mx-auto max-w-4xl">
   <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
     <div class="border-b border-slate-200 px-6 py-4">
-      <h1 class="text-base font-semibold text-slate-900">Valuation Sanity Check</h1>
-      <p class="mt-0.5 text-sm text-slate-500">What does the P/E look like in 1–5 years if the price stays flat?</p>
+      <h1 class="text-base font-semibold text-slate-900"><%= t("stocks.valuation_check.title") %></h1>
+      <p class="mt-0.5 text-sm text-slate-500"><%= t("stocks.valuation_check.subtitle") %></p>
     </div>
 
     <div class="px-6 py-5"
@@ -19,7 +19,7 @@
       <%# Inputs %>
       <div class="grid grid-cols-3 gap-4 mb-6">
         <div>
-          <label class="block text-xs font-medium text-slate-600 mb-1">Current Price ($)</label>
+          <label class="block text-xs font-medium text-slate-600 mb-1"><%= t("stocks.valuation_check.current_price") %></label>
           <input type="number"
                  step="0.01"
                  min="0.01"
@@ -31,7 +31,7 @@
                  class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-600 mb-1">Forward EPS ($)</label>
+          <label class="block text-xs font-medium text-slate-600 mb-1"><%= t("stocks.valuation_check.fwd_eps") %></label>
           <input type="number"
                  step="0.01"
                  min="0.01"
@@ -43,7 +43,7 @@
                  class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-600 mb-1">Annual EPS Growth (%)</label>
+          <label class="block text-xs font-medium text-slate-600 mb-1"><%= t("stocks.valuation_check.annual_eps_growth") %></label>
           <input type="number"
                  step="0.1"
                  name="growth"
@@ -57,16 +57,16 @@
 
       <%# Error message %>
       <p data-valuation-check-target="errorMessage"
-         class="hidden text-sm text-red-600 mb-4">Enter valid inputs (price and EPS must be positive).</p>
+         class="hidden text-sm text-red-600 mb-4"><%= t("stocks.valuation_check.invalid_inputs") %></p>
 
       <%# Projection table %>
       <div data-valuation-check-target="tableWrapper" class="hidden">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-slate-200">
-              <th class="py-2 pr-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wide">Year</th>
-              <th class="py-2 pr-4 text-right text-xs font-medium text-slate-500 uppercase tracking-wide">Projected EPS</th>
-              <th class="py-2 text-right text-xs font-medium text-slate-500 uppercase tracking-wide">P/E at current price</th>
+              <th class="py-2 pr-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wide"><%= t("stocks.valuation_check.columns.year") %></th>
+              <th class="py-2 pr-4 text-right text-xs font-medium text-slate-500 uppercase tracking-wide"><%= t("stocks.valuation_check.columns.projected_eps") %></th>
+              <th class="py-2 text-right text-xs font-medium text-slate-500 uppercase tracking-wide"><%= t("stocks.valuation_check.columns.pe_at_price") %></th>
             </tr>
           </thead>
           <tbody data-valuation-check-target="tableBody">
@@ -75,10 +75,10 @@
 
         <% if @thresholds %>
           <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
-            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-red-100"></span> &gt; <%= @thresholds.fair_max.to_i %>x expensive</span>
-            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-yellow-100"></span> <%= @thresholds.attractive_max.to_i %>–<%= @thresholds.fair_max.to_i %>x fair</span>
-            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-green-100"></span> &lt; <%= @thresholds.attractive_max.to_i %>x attractive</span>
-            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-200"></span> &lt; <%= @thresholds.gift_max.to_i %>x gift</span>
+            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-red-100"></span> &gt; <%= @thresholds.fair_max.to_i %>x t("stocks.valuation_check.legend.expensive")</span>
+            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-yellow-100"></span> <%= @thresholds.attractive_max.to_i %>–<%= @thresholds.fair_max.to_i %>x t("stocks.valuation_check.legend.fair")</span>
+            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-green-100"></span> &lt; <%= @thresholds.attractive_max.to_i %>x t("stocks.valuation_check.legend.attractive")</span>
+            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-200"></span> &lt; <%= @thresholds.gift_max.to_i %>x t("stocks.valuation_check.legend.gift")</span>
             <turbo-frame id="pe-thresholds-edit">
               <%= link_to edit_stocks_sector_pe_threshold_path(CGI.escape(@sector || "Default"), ticker: @ticker),
                     class: "ml-2 inline-flex items-center gap-1 text-slate-400 hover:text-slate-600",
@@ -101,7 +101,7 @@
 
         <%# P/E trajectory chart %>
         <div class="mt-6 rounded-lg border border-slate-100 bg-slate-50 p-4">
-          <p class="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">P/E trajectory</p>
+          <p class="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400"><%= t("stocks.valuation_check.pe_trajectory") %></p>
           <div class="relative h-48">
             <canvas data-valuation-check-target="chartCanvas"></canvas>
           </div>

@@ -1,20 +1,21 @@
 <%= turbo_frame_tag "spot-transaction-delete-frame" do %>
-  <h2 class="mb-4 text-lg font-semibold text-slate-900">Delete transaction</h2>
+  <h2 class="mb-4 text-lg font-semibold text-slate-900"><%= t("spot.delete_confirm.title") %></h2>
 
   <p class="mb-6 text-sm text-slate-600">
-    Are you sure you want to delete this
-    <span class="font-medium capitalize"><%= transaction.token %> <%= transaction.side %></span>
-    of <span class="font-medium"><%= number_with_delimiter(transaction.amount, delimiter: ",") %></span>
-    on <span class="font-medium"><%= transaction.executed_at.strftime("%b %d, %Y") %></span><% unless transaction.side.in?(%w[deposit withdraw]) %> at <span class="font-medium"><%= format_money(transaction.price_usd) %></span><% end %>?
-    <br><span class="font-medium text-red-600">This cannot be undone.</span>
+    <%= t("spot.delete_confirm.confirm_message",
+          token_side: "#{transaction.token} #{transaction.side.capitalize}",
+          amount: number_with_delimiter(transaction.amount, delimiter: ","),
+          date: transaction.executed_at.strftime("%b %d, %Y")) %>
+    <% unless transaction.side.in?(%w[deposit withdraw]) %> <%= t("spot.delete_confirm.at_price", price: format_money(transaction.price_usd)) %><% end %>?
+    <br><span class="font-medium text-red-600"><%= t("spot.delete_confirm.cannot_undo") %></span>
   </p>
 
   <div class="flex gap-2">
-    <%= button_to "Confirm delete", destroy_spot_transaction_path(transaction), method: :delete,
+    <%= button_to t("spot.delete_confirm.confirm"), destroy_spot_transaction_path(transaction), method: :delete,
         class: "rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" %>
     <button type="button" data-action="click->turbo-modal#close"
         class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-      Cancel
+      <%= t("spot.delete_confirm.cancel") %>
     </button>
   </div>
 <% end %>

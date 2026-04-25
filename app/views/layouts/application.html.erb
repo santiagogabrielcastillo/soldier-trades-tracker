@@ -67,13 +67,13 @@
           <nav class="flex flex-1 flex-col overflow-y-auto" aria-label="Main navigation">
             <div class="flex-1 space-y-0.5 px-3 py-4">
               <% [
-                ["Dashboard",         root_path,             root_path],
-                ["Exchange accounts", exchange_accounts_path, "/exchange_accounts"],
-                ["Trades",            trades_path,            "/trades"],
-                ["Spot",              spot_path,              "/spot"],
-                ["Stocks",            stocks_path,            "/stocks"],
-                ["Companies",         companies_path,         "/companies"],
-                ["Allocation",        allocation_path,        "/allocation"],
+                [t("nav.dashboard"),         root_path,             root_path],
+                [t("nav.exchange_accounts"), exchange_accounts_path, "/exchange_accounts"],
+                [t("nav.trades"),            trades_path,            "/trades"],
+                [t("nav.spot"),              spot_path,              "/spot"],
+                [t("nav.stocks"),            stocks_path,            "/stocks"],
+                [t("nav.companies"),         companies_path,         "/companies"],
+                [t("nav.allocation"),        allocation_path,        "/allocation"],
               ].each do |label, path, match| %>
                 <% active = match == root_path ? current_page?(root_path) : request.path.start_with?(match) %>
                 <%= link_to label, path,
@@ -83,15 +83,15 @@
             </div>
             <div class="space-y-0.5 border-t border-slate-800 px-3 py-4">
               <% if current_user&.admin? %>
-                <%= link_to "Admin panel →", admin_root_path,
+                <%= link_to t("nav.admin_panel"), admin_root_path,
                       class: "flex items-center rounded-md px-3 py-2 text-sm font-medium text-amber-400 hover:bg-slate-800 hover:text-amber-300 transition-colors duration-150",
                       data: { action: "nav#close" } %>
               <% end %>
               <% active_settings = request.path.start_with?("/settings") %>
-              <%= link_to "Settings", settings_path,
+              <%= link_to t("nav.settings"), settings_path,
                     class: "flex items-center rounded-md px-3 py-2 text-sm transition-colors duration-150 #{active_settings ? 'bg-slate-700 font-medium text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}",
                     data: { action: "nav#close" } %>
-              <%= button_to "Sign out", logout_path, method: :delete,
+              <%= button_to t("nav.sign_out"), logout_path, method: :delete,
                     class: "flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-400 transition-colors duration-150 hover:bg-slate-800 hover:text-slate-100" %>
             </div>
           </nav>
@@ -106,8 +106,8 @@
           <div class="flex items-center gap-1">
             <button type="button"
               data-action="click->money-visibility#toggle"
-              title="Toggle amounts"
-              aria-label="Toggle amounts"
+              title="<%= t("nav.toggle_amounts") %>"
+              aria-label="<%= t("nav.toggle_amounts") %>"
               aria-pressed="false"
               class="flex items-center justify-center h-8 w-8 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors">
               <svg data-money-visibility-target="eyeOn" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
@@ -139,13 +139,13 @@
           <nav class="flex flex-1 flex-col overflow-y-auto" aria-label="Main navigation">
             <div class="flex-1 space-y-0.5 px-3 py-4">
               <% [
-                ["Dashboard",         root_path,             root_path],
-                ["Exchange accounts", exchange_accounts_path, "/exchange_accounts"],
-                ["Trades",            trades_path,            "/trades"],
-                ["Spot",              spot_path,              "/spot"],
-                ["Stocks",            stocks_path,            "/stocks"],
-                ["Companies",         companies_path,         "/companies"],
-                ["Allocation",        allocation_path,        "/allocation"],
+                [t("nav.dashboard"),         root_path,             root_path],
+                [t("nav.exchange_accounts"), exchange_accounts_path, "/exchange_accounts"],
+                [t("nav.trades"),            trades_path,            "/trades"],
+                [t("nav.spot"),              spot_path,              "/spot"],
+                [t("nav.stocks"),            stocks_path,            "/stocks"],
+                [t("nav.companies"),         companies_path,         "/companies"],
+                [t("nav.allocation"),        allocation_path,        "/allocation"],
               ].each do |label, path, match| %>
                 <% active = match == root_path ? current_page?(root_path) : request.path.start_with?(match) %>
                 <%= link_to label, path,
@@ -154,17 +154,17 @@
             </div>
             <div class="space-y-0.5 border-t border-slate-800 px-3 py-4">
               <% if current_user&.admin? %>
-                <%= link_to "Admin panel →", admin_root_path,
+                <%= link_to t("nav.admin_panel"), admin_root_path,
                       class: "flex items-center rounded-md px-3 py-2 text-sm font-medium text-amber-400 hover:bg-slate-800 hover:text-amber-300 transition-colors duration-150" %>
               <% end %>
               <% active_settings = request.path.start_with?("/settings") %>
-              <%= link_to "Settings", settings_path,
+              <%= link_to t("nav.settings"), settings_path,
                     class: "flex items-center rounded-md px-3 py-2 text-sm transition-colors duration-150 #{active_settings ? 'bg-slate-700 font-medium text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}" %>
-              <%= button_to "Sign out", logout_path, method: :delete,
+              <%= button_to t("nav.sign_out"), logout_path, method: :delete,
                     class: "flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-400 transition-colors duration-150 hover:bg-slate-800 hover:text-slate-100" %>
               <button type="button"
                 data-action="click->money-visibility#toggle"
-                title="Toggle amounts"
+                title="<%= t("nav.toggle_amounts") %>"
                 aria-pressed="false"
                 class="flex items-center gap-2 w-full rounded-md px-3 py-2 text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100 transition-colors">
                 <svg data-money-visibility-target="eyeOn" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4 shrink-0">
@@ -174,7 +174,7 @@
                 <svg data-money-visibility-target="eyeOff" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4 shrink-0 hidden">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
                 </svg>
-                <span>Toggle amounts</span>
+                <span><%= t("nav.toggle_amounts") %></span>
               </button>
             </div>
           </nav>
@@ -262,7 +262,7 @@
         <div class="flex flex-col bg-white h-full max-h-[70vh]">
           <%# Header %>
           <div class="flex items-center justify-between px-4 py-3 bg-slate-800 text-white">
-            <span class="text-sm font-semibold">AI Portfolio Assistant</span>
+            <span class="text-sm font-semibold"><%= t("ai_chat.title") %></span>
             <button data-action="click->ai-chat#toggle" class="text-slate-300 hover:text-white focus:outline-none" aria-label="Close">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -289,7 +289,7 @@
             <textarea
               data-ai-chat-target="input"
               data-action="keydown->ai-chat#handleKeydown"
-              placeholder="Ask about your portfolio… (Ctrl+Enter / ⌘Enter)"
+              placeholder="<%= t("ai_chat.placeholder") %>"
               rows="2"
               class="flex-1 resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
             ></textarea>
@@ -298,7 +298,7 @@
               data-ai-chat-target="submit"
               data-action="click->ai-chat#sendMessage"
               class="self-end px-3 py-2 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >Send</button>
+            ><%= t("ai_chat.send") %></button>
           </div>
         </div>
       </div>

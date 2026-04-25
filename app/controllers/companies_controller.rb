@@ -19,7 +19,7 @@ class CompaniesController < ApplicationController
   def create
     @company = current_user.companies.build(company_params)
     if @company.save
-      redirect_to company_path(@company), notice: "#{@company.ticker} added."
+      redirect_to company_path(@company), notice: t("flash.company_added", ticker: @company.ticker)
     else
       render :new, status: :unprocessable_entity
     end
@@ -30,7 +30,7 @@ class CompaniesController < ApplicationController
 
   def update
     if @company.update(company_params)
-      redirect_to company_path(@company), notice: "#{@company.ticker} updated."
+      redirect_to company_path(@company), notice: t("flash.company_updated", ticker: @company.ticker)
     else
       render :edit, status: :unprocessable_entity
     end
@@ -38,7 +38,7 @@ class CompaniesController < ApplicationController
 
   def destroy
     @company.destroy
-    redirect_to companies_path, notice: "#{@company.ticker} removed."
+    redirect_to companies_path, notice: t("flash.company_removed", ticker: @company.ticker)
   end
 
   def comparison

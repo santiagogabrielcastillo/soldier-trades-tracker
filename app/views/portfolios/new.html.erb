@@ -1,10 +1,10 @@
 <div class="mx-auto max-w-4xl">
   <%= render BreadcrumbComponent.new(items: [
-    { label: "Trades", url: trades_path },
-    { label: "Portfolios", url: portfolios_path },
-    { label: "New", url: nil }
+    { label: t("nav.trades"), url: trades_path },
+    { label: t("portfolios.index.title"), url: portfolios_path },
+    { label: t("portfolios.new.breadcrumb"), url: nil }
   ]) %>
-  <h1 class="mb-2 text-2xl font-semibold text-slate-900">New portfolio</h1>
-  <p class="mb-6 text-sm text-slate-600">Define a date range and optional starting balance. Trades in this range will show with balance = initial balance + P&L.</p>
+  <h1 class="mb-2 text-2xl font-semibold text-slate-900"><%= t("portfolios.new.title") %></h1>
+  <p class="mb-6 text-sm text-slate-600"><%= t("portfolios.new.subtitle") %></p>
   <%= render "form" %>
 </div>

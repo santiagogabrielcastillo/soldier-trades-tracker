@@ -1,31 +1,927 @@
-# Files in the config/locales directory are used for internationalization and
-# are automatically loaded by Rails. If you want to use locales other than
-# English, add the necessary files in this directory.
-#
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t "hello"
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t("hello") %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# To learn more about the API, please read the Rails Internationalization guide
-# at https://guides.rubyonrails.org/i18n.html.
-#
-# Be aware that YAML interprets the following case-insensitive strings as
-# booleans: `true`, `false`, `on`, `off`, `yes`, `no`. Therefore, these strings
-# must be quoted to be interpreted as strings. For example:
-#
-#     en:
-#       "yes": yup
-#       enabled: "ON"
-
 en:
-  hello: "Hello world"
+  # ── Navigation ────────────────────────────────────────────────────────────────
+  nav:
+    dashboard: "Dashboard"
+    exchange_accounts: "Exchange accounts"
+    trades: "Trades"
+    spot: "Spot"
+    stocks: "Stocks"
+    companies: "Companies"
+    allocation: "Allocation"
+    settings: "Settings"
+    admin_panel: "Admin panel →"
+    sign_out: "Sign out"
+    toggle_amounts: "Toggle amounts"
+
+  # ── AI Chat Panel ──────────────────────────────────────────────────────────────
+  ai_chat:
+    title: "AI Portfolio Assistant"
+    send: "Send"
+    placeholder: "Ask about your portfolio..."
+
+  # ── Flash messages ─────────────────────────────────────────────────────────────
+  flash:
+    please_sign_in: "Please sign in."
+    signed_in: "Signed in successfully."
+    signed_out: "Signed out."
+    invalid_credentials: "Invalid email or password."
+    invalid_invite_code: "Invalid or expired invite code."
+    account_created: "Account created. Welcome!"
+    settings_saved: "Settings saved."
+    password_reset_sent: "If that email is registered, you'll receive a reset link shortly."
+    invalid_reset_link: "Reset link is invalid or has expired."
+    password_updated: "Password updated. Please sign in."
+    language_changed: "Language preference saved."
+    # Exchange accounts
+    exchange_account_linked: "Exchange account linked successfully."
+    exchange_account_linked_first: "Account linked! Contact an admin to request a historic data sync for your older trades."
+    exchange_account_settings_updated: "Settings updated."
+    exchange_account_removed: "Exchange account removed."
+    exchange_not_supported: "This exchange is not supported for sync."
+    sync_started: "Sync started. Trades will appear shortly."
+    sync_rate_limit: "Rate limit: max 2 syncs per day per account. Try again tomorrow."
+    historic_sync_started: "Historic sync started. This may take a few minutes."
+    not_authorized: "Not authorized."
+    # Portfolios
+    portfolio_created: "Portfolio created."
+    portfolio_updated: "Portfolio updated."
+    portfolio_removed: "Portfolio removed."
+    portfolio_set_default: "%{name} is now the default portfolio."
+    # Trades / positions
+    trade_added: "Trade added and positions rebuilt."
+    trade_updated: "Trade updated and positions rebuilt."
+    trade_deleted: "Trade deleted and positions rebuilt."
+    manual_trade_only: "Only manually-entered trades can be edited."
+    exchange_account_not_found: "That exchange account wasn't found."
+    # Column preferences
+    columns_saved: "Columns saved."
+    columns_at_least_one: "Select at least one column."
+    columns_exchange_not_found: "Exchange account not found."
+    columns_portfolio_not_found: "Portfolio not found."
+    columns_could_not_save: "Could not save columns."
+    # Spot
+    spot_csv_required: "Please select a CSV file."
+    spot_csv_too_large: "CSV file must be under %{limit} MB."
+    spot_imported: "Imported %{created} row(s), %{skipped} skipped (duplicates)."
+    spot_imported_errors: " Errors: %{errors}."
+    spot_cash_added: "Cash movement added."
+    spot_transaction_added: "Transaction added."
+    spot_transaction_exists: "This transaction already exists."
+    spot_transaction_updated: "Transaction updated."
+    spot_transaction_deleted: "Transaction deleted."
+    spot_prices_updated: "Prices updated."
+    configure_here: "Configure it here"
+    configure_them_here: "Configure them here"
+    spot_coingecko_missing_html: "Crypto prices require a CoinGecko API key. %{link}."
+    dashboard_coingecko_missing_html: "Crypto spot prices require a CoinGecko API key. %{link}."
+    # Stocks
+    stocks_trade_added: "Trade added."
+    stocks_trade_exists: "This trade already exists."
+    stocks_entry_deleted: "Entry deleted."
+    stocks_snapshot_recorded: "Snapshot recorded."
+    stocks_cash_flow_recorded: "Cash flow recorded."
+    stocks_enter_positive_amount: "Enter a positive amount."
+    stocks_price_fetch_failed: "Could not fetch current prices. Try again later."
+    stocks_sync_started: "Sync started — refresh in a moment to see updated data."
+    stocks_analysis_started: "Analysis started — refresh in a moment."
+    stocks_ticker_not_found: "Ticker not found."
+    stocks_iol_missing_html: "Argentine stock prices require IOL credentials. %{link}."
+    stocks_finnhub_missing_html: "Stock prices require a Finnhub API key. %{link}."
+    # Allocation
+    allocation_portfolio_assigned: "Portfolio assigned."
+    allocation_account_assigned: "Account assigned."
+    allocation_bucket_created: "Bucket created."
+    allocation_bucket_updated: "Bucket updated."
+    allocation_bucket_removed: "Bucket removed."
+    # Stock portfolios
+    stock_portfolio_created: "Portfolio created."
+    stock_portfolio_updated: "Portfolio updated."
+    # CEDEAR instruments
+    cedear_added: "Instrument added."
+    cedear_updated: "Instrument updated."
+    cedear_removed: "Instrument removed."
+    # Companies
+    company_added: "%{ticker} added."
+    company_updated: "%{ticker} updated."
+    company_removed: "%{ticker} removed."
+    # Earnings reports
+    report_added: "Report added."
+    report_updated: "Report updated."
+    report_removed: "Report removed."
+    # API Keys
+    api_key_invalid: "Invalid provider or blank key."
+    api_key_saved: "%{provider} key saved."
+    api_key_save_failed: "Could not save key."
+    api_key_removed: "Key removed."
+    # Admin
+    admin_student_status: "%{email} marked %{status}."
+    admin_student_promoted: "%{email} promoted to admin."
+    admin_admin_demoted: "%{email} demoted to user."
+    admin_invite_rotated: "Invite code rotated successfully."
+    admin_invite_invalid_expiry: "Please provide a valid future expiry date."
+    admin_invite_rotate_failed: "Could not rotate code: %{message}"
+    # Custom metric definitions
+    metric_added: "%{name} metric added."
+    metric_updated: "%{name} metric updated."
+    metric_removed: "%{name} metric removed."
+    # Allocation manual entries
+    allocation_entry_added: "Entry added."
+    allocation_entry_updated: "Entry updated."
+    allocation_entry_removed: "Entry removed."
+    # Stocks analysis
+    stocks_analysis_not_found: "No analysis found for %{ticker}."
+
+  # ── Sync intervals ─────────────────────────────────────────────────────────────
+  sync_intervals:
+    hourly: "Hourly"
+    daily: "Daily"
+    twice_daily: "Twice daily (08:00 & 20:00 UTC)"
+
+  # ── Auth pages ─────────────────────────────────────────────────────────────────
+  sessions:
+    new:
+      title: "Welcome back"
+      subtitle: "Sign in to your account to continue."
+      email: "Email"
+      password: "Password"
+      submit: "Sign in"
+      forgot_password: "Forgot your password?"
+      no_account: "Don't have an account?"
+      sign_up: "Sign up"
+
+  users:
+    new:
+      title: "Create account"
+      subtitle: "Start tracking your trades in minutes."
+      email: "Email"
+      password: "Password"
+      password_confirmation: "Confirm password"
+      invite_code: "Invite code"
+      invite_code_placeholder: "Enter your invite code"
+      submit: "Sign up"
+      have_account: "Already have an account?"
+      sign_in: "Sign in"
+
+  password_resets:
+    new:
+      title: "Reset your password"
+      subtitle: "Enter your email and we'll send you a reset link."
+      submit: "Send reset link"
+      back_to_sign_in: "Back to sign in"
+    edit:
+      title: "Choose a new password"
+      subtitle: "Enter and confirm your new password below."
+      new_password: "New password"
+      confirm_password: "Confirm new password"
+      submit: "Update password"
+
+  # ── Mailer ─────────────────────────────────────────────────────────────────────
+  mailers:
+    users_mailer:
+      password_reset:
+        subject: "Reset your password"
+        heading: "Reset your password"
+        body: "We received a request to reset the password for your account (%{email}). Click the button below to choose a new password. This link expires in 2 hours."
+        button: "Reset password"
+        ignore: "If you didn't request a password reset, you can safely ignore this email. Your password will not change."
+        copy_link: "Or copy this link:"
+        text_heading: "Reset your password"
+        text_body: "We received a request to reset the password for %{email}."
+        text_instructions: "Click the link below to choose a new password. This link expires in 2 hours."
+        text_ignore: "If you didn't request a password reset, ignore this email — your password won't change."
+
+  # ── Layouts ────────────────────────────────────────────────────────────────────
+  layouts:
+    admin:
+      dashboard: "Dashboard"
+      students: "Students"
+      admins: "Admins"
+      invite_code: "Invite Code"
+      back_to_portfolio: "← My portfolio"
+      sign_out: "Sign out"
+
+  # ── Dashboard ─────────────────────────────────────────────────────────────────
+  dashboards:
+    show:
+      title: "Dashboard"
+      subtitle: "Centralize your trade activity across exchanges."
+      period_summary: "Period summary"
+      view_trades: "View trades"
+      balance: "Balance"
+      period_pl: "Period P&L"
+      total_return: "Total return"
+      unrealized_pl: "Unrealized P&L"
+      positions: "Positions"
+      consistency: "Consistency"
+      win_rate: "Win rate"
+      avg_win: "Avg win"
+      avg_loss: "Avg loss"
+      closed: "Closed"
+      performance_over_time: "Performance over time"
+      spot: "Spot"
+      stocks: "Stocks"
+      allocation: "Allocation"
+      exchange_accounts: "Exchange accounts"
+      no_exchange_linked: "No exchange linked."
+      connect_exchange: "Connect an exchange account"
+
+  # ── Trades ─────────────────────────────────────────────────────────────────────
+  trades:
+    index:
+      manage_portfolios: "Manage portfolios"
+      add_manual_trade: "Add manual trade"
+      history_tab: "History"
+      portfolio_tab: "Portfolio"
+      exchange_tab: "Exchange"
+      all_exchanges: "All exchanges"
+      columns: "Columns"
+      visible_columns: "Visible columns"
+      save: "Save"
+      cancel: "Cancel"
+      edit: "Edit"
+      delete: "Delete"
+      delete_confirm: "Delete this manual trade and rebuild positions?"
+      no_trades: "No trades yet."
+      no_positions: "No positions yet."
+    columns:
+      closed: "Closed"
+      exchange: "Exchange"
+      symbol: "Symbol"
+      side: "Side"
+      leverage: "Leverage"
+      margin_used: "Margin used"
+      roi: "ROI"
+      commission: "Commission"
+      net_pl: "Net P&L"
+      balance: "Balance"
+      entry_price: "Entry price"
+      exit_price: "Exit price"
+      open_date: "Open date"
+      quantity: "Quantity"
+
+  # ── Exchange Accounts ──────────────────────────────────────────────────────────
+  exchange_accounts:
+    index:
+      title: "Exchange accounts"
+      link_account: "Link account"
+      sync_failed: "⚠ Sync failed"
+      linked_ago: "Linked %{time} ago"
+      last_synced_ago: "Last synced %{time} ago"
+      never_synced: "Never synced"
+      syncing: "Syncing:"
+      sync_now: "Sync now"
+      rate_limit: "Rate limit (2/day)"
+      historic_sync: "Historic sync"
+      settings: "Settings"
+      remove: "Remove"
+      remove_confirm: "Remove this exchange account?"
+      no_accounts: "No exchange accounts linked yet."
+    new:
+      title: "Link exchange account"
+      exchange: "Exchange"
+      api_key: "API Key"
+      api_secret: "API Secret"
+      submit: "Link account"
+      cancel: "Cancel"
+    edit:
+      title: "Edit account settings"
+      quote_currencies: "Quote currencies to sync"
+      submit: "Save settings"
+      cancel: "Cancel"
+
+  # ── Settings ──────────────────────────────────────────────────────────────────
+  settings:
+    language: "Language"
+    show:
+      title: "Settings"
+      sync_interval_legend: "Sync interval"
+      sync_interval_hint: "How often to fetch new trades from your exchange accounts."
+      current: "Current:"
+      no_sync_yet: "No sync has run yet."
+      submit: "Save settings"
+      api_keys_section: "API Keys"
+    api_keys:
+      index:
+        title: "API Keys"
+      provider_card:
+        configured: "Configured"
+        not_configured: "Not configured"
+        remove: "Remove"
+        save: "Save"
+        encrypted_notice: "Stored encrypted. Never shared."
+
+  # ── Portfolios ────────────────────────────────────────────────────────────────
+  portfolios:
+    index:
+      title: "Portfolios"
+      new_portfolio: "New portfolio"
+      set_as_default: "Set as default"
+      floor: "Floor"
+      edit: "Edit"
+      remove: "Remove"
+      remove_confirm: "Remove this portfolio?"
+      no_portfolios: "No portfolios yet."
+    new:
+      title: "New portfolio"
+    edit:
+      title: "Edit portfolio"
+    form:
+      name: "Name"
+      start_date: "Start date"
+      end_date: "End date"
+      include_trades_from: "Include trades from"
+      all_exchanges: "All exchanges"
+      initial_balance: "Initial balance / floor"
+      notes: "Notes"
+      set_as_default: "Set as default portfolio"
+      cancel: "Cancel"
+
+  # ── Spot ──────────────────────────────────────────────────────────────────────
+  spot:
+    index:
+      title: "Spot portfolio"
+      portfolio_tab: "Portfolio"
+      transactions_tab: "Transactions"
+      sync_prices: "Sync prices"
+      prices_synced_ago: "Last synced %{time} ago"
+      prices_not_synced: "Prices not synced"
+      new_transaction: "New transaction"
+      side: "Side"
+      token: "Token"
+      amount: "Amount"
+      price: "Price"
+      date: "Date"
+      add_transaction: "Add transaction"
+      cash_balance: "Cash balance"
+      cash_pct: "Cash % of portfolio"
+      crypto_value: "Crypto value"
+      total: "Total"
+      import_csv: "Import CSV"
+      status_open: "Open"
+      status_closed: "Closed"
+      no_positions: "No open positions."
+      no_transactions: "No transactions yet."
+      empty_positions: "No open spot positions yet."
+      empty_transactions: "No spot transactions yet."
+    delete_confirm:
+      title: "Delete transaction"
+      message: "Are you sure you want to delete this transaction?"
+      warning: "This cannot be undone."
+      confirm: "Confirm delete"
+      cancel: "Cancel"
+      confirm_message: "Delete %{token_side} — %{amount} units on %{date}"
+      at_price: "at $%{price}"
+      cannot_undo: "This action cannot be undone."
+    edit_form:
+      title: "Edit transaction"
+      side: "Side"
+      token: "Token"
+      amount: "Amount"
+      price_usd: "Price (USD)"
+      executed_at: "Date & time"
+      submit: "Save changes"
+      cancel: "Cancel"
+    scenario_calculator:
+      title: "Scenario calculator"
+      ephemeral_note: "ephemeral · resets on close"
+      current_cash: "Current cash"
+      target_cash_pct: "Target cash %"
+      budget: "Budget to invest"
+      manual_tab: "Manual"
+      optimize_tab: "Optimize"
+      token_header: "Token"
+      breakeven_header: "Breakeven"
+      current_roi_header: "Current ROI"
+      inject_header: "Inject"
+      new_roi_header: "New ROI"
+      allocated: "Allocated:"
+      remaining: "remaining"
+      optimizer_mode: "Optimizer mode"
+      fixed_target_roi: "Fixed target ROI"
+      best_achievable_floor: "Best achievable floor"
+      target_roi: "Target ROI"
+      apply_to_positions: "Apply to positions"
+      optimize: "Optimize ✦"
+
+  # ── Companies ─────────────────────────────────────────────────────────────────
+  companies:
+    index:
+      title: "Companies"
+      new_company: "New company"
+      compare: "Compare"
+      edit: "Edit"
+      remove: "Remove"
+      no_companies: "No companies yet."
+    show:
+      custom_metrics: "Custom Metrics"
+      earnings_reports: "Earnings Reports"
+      add_metric: "Add metric"
+      metric_name: "Metric name"
+      type: "Type"
+      no_metrics: "No custom metrics yet."
+      no_reports: "No reports yet."
+      add_first_report: "Add first report"
+      edit: "Edit"
+      remove: "Remove"
+    new:
+      title: "Add Company"
+    edit:
+      title: "Edit %{ticker}"
+    form:
+      ticker: "Ticker"
+      sector: "Sector (optional)"
+      name: "Company name"
+      description: "Investment thesis / notes (optional)"
+      cancel: "Cancel"
+    comparison:
+      back: "Back to profile"
+      no_reports: "No reports yet."
+      core_financials: "Core financials"
+      custom_metrics: "Custom metrics"
+      revenue: "Revenue"
+      net_income: "Net Income"
+      eps: "EPS"
+
+  # ── Earnings Reports ──────────────────────────────────────────────────────────
+  earnings_reports:
+    new:
+      title: "Add Earnings Report"
+    edit:
+      title: "Edit %{period}"
+    show:
+      core_financials: "Core financials"
+      custom_metrics: "Custom metrics"
+      notes: "Notes"
+      remove: "Remove"
+      remove_confirm: "Remove this report?"
+    form:
+      period_type: "Period type"
+      quarterly: "Quarterly"
+      annual: "Annual"
+      fiscal_year: "Fiscal year"
+      quarter: "Quarter"
+      reported_on: "Reported on"
+      standard_metrics: "Standard Metrics"
+      custom_metrics: "Custom Metrics"
+      notes: "Notes"
+      cancel: "Cancel"
+
+  # ── Manual Trades ─────────────────────────────────────────────────────────────
+  manual_trades:
+    new:
+      title: "Add Manual Trade"
+    edit:
+      title: "Edit Manual Trade"
+    form:
+      symbol: "Symbol"
+      side: "Side"
+      buy: "Buy"
+      sell: "Sell"
+      quantity: "Quantity"
+      price: "Price"
+      net_amount_preview: "Net amount preview"
+      executed_at: "Executed at"
+      fee: "Fee (optional)"
+      position_side: "Position side"
+      auto_detect: "Auto-detect"
+      long: "LONG"
+      short: "SHORT"
+      leverage: "Leverage"
+      reduce_only: "Reduce only"
+      realized_pnl: "Realized P&L"
+      submit: "Save Trade"
+      cancel: "Cancel"
+
+  # ── Stock Portfolios ──────────────────────────────────────────────────────────
+  stock_portfolios:
+    index:
+      title: "Stock portfolios"
+      new_portfolio: "New portfolio"
+      edit: "Edit"
+      no_portfolios: "No stock portfolios yet."
+    new:
+      title: "New stock portfolio"
+    edit:
+      title: "Edit stock portfolio"
+    form:
+      name: "Name"
+      market_us: "US"
+      market_argentina: "Argentina"
+      set_as_default: "Set as default portfolio"
+      cancel: "Cancel"
+
+  # ── CEDEAR Instruments ────────────────────────────────────────────────────────
+  cedear_instruments:
+    index:
+      title: "CEDEAR instruments"
+      subtitle: "Define your CEDEAR instruments and their ratios to enable Argentine portfolio tracking."
+      add_instrument: "Add instrument"
+      ticker_col: "Ticker"
+      ratio_col: "Ratio"
+      underlying_col: "Underlying"
+      edit: "Edit"
+      remove: "Remove"
+    new:
+      title: "New CEDEAR instrument"
+    edit:
+      title: "Edit CEDEAR instrument"
+    form:
+      ticker: "Ticker (CEDEAR)"
+      ratio: "Ratio (CEDEARs per underlying share)"
+      underlying_hint: "How many CEDEARs equal one underlying share."
+      underlying_ticker: "Underlying ticker (optional)"
+      cancel: "Cancel"
+
+  # ── Allocation ────────────────────────────────────────────────────────────────
+  allocations:
+    show:
+      title: "Asset Allocation"
+      total_tracked: "Total tracked"
+      buckets: "Buckets"
+      targets_set: "Targets set"
+      overview: "Overview"
+      allocation: "Allocation"
+      actual_vs_target: "Actual vs Target"
+      rebalancing_guide: "Rebalancing guide"
+      bucket_col: "Bucket"
+      target_col: "Target"
+      actual_col: "Actual"
+      drift_col: "Drift"
+      action_col: "Action"
+      on_target: "On target"
+      add_amount: "Add %{amount}"
+      reduce_amount: "Reduce %{amount}"
+      add_entry: "Add entry"
+      save: "Save"
+      delete_bucket: "Delete bucket"
+      add_bucket: "Add bucket"
+      link_tracked_assets: "Link tracked assets"
+      stock_portfolios: "Stock portfolios"
+      spot_accounts: "Spot accounts"
+      unassigned: "— Unassigned —"
+
+  # ── Stocks ────────────────────────────────────────────────────────────────────
+  stocks:
+    index:
+      title: "Stock portfolio"
+      portfolio_label: "Portfolio:"
+      manage_portfolios: "Manage portfolios"
+      mep_rate: "MEP: %{rate} ARS/USD"
+      mep_unavailable: "MEP rate unavailable — USD estimates hidden"
+      manage_cedear: "Manage CEDEAR instruments"
+      portfolio_tab: "Portfolio"
+      transactions_tab: "Transactions"
+      performance_tab: "Performance"
+      valuations_tab: "Valuations"
+      watchlist_tab: "Watch List"
+      new_trade: "New trade"
+      side: "Side"
+      ticker: "Ticker"
+      shares: "Shares"
+      price: "Price"
+      date: "Date"
+      cedear_ratio: "CEDEAR ratio"
+      add_trade: "Add trade"
+      filter: "Filter"
+      clear_filters: "Clear filters"
+      snapshot_type: "Snapshot"
+      deposit_type: "Deposit"
+      withdrawal_type: "Withdrawal"
+      record_entry: "Record entry"
+      delete_entry_confirm: "Delete this entry?"
+      no_positions: "No open positions."
+      no_trades: "No trades yet."
+      finnhub_hint: "Prices via Finnhub. Add your Finnhub API key in Settings to enable live quotes."
+      empty_positions: "No open stock positions yet. Add a buy trade above to get started."
+      empty_trades: "No stock trades yet."
+      tabs:
+        portfolio: "Portfolio"
+        transactions: "Transactions"
+        performance: "Performance"
+        valuations: "Valuations"
+        watchlist: "Watch List"
+      form:
+        side: "Side"
+        buy: "Buy"
+        sell: "Sell"
+        select_side: "Select"
+        ticker: "Ticker"
+        ticker_bcba: "Ticker (BCBA)"
+        quantity: "Quantity"
+        shares: "Shares"
+        price_ars: "Price (ARS)"
+        price_usd: "Price (USD)"
+        cedear_ratio: "CEDEAR ratio"
+        cedear_ratio_hint: "(CEDEARs only, auto-filled)"
+        cedear_ratio_auto: "Auto-filled from your CEDEAR instruments list. Leave blank for regular Argentine stocks."
+        executed_at: "Date & time"
+        add_trade: "Add trade"
+      stats:
+        stocks_ars: "Stocks (ARS)"
+        stocks_usd: "Stocks (USD)"
+        unrealized_pnl_ars: "Unrealized P&L (ARS)"
+        unrealized_pnl_usd: "Unrealized P&L (USD)"
+        unrealized_pnl: "Unrealized P&L"
+        cash_ars: "Cash (ARS)"
+        cash_usd: "Cash (USD)"
+      columns:
+        ticker: "Ticker"
+        ratio: "Ratio"
+        quantity: "Quantity"
+        shares: "Shares"
+        avg_buy_price: "Avg buy price"
+        price_ars: "Price (ARS)"
+        price_usd: "Price (USD)"
+        total_ars: "Total (ARS)"
+        total_usd: "Total (USD)"
+        total_value_ars: "Total value (ARS)"
+        total_value_usd: "Total value (USD)"
+        pct_total: "% / Total"
+        pct_pnl: "% PnL"
+        avg_cost: "Avg cost"
+        current_price: "Current price"
+        market_value: "Market value"
+        unrealized_pnl: "Unrealized P&L"
+        unrealized_roi: "Unrealized ROI"
+        date: "Date"
+      charts:
+        portfolio_allocation: "Portfolio allocation"
+        unrealized_pnl_by_ticker: "Unrealized P&L by ticker"
+        no_price_data: "No price data available."
+      performance:
+        record_entry: "Record entry"
+        type: "Type"
+        snapshot_only: "Snapshot only"
+        snapshot: "Snapshot"
+        deposit: "Deposit"
+        withdrawal: "Withdrawal"
+        amount: "Amount (%{currency})"
+        amount_hint: "Enter a positive amount — direction is set by the type above."
+        auto_fetch: "Current portfolio value will be fetched automatically from live prices."
+        allocation_over_time: "Allocation over time (%)"
+        no_snapshots_allocation: "No snapshots with position data yet. Record at least two snapshots to see the chart."
+        twr: "Time-Weighted Return (%)"
+        no_snapshots_twr: "No snapshots yet. Record at least two entries to see the chart."
+        cash_flow: "Cash flow"
+        portfolio_value: "Portfolio value"
+        source: "Source"
+        positions: "Positions"
+        n_positions:
+          one: "%{count} position"
+          other: "%{count} positions"
+        value: "Value"
+        delete_confirm: "Delete this entry?"
+        empty: "No entries yet. Record a snapshot or cash flow to start tracking TWR."
+      watchlist:
+        empty: "No tickers yet — add one above."
+    fundamentals:
+      last_synced: "Last synced %{time} ago"
+      no_data: "No data yet — click Sync to fetch fundamentals from Finviz"
+      sync_now: "Sync now"
+      ticker_col: "Ticker"
+      ai_signal_col: "AI Signal"
+      sector_col: "Sector"
+      pe_col: "P/E"
+      fwd_pe_col: "Fwd P/E"
+      peg_col: "PEG"
+      ps_col: "P/S"
+      pfcf_col: "P/FCF"
+      ev_ebitda_col: "EV/EBITDA"
+      net_margin_col: "Net Margin"
+      roe_col: "ROE"
+      roic_col: "ROIC"
+      debt_eq_col: "Debt/Eq"
+      sales_yoy_col: "Sales Y/Y"
+      sales_qoq_col: "Sales Q/Q"
+      sanity_check_col: "Sanity Check"
+      re_analyze: "Re-analyze"
+      reanalyze: "Re-analyze"
+      analyze: "Analyze"
+      configure_ai: "Configure AI"
+      sanity_check: "Sanity Check"
+      columns:
+        ticker: "Ticker"
+        ai_signal: "AI Signal"
+        ai_signal_title: "Powered by Gemini AI"
+        sector: "Sector"
+        net_margin: "Net Margin"
+        sales_yy: "Sales Y/Y"
+        sales_qq: "Sales Q/Q"
+    valuation_check:
+      title: "Valuation Sanity Check"
+      breadcrumb: "Sanity Check"
+      breadcrumb_with_ticker: "Sanity Check — %{ticker}"
+      subtitle: "What does the P/E look like in 1–5 years if the price stays flat?"
+      current_price: "Current Price ($)"
+      forward_eps: "Forward EPS ($)"
+      fwd_eps: "Forward EPS ($)"
+      eps_growth: "Annual EPS Growth (%)"
+      annual_eps_growth: "Annual EPS Growth (%)"
+      invalid_inputs: "Enter valid inputs (price and EPS must be positive)."
+      year_col: "Year"
+      projected_eps_col: "Projected EPS"
+      pe_col: "P/E at current price"
+      pe_trajectory: "P/E trajectory"
+      columns:
+        year: "Year"
+        projected_eps: "Projected EPS"
+        pe_at_price: "P/E at current price"
+      legend:
+        expensive: "> 30x expensive"
+        fair: "15–30x fair"
+        attractive: "< 15x attractive"
+        gift: "< 10x gift"
+
+  # ── Admin ─────────────────────────────────────────────────────────────────────
+  admin:
+    shared:
+      email: "Email"
+      realized_pnl: "Realized P&L"
+      status: "Status"
+      student: "Student"
+      active: "Active"
+      inactive: "Inactive"
+      activate: "Activate"
+      deactivate: "Deactivate"
+      readonly_view: "Read-only view"
+      open_positions: "Open positions"
+      closed_positions: "Closed positions"
+      recent_closed_positions: "Recent closed positions"
+      symbol: "Symbol"
+      side: "Side"
+      exchange: "Exchange"
+      closed_at: "Closed at"
+      net_pnl: "Net P&L"
+      roi: "ROI"
+      no_closed_positions: "No closed positions yet."
+      stock_portfolios: "Stock portfolios"
+      spot_accounts: "Spot accounts"
+      trades_count:
+        one: "%{count} trade"
+        other: "%{count} trades"
+      transactions_count:
+        one: "%{count} transaction"
+        other: "%{count} transactions"
+    dashboard:
+      title: "Class Overview"
+      subtitle: "Aggregated statistics for all students"
+      total_students: "Total students"
+      active_students: "Active students"
+      pct_profitable: "% Profitable"
+      total_pl: "Total realized P&L"
+      total_realized_pnl: "Total realized P&L"
+      avg_pl: "Avg realized P&L"
+      avg_realized_pnl: "Avg realized P&L"
+      leaderboard: "Leaderboard"
+      rank_col: "#"
+      student_col: "Student"
+      pl_col: "Realized P&L"
+      status_col: "Status"
+      no_students: "No students registered yet."
+    students:
+      title: "Students"
+      promote: "Promote"
+      promote_to_admin: "Promote to Admin"
+      all_students: "← All students"
+      empty: "No students registered yet."
+      empty_share_code: "No students registered yet. Share the invite code to get started."
+      index:
+        title: "Students"
+        email_col: "Email"
+        pl_col: "Realized P&L"
+        status_col: "Status"
+        activate: "Activate"
+        deactivate: "Deactivate"
+        promote: "Promote"
+        view: "View"
+        no_students: "No students registered yet. Share the invite code..."
+      show:
+        subtitle: "Read-only view"
+        activate: "Activate"
+        deactivate: "Deactivate"
+        promote: "Promote to Admin"
+        back: "← All students"
+        realized_pl: "Realized P&L"
+        open_positions: "Open positions"
+        closed_positions: "Closed positions"
+        recent_closed: "Recent closed positions"
+        symbol_col: "Symbol"
+        side_col: "Side"
+        exchange_col: "Exchange"
+        closed_at_col: "Closed at"
+        net_pl_col: "Net P&L"
+        roi_col: "ROI"
+        stock_portfolios: "Stock portfolios"
+        spot_accounts: "Spot accounts"
+        no_closed_positions: "No closed positions yet."
+    admins:
+      title: "Admins"
+      demote: "Demote"
+      demote_to_user: "Demote to User"
+      all_admins: "← All admins"
+      readonly_view: "Admin — read-only view"
+      empty: "No admins yet. Promote a student to get started."
+      index:
+        title: "Admins"
+        activate: "Activate"
+        deactivate: "Deactivate"
+        demote: "Demote"
+        view: "View"
+        no_admins: "No admins yet. Promote a student..."
+      show:
+        subtitle: "Admin — read-only view"
+        demote: "Demote to User"
+        back: "← All admins"
+    invite_code:
+      title: "Invite Code"
+      subtitle: "Students use this code to register."
+      current_code: "Current code"
+      expires: "Expires %{date}"
+      valid: "Valid"
+      expired: "Expired"
+      share_hint: "Share this code with your students. They will enter it during registration."
+      no_code: "No invite code set. Generate one below before students can register."
+      rotate_code: "Rotate code"
+      rotate_hint: "Generating a new code immediately invalidates the old one. Set an expiry date for when the registration window should close."
+      expiry_date: "Expiry date & time"
+      generate: "Generate new code"
+      show:
+        title: "Invite Code"
+        subtitle: "Students use this code to register."
+        current_code: "Current code"
+        valid: "Valid"
+        expired: "Expired"
+        sharing_hint: "Share this code with students who want to register."
+        no_code: "No invite code set."
+        rotate: "Rotate code"
+        rotate_warning: "Generating a new code immediately invalidates the old one."
+        expiry_label: "Expiry date & time"
+        generate: "Generate new code"
+
+  # ── Custom Metric Definitions ─────────────────────────────────────────────────
+  custom_metric_definitions:
+    edit:
+      breadcrumb: "Edit metric"
+      title: "Edit %{name}"
+      metric_name: "Metric name"
+      type: "Type"
+      number: "Number"
+      money: "Money"
+      percentage: "Percentage"
+      text: "Text"
+      submit: "Save"
+      form:
+        name: "Metric name"
+        type: "Type"
+
+  # ── Common shared strings ─────────────────────────────────────────────────────
+  common:
+    save: "Save"
+    cancel: "Cancel"
+    delete: "Delete"
+    remove: "Remove"
+    edit: "Edit"
+    add: "Add"
+    view: "View"
+    filter: "Filter"
+    clear_filters: "Clear filters"
+    all: "All"
+    from: "From"
+    to: "To"
+    hide: "hide"
+
+  # ── ActiveRecord model validation errors ───────────────────────────────────────
+  activerecord:
+    errors:
+      models:
+        portfolio:
+          attributes:
+            end_date:
+              after_start_date: "must be on or after start date"
+            exchange_account_id:
+              not_your_account: "must be one of your exchange accounts"
+        custom_metric_value:
+          attributes:
+            text_value:
+              must_be_blank_for_number: "must be blank for number metrics"
+            decimal_value:
+              must_be_blank_for_text: "must be blank for text metrics"
+        stock_portfolio:
+          attributes:
+            market:
+              immutable_after_trades: "cannot be changed after trades have been recorded"
+        earnings_report:
+          attributes:
+            fiscal_quarter:
+              required_for_quarterly: "is required for quarterly reports"
+              out_of_range: "must be between 1 and 4"
+              must_be_blank_for_annual: "must be blank for annual reports"
+        exchange_account:
+          attributes:
+            allowed_quote_currencies:
+              must_be_array: "must be an array"
+              unknown_currencies: "contains unknown currencies: %{currencies}"
+        user:
+          attributes:
+            active:
+              last_super_admin: "cannot deactivate the last active super admin"

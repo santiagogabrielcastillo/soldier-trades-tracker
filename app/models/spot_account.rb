@@ -37,5 +37,4 @@ class SpotAccount < ApplicationRecord
   end
 
   private
-
 end
