@@ -1,0 +1,4 @@
+<%= render PageHeaderComponent.new(title: "New stock trade for #{@student.email}") %>
+<%= render CardComponent.new do %>
+  <%= render "form", url: admin_student_stock_trades_path(@student), method: :post, submit_label: "Create trade" %>
+<% end %>
