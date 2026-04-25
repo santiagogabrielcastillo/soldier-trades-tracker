@@ -31,6 +31,7 @@ es:
     password_reset_sent: "Si ese email está registrado, recibirás un enlace de restablecimiento en breve."
     invalid_reset_link: "El enlace de restablecimiento es inválido o expiró."
     password_updated: "Contraseña actualizada. Por favor, iniciá sesión."
+    language_changed: "Preferencia de idioma guardada."
     # Exchange accounts
     exchange_account_linked: "Cuenta de exchange vinculada correctamente."
     exchange_account_linked_first: "¡Cuenta vinculada! Contactá a un admin para solicitar una sincronización histórica de tus operaciones anteriores."
@@ -290,6 +291,7 @@ es:
 
   # ── Settings ──────────────────────────────────────────────────────────────────
   settings:
+    language: "Idioma"
     show:
       title: "Configuración"
       sync_interval_legend: "Intervalo de sincronización"

@@ -9,6 +9,8 @@ class LocaleController < ApplicationController
     pref.value = locale
     pref.save!
 
-    redirect_back fallback_location: root_path
+    redirect_back fallback_location: root_path, notice: t("flash.language_changed")
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    redirect_back fallback_location: root_path, alert: t("flash.language_change_failed", default: "Failed to update language preference. Please try again.")
   end
 end
